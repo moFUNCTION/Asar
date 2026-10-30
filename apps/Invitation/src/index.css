@@ -1,0 +1,196 @@
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: rgba(22, 22, 32, 0.75);
+  --border-card: rgba(212, 175, 55, 0.2);
+  --border-card-hover: rgba(212, 175, 55, 0.4);
+  --text-primary: #fbfbfb;
+  --text-secondary: #c2c2cf;
+  --text-muted: #7c7c8f;
+  --gold-primary: #e5c07b;
+  --gold-glow: rgba(229, 192, 123, 0.25);
+  --accent-emerald: #10b981;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  background-image: 
+    radial-gradient(at 50% 10%, rgba(229, 192, 123, 0.08) 0px, transparent 60%),
+    radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
+}
+
+.invitation-wrapper {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.brand-crest {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold-primary);
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.2rem;
+  box-shadow: 0 0 15px var(--gold-glow);
+}
+
+.invite-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 24px;
+  padding: 3.5rem 3rem;
+  backdrop-filter: blur(20px);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.7);
+  margin-bottom: 2.5rem;
+}
+
+.invite-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+}
+
+.monogram {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  color: var(--gold-primary);
+  margin-bottom: 1.5rem;
+}
+
+.invitation-to {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.8rem;
+  color: var(--gold-primary);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.guest-name {
+  font-family: var(--font-serif);
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.event-details {
+  max-width: 580px;
+  margin: 0 auto 2.5rem auto;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+  margin: 2rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.time-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.time-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+
+.time-val {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+}
+
+.rsvp-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-rsvp-accept {
+  padding: 0.9rem 2.2rem;
+  border-radius: 12px;
+  border: 1px solid var(--gold-primary);
+  background: linear-gradient(135deg, #d4af37, #aa8212);
+  color: #0a0a0f;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 20px -4px var(--gold-glow);
+}
+
+.btn-rsvp-accept:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.btn-rsvp-decline {
+  padding: 0.9rem 2.2rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.btn-rsvp-decline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
