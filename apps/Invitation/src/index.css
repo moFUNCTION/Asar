@@ -1,17 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Aref+Ruqaa:wght@400;700&family=Cairo:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #12121a;
-  --bg-card: rgba(22, 22, 32, 0.75);
-  --border-card: rgba(212, 175, 55, 0.2);
-  --border-card-hover: rgba(212, 175, 55, 0.4);
-  --text-primary: #fbfbfb;
-  --text-secondary: #c2c2cf;
-  --text-muted: #7c7c8f;
-  --gold-primary: #e5c07b;
-  --gold-glow: rgba(229, 192, 123, 0.25);
-  --accent-emerald: #10b981;
-  --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  --font-serif: 'Playfair Display', Georgia, serif;
+  /* Brand Primary: Royal Maroon & Burgundy */
+  --athar-maroon: #6B1D28;
+  --athar-maroon-dark: #5B1621;
+  --athar-maroon-deep: #4A0E17;
+  --athar-maroon-glow: rgba(107, 29, 40, 0.16);
+  --athar-maroon-subtle: rgba(107, 29, 40, 0.06);
+
+  /* Brand Secondary: Champagne Gold */
+  --athar-gold: #D4AF37;
+  --athar-gold-bright: #E5C158;
+  --athar-gold-light: #F1E5D1;
+  --athar-gold-border: rgba(212, 175, 55, 0.4);
+
+  /* Editorial Surfaces: Alabaster & Linen */
+  --athar-bg-primary: #FBF7F2;
+  --athar-bg-secondary: #F4EFEA;
+  --athar-bg-tertiary: #EDE6DC;
+  --athar-card-bg: rgba(255, 255, 255, 0.94);
+  --athar-card-border: rgba(107, 29, 40, 0.08);
+
+  /* Noir VIP Surface */
+  --athar-noir-bg: linear-gradient(170deg, #231A1E 0%, #161214 100%);
+  --athar-noir-surface: #1F1A1C;
+
+  /* Typography Colors */
+  --athar-text-title: #231F20;
+  --athar-text-body: #4A4240;
+  --athar-text-muted: #7A6F6D;
+
+  /* Status Semantic Colors (Tuned to Warm Editorial Palette) */
+  --athar-status-success: #1E6F50;
+  --athar-status-success-bg: rgba(30, 111, 80, 0.1);
+  --athar-status-warning: #B7791F;
+  --athar-status-warning-bg: rgba(212, 175, 55, 0.18);
+  --athar-status-danger: #9B2C2C;
+  --athar-status-danger-bg: rgba(155, 44, 44, 0.1);
+
+  /* Font Stacks */
+  --font-arabic-display: 'Amiri', 'Aref Ruqaa', 'Playfair Display', serif;
+  --font-latin-display: 'Playfair Display', 'Amiri', serif;
+  --font-body: 'Cairo', system-ui, -apple-system, sans-serif;
+
+  /* Radii & Shadows */
+  --athar-radius-sm: 8px;
+  --athar-radius-md: 16px;
+  --athar-radius-lg: 24px;
+  --athar-radius-xl: 32px;
+  --athar-radius-full: 9999px;
+  --athar-shadow-soft: 0 10px 30px -10px rgba(107, 29, 40, 0.06);
+  --athar-shadow-elevated: 0 24px 48px -12px rgba(107, 29, 40, 0.14);
+  --athar-shadow-gold: 0 15px 40px -10px rgba(212, 175, 55, 0.22);
+
+  /* Legacy & Bridge Variables */
+  --bg-primary: var(--athar-bg-primary);
+  --bg-secondary: var(--athar-bg-secondary);
+  --bg-card: var(--athar-card-bg);
+  --border-card: var(--athar-gold-border);
+  --border-card-hover: var(--athar-gold);
+  --text-primary: var(--athar-text-title);
+  --text-secondary: var(--athar-text-body);
+  --text-muted: var(--athar-text-muted);
+  --gold-primary: var(--athar-gold);
+  --gold-glow: var(--athar-shadow-gold);
+  --accent-emerald: var(--athar-status-success);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-arabic-display);
 }
 
 * {
@@ -20,177 +75,248 @@
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: var(--font-sans);
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  font-family: var(--font-body);
+  background-color: var(--athar-bg-primary);
+  color: var(--athar-text-body);
   min-height: 100vh;
-  background-image: 
-    radial-gradient(at 50% 10%, rgba(229, 192, 123, 0.08) 0px, transparent 60%),
-    radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.invitation-wrapper {
-  max-width: 840px;
-  margin: 0 auto;
-  padding: 2.5rem 1.5rem;
+/* Typography Utility Classes */
+.font-arabic-display {
+  font-family: var(--font-arabic-display);
 }
 
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+.font-latin-display {
+  font-family: var(--font-latin-display);
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
+.font-body {
+  font-family: var(--font-body);
 }
 
-.brand-crest {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--gold-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--gold-primary);
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 1.2rem;
-  box-shadow: 0 0 15px var(--gold-glow);
+/* Luxury Card Foundations */
+.luxury-card {
+  background: var(--athar-card-bg);
+  border: 1px solid var(--athar-card-border);
+  border-radius: var(--athar-radius-lg);
+  box-shadow: var(--athar-shadow-soft);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-.invite-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-card);
-  border-radius: 24px;
-  padding: 3.5rem 3rem;
-  backdrop-filter: blur(20px);
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.7);
-  margin-bottom: 2.5rem;
+.luxury-card:hover {
+  border-color: var(--athar-gold-border);
+  box-shadow: var(--athar-shadow-elevated);
 }
 
-.invite-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 20%;
-  right: 20%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+.luxury-card-noir {
+  background: var(--athar-noir-bg);
+  color: #FFFFFF;
+  border: 1.5px solid var(--athar-gold);
+  border-radius: var(--athar-radius-xl);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.45);
 }
 
-.monogram {
-  font-family: var(--font-serif);
-  font-size: 2.5rem;
-  color: var(--gold-primary);
-  margin-bottom: 1.5rem;
-}
-
-.invitation-to {
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-size: 0.8rem;
-  color: var(--gold-primary);
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-}
-
-.guest-name {
-  font-family: var(--font-serif);
-  font-size: 2.4rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  color: #fff;
-  letter-spacing: -0.01em;
-}
-
-.event-details {
-  max-width: 580px;
-  margin: 0 auto 2.5rem auto;
-  color: var(--text-secondary);
-  font-size: 1rem;
-  line-height: 1.7;
-}
-
-.time-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  padding: 1.5rem 0;
-  margin: 2rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.time-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.time-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-  margin-bottom: 0.35rem;
-}
-
-.time-val {
-  font-weight: 700;
-  color: var(--text-primary);
-  font-size: 1.05rem;
-}
-
-.rsvp-actions {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.btn-rsvp-accept {
-  padding: 0.9rem 2.2rem;
-  border-radius: 12px;
-  border: 1px solid var(--gold-primary);
-  background: linear-gradient(135deg, #d4af37, #aa8212);
-  color: #0a0a0f;
+/* Luxury Gold & Maroon Buttons */
+.btn-athar-primary {
+  background: var(--athar-maroon);
+  color: #FFFFFF;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--athar-radius-full);
+  padding: 0.75rem 1.75rem;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
-  font-family: inherit;
+  box-shadow: 0 4px 14px rgba(107, 29, 40, 0.25);
   transition: all 0.2s ease;
-  box-shadow: 0 8px 20px -4px var(--gold-glow);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
 }
 
-.btn-rsvp-accept:hover {
+.btn-athar-primary:hover {
+  background: var(--athar-maroon-dark);
+  border-color: var(--athar-gold);
   transform: translateY(-2px);
-  filter: brightness(1.1);
+  box-shadow: 0 8px 24px rgba(107, 29, 40, 0.35);
 }
 
-.btn-rsvp-decline {
-  padding: 0.9rem 2.2rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-secondary);
-  font-weight: 600;
+.btn-athar-secondary {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--athar-text-title);
+  border: 1px solid var(--athar-gold-border);
+  border-radius: var(--athar-radius-full);
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-body);
+  font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
-  font-family: inherit;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
 }
 
-.btn-rsvp-decline:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+.btn-athar-secondary:hover {
+  background: #FFFFFF;
+  border-color: var(--athar-maroon);
+  transform: translateY(-2px);
+  box-shadow: var(--athar-shadow-soft);
+}
+
+.btn-athar-gold {
+  background: linear-gradient(135deg, var(--athar-gold-bright) 0%, var(--athar-gold) 100%);
+  color: var(--athar-maroon-deep);
+  border: 1px solid var(--athar-gold-bright);
+  border-radius: var(--athar-radius-full);
+  padding: 0.8rem 1.8rem;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: var(--athar-shadow-gold);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.btn-athar-gold:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 45px -8px rgba(212, 175, 55, 0.45);
+}
+
+/* Editorial Form Inputs */
+.athar-input {
+  width: 100%;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--athar-radius-md);
+  border: 1px solid rgba(107, 29, 40, 0.18);
+  background-color: #FFFFFF;
+  color: var(--athar-text-title);
+  outline: none;
+  font-size: 0.95rem;
+  font-family: var(--font-body);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.athar-input:focus {
+  border-color: var(--athar-maroon);
+  box-shadow: 0 0 0 3px var(--athar-maroon-glow);
+}
+
+.athar-input-locked {
+  background-color: var(--athar-bg-secondary);
+  border-color: rgba(107, 29, 40, 0.25);
+  cursor: not-allowed;
+}
+
+/* Acoustic Waveform & Ornaments */
+.acoustic-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  opacity: 0.8;
+}
+
+.acoustic-line {
+  height: 1px;
+  width: 60px;
+}
+
+/* Digital Pass Ticket Perforations */
+.pass-ticket-card {
+  position: relative;
+  background: #FFFFFF;
+  border: 1.5px solid var(--athar-gold);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px -15px rgba(107, 29, 40, 0.18);
+}
+
+.pass-ticket-cutout-left,
+.pass-ticket-cutout-right {
+  position: absolute;
+  top: 55%;
+  width: 28px;
+  height: 28px;
+  background-color: var(--athar-bg-primary);
+  border-radius: 50%;
+  z-index: 5;
+}
+
+.pass-ticket-cutout-left {
+  left: -14px;
+  border-right: 1.5px solid var(--athar-gold);
+}
+
+.pass-ticket-cutout-right {
+  right: -14px;
+  border-left: 1.5px solid var(--athar-gold);
+}
+
+.pass-ticket-dashline {
+  position: absolute;
+  top: calc(55% + 13px);
+  left: 20px;
+  right: 20px;
+  border-top: 2px dashed rgba(212, 175, 55, 0.5);
+  z-index: 4;
+}
+
+/* Shimmer Effect */
+@keyframes athar-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-badge {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.35) 50%, rgba(212, 175, 55, 0.15) 100%);
+  background-size: 200% 100%;
+  animation: athar-shimmer 3s infinite;
+}
+
+/* Print Optimization for Guest Pass */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+
+  .no-print,
+  .reviewer-nav-pill,
+  header,
+  footer,
+  button:not(.print-keep) {
+    display: none !important;
+  }
+
+  .pass-ticket-card {
+    box-shadow: none !important;
+    border: 2px solid #000000 !important;
+    page-break-inside: avoid;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+  }
 }

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Box, Grid, Flex, Text, HStack, Badge } from "@chakra-ui/react";
+import { Box, Grid, Flex, Text, HStack, Badge, Image } from "@chakra-ui/react";
 import { FaChevronDown, FaMicrophoneAlt, FaUserTie, FaSlidersH, FaCrown, FaCloudDownloadAlt } from "react-icons/fa";
-import { BlurText, SplitText, FadeContent } from "@repo/ui-components";
+import { BlurText, SplitText } from "@repo/ui-components";
 
 // Statically defined local assets to prevent recreation and memory churn
 const GALLERY_ITEMS = [
@@ -161,7 +161,6 @@ export const WhyChooseUsSection: React.FC = () => {
             bg="rgba(255, 255, 255, 0.98)"
             boxShadow="0 25px 60px -15px rgba(107, 29, 40, 0.18)"
             border="1px solid rgba(212, 175, 55, 0.35)"
-            position="relative"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
@@ -177,8 +176,7 @@ export const WhyChooseUsSection: React.FC = () => {
                   transition="opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
                   pointerEvents={activePhoto === idx ? "auto" : "none"}
                 >
-                  <Box
-                    as="img"
+                  <Image
                     src={item.image}
                     alt={item.text}
                     w="100%"

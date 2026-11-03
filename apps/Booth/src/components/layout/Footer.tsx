@@ -85,30 +85,35 @@ export const Footer: React.FC = () => {
               { label: "تواصل معنا", href: "#contact" },
             ].map((link) => (
               <Box
-                as="a"
+                asChild
                 key={link.label}
-                href={link.href}
                 textDecoration="none"
                 color="inherit"
                 transition="color 0.2s ease"
                 fontWeight="600"
                 _hover={{ color: "#D4AF37" }}
               >
-                {link.label}
+                <a href={link.href}>{link.label}</a>
               </Box>
             ))}
           </HStack>
 
           {/* Social Links */}
           <HStack gap={4} pt={2}>
-            <Box as="a" href="https://instagram.com" target="_blank" color="white" _hover={{ color: "#D4AF37" }} aria-label="Instagram">
-              <FaInstagram size={19} />
+            <Box asChild color="white" _hover={{ color: "#D4AF37" }}>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <FaInstagram size={19} />
+              </a>
             </Box>
-            <Box as="a" href="https://tiktok.com" target="_blank" color="white" _hover={{ color: "#D4AF37" }} aria-label="TikTok">
-              <FaTiktok size={19} />
+            <Box asChild color="white" _hover={{ color: "#D4AF37" }}>
+              <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+                <FaTiktok size={19} />
+              </a>
             </Box>
-            <Box as="a" href="https://facebook.com" target="_blank" color="white" _hover={{ color: "#D4AF37" }} aria-label="Facebook">
-              <FaFacebook size={19} />
+            <Box asChild color="white" _hover={{ color: "#D4AF37" }}>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <FaFacebook size={19} />
+              </a>
             </Box>
           </HStack>
         </Flex>

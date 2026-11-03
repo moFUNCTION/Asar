@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Flex, Text, HStack, Button, Badge, SimpleGrid } from "@chakra-ui/react";
+import { Box, Flex, Text, HStack, Button, Badge, SimpleGrid, Image } from "@chakra-ui/react";
 import { FaPlay, FaPause, FaVolumeUp, FaExpand, FaVideo } from "react-icons/fa";
 import { FadeContent, SplitText, BlurText } from "@repo/ui-components";
 
@@ -11,7 +11,7 @@ export const VideoSection: React.FC = () => {
   const gainNodeRef = useRef<GainNode | null>(null);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (isPlaying) {
       interval = setInterval(() => {
         setProgress((prev) => {
@@ -139,8 +139,7 @@ export const VideoSection: React.FC = () => {
             position="relative"
           >
             {/* Poster / Video Background */}
-            <Box
-              as="img"
+            <Image
               src="/assets/love-wedding.jpg"
               alt="فيديو أثر السينمائي"
               w="100%"
@@ -299,7 +298,7 @@ export const VideoSection: React.FC = () => {
                 time: "0:30",
               },
             ].map((v, i) => (
-              <FadeContent key={i} blur={true} duration={700} easing="ease-out" initialOpacity={0}>
+              <FadeContent key={i} blur={true} duration={700} initialOpacity={0}>
                 <HStack
                   p={3.5}
                   bg="white"
@@ -324,8 +323,7 @@ export const VideoSection: React.FC = () => {
                     position="relative"
                     flexShrink={0}
                   >
-                    <Box
-                      as="img"
+                    <Image
                       src={v.img}
                       alt={v.title}
                       w="100%"

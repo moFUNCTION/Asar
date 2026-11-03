@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Flex, Grid, Text, HStack, Badge } from "@chakra-ui/react";
+import { Box, Flex, Grid, Text, HStack, Badge, Image } from "@chakra-ui/react";
 import { FaCalendarAlt, FaTruck, FaPhoneAlt, FaHeadphones, FaHeart } from "react-icons/fa";
 import { FadeContent, SplitText } from "@repo/ui-components";
 
@@ -196,8 +196,7 @@ export const HowItWorksSection: React.FC = () => {
                 h={{ base: "380px", sm: "460px", lg: "500px" }}
                 bg="var(--athar-bg-secondary)"
               >
-                <Box
-                  as="img"
+                <Image
                   src="/assets/booth-hero-photo.webp"
                   alt="ركن هاتف أثر الصوتي العتيق"
                   w="100%"

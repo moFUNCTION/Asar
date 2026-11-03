@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Flex, SimpleGrid, Text, HStack, Button, Badge } from "@chakra-ui/react";
+import { Box, Flex, SimpleGrid, Text, HStack, Button, Badge, Image } from "@chakra-ui/react";
 import { FaPlay, FaPause, FaVolumeUp } from "react-icons/fa";
 import { FadeContent, SplitText } from "@repo/ui-components";
 
@@ -223,8 +223,7 @@ export const RealVoicesSection: React.FC = () => {
                 >
                   <Flex justify="space-between" align="center" mb={4}>
                     <HStack gap={3}>
-                      <Box
-                        as="img"
+                      <Image
                         src={item.avatar}
                         alt={item.name}
                         w="50px"

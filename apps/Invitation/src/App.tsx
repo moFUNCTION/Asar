@@ -1,143 +1,188 @@
-import React, { useState } from "react";
-import { useAppwrite } from "@repo/react-appwrite";
+import React, { useState, useEffect } from "react";
+import { InvitationLandingPage } from "./pages/InvitationLandingPage";
+import { CustomEventPage } from "./pages/CustomEventPage";
+import { GuestPassPage } from "./pages/GuestPassPage";
+
+export type AppViewMode = "landing" | "event" | "pass";
+
+export interface AppViewState {
+  mode: AppViewMode;
+  slug: string;
+  rsvpId: string;
+}
 
 export const App: React.FC = () => {
-  const { client } = useAppwrite();
-  const [rsvpState, setRsvpState] = useState<"pending" | "accepted" | "declined">("pending");
+  // Parse initial route from URL search params or pathname
+  const parseInitialRoute = (): AppViewState => {
+    try {
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventParam = urlParams.get("event") || urlParams.get("e");
+        const passParam = urlParams.get("pass") || urlParams.get("p");
+
+        if (eventParam) {
+          return { mode: "event", slug: eventParam, rsvpId: "rsvp-approved-1" };
+        }
+        if (passParam) {
+          return { mode: "pass", slug: "omar-and-layla", rsvpId: passParam };
+        }
+
+        const path = window.location.pathname;
+        if (path.startsWith("/e/")) {
+          const pathSlug = path.replace(/^\/e\//, "").split("/")[0];
+          if (pathSlug) return { mode: "event", slug: pathSlug, rsvpId: "rsvp-approved-1" };
+        }
+        if (path.startsWith("/pass/")) {
+          const pathPass = path.replace(/^\/pass\//, "").split("/")[0];
+          if (pathPass) return { mode: "pass", slug: "omar-and-layla", rsvpId: pathPass };
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    return { mode: "landing", slug: "omar-and-layla", rsvpId: "rsvp-approved-1" };
+  };
+
+  const [view, setView] = useState<AppViewState>(parseInitialRoute);
+
+  // Sync browser URL parameters on view change (without reloading)
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined" && typeof window.history.pushState === "function") {
+        let newUrl = window.location.pathname;
+        if (view.mode === "event") {
+          newUrl = `?event=${encodeURIComponent(view.slug)}`;
+        } else if (view.mode === "pass") {
+          newUrl = `?pass=${encodeURIComponent(view.rsvpId)}`;
+        } else {
+          newUrl = window.location.pathname;
+        }
+        window.history.replaceState(null, "", newUrl);
+      }
+    } catch {
+      // Ignore
+    }
+  }, [view]);
 
   return (
-    <div className="invitation-wrapper">
-      <header>
-        <div className="brand">
-          <div className="brand-crest">A</div>
-          <div>
-            <h1 style={{ fontSize: "1.1rem", fontWeight: 700 }}>Asar Privé</h1>
-            <p style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Official Guest Service</p>
-          </div>
-        </div>
+    <div className="athar-invitation-app" style={{ minHeight: "100vh", position: "relative" }}>
+      {/* 1. Main View Rendering */}
+      {view.mode === "landing" && (
+        <InvitationLandingPage
+          onPreviewEvent={(slug) => setView((prev) => ({ ...prev, mode: "event", slug }))}
+          onPreviewPass={(rsvpId) => setView((prev) => ({ ...prev, mode: "pass", rsvpId }))}
+        />
+      )}
 
-        <a
-          href="http://localhost:3000"
+      {view.mode === "event" && (
+        <CustomEventPage
+          slug={view.slug}
+          onBack={() => setView((prev) => ({ ...prev, mode: "landing" }))}
+          onOpenPass={(rsvpId) => setView((prev) => ({ ...prev, mode: "pass", rsvpId }))}
+        />
+      )}
+
+      {view.mode === "pass" && (
+        <GuestPassPage
+          passId={view.rsvpId}
+          onBack={() => setView((prev) => ({ ...prev, mode: "event" }))}
+        />
+      )}
+
+      {/* 2. Floating Reviewer Navigation Pill (Fixed Bottom-Left) */}
+      <aside
+        className="no-print reviewer-nav-pill"
+        aria-label="مفتاح التبديل السريع للمراجعين"
+        style={{
+          position: "fixed",
+          bottom: "20px",
+          left: "20px",
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          padding: "6px 8px",
+          borderRadius: "9999px",
+          backgroundColor: "rgba(22, 18, 20, 0.92)",
+          backdropFilter: "blur(14px)",
+          border: "1.5px solid var(--athar-gold)",
+          boxShadow: "0 12px 30px rgba(0, 0, 0, 0.45)",
+          direction: "rtl",
+        }}
+      >
+        <span
           style={{
-            color: "var(--text-muted)",
-            textDecoration: "none",
-            fontSize: "0.85rem",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            padding: "0.4rem 0.8rem",
-            borderRadius: "8px",
+            fontSize: "0.75rem",
+            fontWeight: 800,
+            color: "var(--athar-gold-bright)",
+            padding: "0 8px",
+            letterSpacing: "0.05em",
           }}
         >
-          ← Main Hub
-        </a>
-      </header>
+          ✦ العرض:
+        </span>
 
-      <div className="invite-card">
-        <div className="monogram">✦</div>
-        <div className="invitation-to">Cordially Invites</div>
-        <div className="guest-name">H.E. Yousef Al-Ghamdi</div>
+        <button
+          type="button"
+          onClick={() => setView((prev) => ({ ...prev, mode: "landing" }))}
+          style={{
+            padding: "6px 14px",
+            borderRadius: "9999px",
+            border: "none",
+            backgroundColor:
+              view.mode === "landing" ? "var(--athar-maroon)" : "transparent",
+            color: view.mode === "landing" ? "#FFFFFF" : "#D1D5DB",
+            fontSize: "0.78rem",
+            fontWeight: 700,
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+          }}
+        >
+          1. منصة الدعوات (Landing)
+        </button>
 
-        <p className="event-details">
-          To the Inaugural Gala & Leadership Summit of <strong>Project Asar</strong>. Join distinguished
-          innovators and partners for an evening of visionary keynote addresses and networking.
-        </p>
+        <button
+          type="button"
+          onClick={() =>
+            setView((prev) => ({ ...prev, mode: "event", slug: "omar-and-layla" }))
+          }
+          style={{
+            padding: "6px 14px",
+            borderRadius: "9999px",
+            border: "none",
+            backgroundColor:
+              view.mode === "event" ? "var(--athar-maroon)" : "transparent",
+            color: view.mode === "event" ? "#FFFFFF" : "#D1D5DB",
+            fontSize: "0.78rem",
+            fontWeight: 700,
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+          }}
+        >
+          2. موقع دعوة حي (Custom Event)
+        </button>
 
-        <div className="time-grid">
-          <div className="time-item">
-            <span className="time-label">Date</span>
-            <span className="time-val">Thursday, Nov 12</span>
-          </div>
-          <div className="time-item">
-            <span className="time-label">Time</span>
-            <span className="time-val">19:30 AST</span>
-          </div>
-          <div className="time-item">
-            <span className="time-label">Venue</span>
-            <span className="time-val">The Grand Pavilion</span>
-          </div>
-        </div>
-
-        {rsvpState === "pending" && (
-          <div>
-            <p style={{ marginBottom: "1.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-              Please respond by November 1st to reserve your assigned delegate seat and security badge.
-            </p>
-            <div className="rsvp-actions">
-              <button
-                onClick={() => setRsvpState("accepted")}
-                className="btn-rsvp-accept"
-              >
-                Accept Invitation
-              </button>
-              <button
-                onClick={() => setRsvpState("declined")}
-                className="btn-rsvp-decline"
-              >
-                Decline with Regrets
-              </button>
-            </div>
-          </div>
-        )}
-
-        {rsvpState === "accepted" && (
-          <div style={{
-            padding: "1.5rem",
-            borderRadius: "16px",
-            background: "rgba(16, 185, 129, 0.1)",
-            border: "1px solid var(--accent-emerald)",
-            color: "var(--accent-emerald)"
-          }}>
-            <h3 style={{ fontSize: "1.2rem", marginBottom: "0.25rem" }}>✓ RSVP Confirmed</h3>
-            <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-              Your seat is confirmed and your digital pass has been generated in Appwrite!
-            </p>
-            <button
-              onClick={() => setRsvpState("pending")}
-              style={{
-                marginTop: "1rem",
-                background: "transparent",
-                border: "none",
-                color: "var(--text-muted)",
-                fontSize: "0.8rem",
-                textDecoration: "underline",
-                cursor: "pointer"
-              }}
-            >
-              Change response
-            </button>
-          </div>
-        )}
-
-        {rsvpState === "declined" && (
-          <div style={{
-            padding: "1.5rem",
-            borderRadius: "16px",
-            background: "rgba(255, 255, 255, 0.05)",
-            border: "1px solid rgba(255, 255, 255, 0.1)"
-          }}>
-            <p style={{ fontSize: "0.95rem", color: "var(--text-secondary)" }}>
-              Thank you for notifying us. We hope to welcome you at future Asar events.
-            </p>
-            <button
-              onClick={() => setRsvpState("pending")}
-              style={{
-                marginTop: "1rem",
-                background: "transparent",
-                border: "none",
-                color: "var(--text-muted)",
-                fontSize: "0.8rem",
-                textDecoration: "underline",
-                cursor: "pointer"
-              }}
-            >
-              Change response
-            </button>
-          </div>
-        )}
-
-        <div style={{ marginTop: "2.5rem", fontSize: "0.78rem", color: "var(--text-muted)" }}>
-          Powered by Appwrite SDK ({client?.config?.project || "asar-invitation"}) · Pass #INV-7702-X
-        </div>
-      </div>
+        <button
+          type="button"
+          onClick={() =>
+            setView((prev) => ({ ...prev, mode: "pass", rsvpId: "rsvp-approved-1" }))
+          }
+          style={{
+            padding: "6px 14px",
+            borderRadius: "9999px",
+            border: "none",
+            backgroundColor:
+              view.mode === "pass" ? "var(--athar-maroon)" : "transparent",
+            color: view.mode === "pass" ? "#FFFFFF" : "#D1D5DB",
+            fontSize: "0.78rem",
+            fontWeight: 700,
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+          }}
+        >
+          3. بطاقة الدخول (VIP QR Pass)
+        </button>
+      </aside>
     </div>
   );
 };

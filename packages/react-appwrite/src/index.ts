@@ -46,3 +46,6 @@ export {
   AppwriteException,
   type Models,
 } from "appwrite";
+
+// 11. ASAR Domain Models, Utilities & Seed Defaults
+export * from "./AsarDomain";

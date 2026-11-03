@@ -134,14 +134,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenBooking }) => {
       >
         <Flex justify="space-between" align="center" maxW="1400px" mx="auto">
           {/* Brand Logo (Right in RTL) */}
-          <HStack
-            as="a"
-            href="#"
-            gap={3}
-            textDecoration="none"
-            cursor="pointer"
-          >
-            <Image
+          <a href="#" style={{ textDecoration: "none", cursor: "pointer" }}>
+            <HStack
+              gap={3}
+            >
+              <Image
               src="/assets/logo-main.png"
               alt="أثر - ATHAR"
               h={{ base: "42px", md: "52px" }}
@@ -167,6 +164,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenBooking }) => {
               </Text>
             </Box>
           </HStack>
+        </a>
 
           {/* Navigation Links (Middle - Desktop) */}
           <HStack
@@ -176,9 +174,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenBooking }) => {
           >
             {navItems.map((item) => (
               <Box
-                as="a"
+                asChild
                 key={item.label}
-                href={item.href}
                 fontSize="0.95rem"
                 fontWeight="600"
                 color="var(--athar-text-title)"
@@ -190,7 +187,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenBooking }) => {
                   color: "var(--athar-maroon)",
                 }}
               >
-                {item.label}
+                <a href={item.href}>{item.label}</a>
               </Box>
             ))}
           </HStack>
@@ -198,30 +195,33 @@ export const Header: React.FC<HeaderProps> = ({ onOpenBooking }) => {
           {/* Action Group (Left in RTL) */}
           <HStack gap={{ base: 2, md: 3 }}>
             {/* WhatsApp Direct */}
-            <Button
-              as="a"
+            <a
               href="https://wa.me/201000000000?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D9%81%D8%B1%D9%8A%D9%82%20%D8%A3%D8%AB%D8%B1%D8%8C%20%D8%AD%D8%A7%D8%A8%D8%A8%20%D8%A3%D8%B3%D8%AA%D9%81%D8%B3%D8%B1%20%D8%B9%D9%86%20%D8%AD%D8%AC%D8%B2%20%D9%87%D8%A7%D8%AA%D9%81%20%D8%A7%D9%84%D8%B0%D9%83%D8%B1%D9%8A%D8%A7%D8%AA%20%D8%A7%D9%84%D8%B5%D9%88%D8%AA%D9%8A."
               target="_blank"
               rel="noopener noreferrer"
-              display={{ base: "none", sm: "inline-flex" }}
-              size="sm"
-              variant="outline"
-              borderColor="rgba(212, 175, 55, 0.45)"
-              color="var(--athar-text-title)"
-              bg="rgba(255, 255, 255, 0.8)"
-              borderRadius="full"
-              px={4}
-              fontSize="0.88rem"
-              fontWeight="700"
-              _hover={{
-                bg: "white",
-                borderColor: "#D4AF37",
-                transform: "translateY(-1px)",
-              }}
+              style={{ textDecoration: "none" }}
             >
-              <FaWhatsapp style={{ color: "#25D366", marginLeft: "6px" }} />
-              واتساب
-            </Button>
+              <Button
+                display={{ base: "none", sm: "inline-flex" }}
+                size="sm"
+                variant="outline"
+                borderColor="rgba(212, 175, 55, 0.45)"
+                color="var(--athar-text-title)"
+                bg="rgba(255, 255, 255, 0.8)"
+                borderRadius="full"
+                px={4}
+                fontSize="0.88rem"
+                fontWeight="700"
+                _hover={{
+                  bg: "white",
+                  borderColor: "#D4AF37",
+                  transform: "translateY(-1px)",
+                }}
+              >
+                <FaWhatsapp style={{ color: "#25D366", marginLeft: "6px" }} />
+                واتساب
+              </Button>
+            </a>
 
             {/* Book Date Button */}
             <Button
@@ -326,10 +326,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenBooking }) => {
           >
             {navItems.map((item) => (
               <Box
-                as="a"
+                asChild
                 key={item.label}
-                href={item.href}
-                onClick={() => setIsMobileMenuOpen(false)}
                 fontSize="1.4rem"
                 fontFamily="var(--font-arabic-display)"
                 fontWeight="700"
@@ -337,7 +335,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenBooking }) => {
                 textDecoration="none"
                 _hover={{ color: "var(--athar-gold)" }}
               >
-                {item.label}
+                <a href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
+                  {item.label}
+                </a>
               </Box>
             ))}
           </Flex>

@@ -186,19 +186,22 @@ export const FAQSection: React.FC = () => {
             </Text>
           </Box>
 
-          <Button
-            as="a"
+          <a
             href="https://wa.me/201000000000?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D8%8C%20%D8%B9%D9%86%D8%AF%D9%8A%20%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%A8%D8%AE%D8%B5%D9%88%D8%B5%20%D9%87%D8%A7%D8%AA%D9%81%20%D8%A3%D8%AB%D8%B1."
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-athar-primary"
-            size="md"
-            px={7}
-            flexShrink={0}
+            style={{ textDecoration: "none" }}
           >
-            <FaWhatsapp style={{ marginLeft: "8px", fontSize: "1.1rem" }} />
-            تحدث معنا على واتساب
-          </Button>
+            <Button
+              className="btn-athar-primary"
+              size="md"
+              px={7}
+              flexShrink={0}
+            >
+              <FaWhatsapp style={{ marginLeft: "8px", fontSize: "1.1rem" }} />
+              تحدث معنا على واتساب
+            </Button>
+          </a>
         </Box>
       </FadeContent>
     </Box>

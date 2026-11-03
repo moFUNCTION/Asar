@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import React, { useRef, useMemo, useEffect, useState, CSSProperties } from "react";
+import React, { useRef, useMemo, useEffect, useState, type CSSProperties } from "react";
 
 type KeyframeRecord = Record<string, number | string | undefined>;
 

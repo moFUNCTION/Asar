@@ -1,7 +1,7 @@
 import React from "react";
-import { Box, Grid, Flex, Text, HStack, Badge } from "@chakra-ui/react";
+import { Box, Grid, Flex, Text, HStack, Badge, Image } from "@chakra-ui/react";
 import { FaHeart, FaHands, FaDove, FaQuoteRight } from "react-icons/fa";
-import { HalftoneReveal, SplitText, BlurText, FadeContent } from "@repo/ui-components";
+import { SplitText } from "@repo/ui-components";
 
 export const MoreThanPhoneSection: React.FC = () => {
   const pillars = [
@@ -203,8 +203,7 @@ export const MoreThanPhoneSection: React.FC = () => {
                 position="relative"
                 bg="var(--athar-bg-secondary)"
               >
-                <Box
-                  as="img"
+                <Image
                   src="/assets/love-wedding.jpg"
                   alt="لحظات حب وذكريات صوتية حية في حفل الزفاف"
                   w="100%"

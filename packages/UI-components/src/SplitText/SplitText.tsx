@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState, useEffect, CSSProperties } from "react";
+import React, { useRef, useMemo, useState, useEffect, type CSSProperties } from "react";
 import { motion } from "motion/react";
 
 export const SPLIT_ANIMATION_PRESETS: Record<

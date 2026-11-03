@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Flex, Grid, Text, HStack, Button, Badge } from "@chakra-ui/react";
+import { Box, Flex, Grid, Text, HStack, Button, Badge, Image } from "@chakra-ui/react";
 import {
   FaPhoneAlt,
   FaEnvelope,
@@ -99,47 +99,45 @@ export const ContactSection: React.FC = () => {
             ].map((c, i) => {
               const IconComp = c.icon;
               return (
-                <HStack
-                  as="a"
-                  key={i}
-                  href={c.href}
-                  textDecoration="none"
-                  p={5}
-                  bg="white"
-                  borderRadius="20px"
-                  border="1px solid rgba(107, 29, 40, 0.08)"
-                  boxShadow="0 4px 15px rgba(0, 0, 0, 0.02)"
-                  gap={4}
-                  transition="all 0.3s ease"
-                  _hover={{
-                    borderColor: "var(--athar-maroon)",
-                    transform: "translateX(-6px)",
-                    boxShadow: "0 10px 25px -10px rgba(107, 29, 40, 0.12)",
-                  }}
-                >
-                  <Box
-                    p={3.5}
-                    borderRadius="14px"
-                    bg="rgba(107, 29, 40, 0.08)"
-                    color="var(--athar-maroon)"
-                    fontSize="1.2rem"
+                <a key={i} href={c.href} style={{ textDecoration: "none" }}>
+                  <HStack
+                    p={5}
+                    bg="white"
+                    borderRadius="20px"
+                    border="1px solid rgba(107, 29, 40, 0.08)"
+                    boxShadow="0 4px 15px rgba(0, 0, 0, 0.02)"
+                    gap={4}
+                    transition="all 0.3s ease"
+                    _hover={{
+                      borderColor: "var(--athar-maroon)",
+                      transform: "translateX(-6px)",
+                      boxShadow: "0 10px 25px -10px rgba(107, 29, 40, 0.12)",
+                    }}
                   >
-                    <IconComp />
-                  </Box>
-                  <Box>
-                    <Text fontSize="0.82rem" color="var(--athar-text-muted)" fontWeight="600">
-                      {c.label}
-                    </Text>
-                    <Text
-                      fontFamily="var(--font-arabic-display)"
-                      fontSize="1.22rem"
-                      fontWeight="800"
-                      color="var(--athar-text-title)"
+                    <Box
+                      p={3.5}
+                      borderRadius="14px"
+                      bg="rgba(107, 29, 40, 0.08)"
+                      color="var(--athar-maroon)"
+                      fontSize="1.2rem"
                     >
-                      {c.value}
-                    </Text>
-                  </Box>
-                </HStack>
+                      <IconComp />
+                    </Box>
+                    <Box>
+                      <Text fontSize="0.82rem" color="var(--athar-text-muted)" fontWeight="600">
+                        {c.label}
+                      </Text>
+                      <Text
+                        fontFamily="var(--font-arabic-display)"
+                        fontSize="1.22rem"
+                        fontWeight="800"
+                        color="var(--athar-text-title)"
+                      >
+                        {c.value}
+                      </Text>
+                    </Box>
+                  </HStack>
+                </a>
               );
             })}
 
@@ -157,11 +155,8 @@ export const ContactSection: React.FC = () => {
                   const IconComp = s.icon;
                   return (
                     <Box
-                      as="a"
+                      asChild
                       key={idx}
-                      href={s.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       p={3}
                       borderRadius="full"
                       bg="white"
@@ -174,29 +169,33 @@ export const ContactSection: React.FC = () => {
                         color: "white",
                         transform: "translateY(-3px)",
                       }}
-                      aria-label={s.name}
                     >
-                      <IconComp />
+                      <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.name}>
+                        <IconComp />
+                      </a>
                     </Box>
                   );
                 })}
               </HStack>
             </Box>
 
-            <Button
-              as="a"
+            <a
               href="https://wa.me/201000000000?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D9%81%D8%B1%D9%8A%D9%82%20%D8%A3%D8%AB%D8%B1%D8%8C%20%D8%AD%D8%A7%D8%A8%D8%A8%20%D8%A3%D8%AA%D9%88%D8%A7%D8%B5%D9%84%20%D9%85%D8%B9%D9%83%D9%85."
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-athar-primary"
-              py={6}
-              px={8}
-              fontSize="1.05rem"
-              fontWeight="800"
+              style={{ textDecoration: "none" }}
             >
-              <FaWhatsapp style={{ fontSize: "1.3rem", marginLeft: "8px" }} />
-              محادثة مباشرة عبر واتساب
-            </Button>
+              <Button
+                className="btn-athar-primary"
+                py={6}
+                px={8}
+                fontSize="1.05rem"
+                fontWeight="800"
+              >
+                <FaWhatsapp style={{ fontSize: "1.3rem", marginLeft: "8px" }} />
+                محادثة مباشرة عبر واتساب
+              </Button>
+            </a>
           </Flex>
 
           {/* Left Column in RTL: Visual Regional Map Card from Screen 12 */}
@@ -235,8 +234,7 @@ export const ContactSection: React.FC = () => {
               alignItems="center"
               justifyContent="center"
             >
-              <Box
-                as="img"
+              <Image
                 src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80"
                 alt="خريطة مناطق التغطية"
                 w="100%"

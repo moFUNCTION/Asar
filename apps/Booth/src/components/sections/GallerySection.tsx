@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Flex, SimpleGrid, Text, Badge } from "@chakra-ui/react";
+import { Box, Flex, SimpleGrid, Text, Badge, Image } from "@chakra-ui/react";
 import { FadeContent, SplitText } from "@repo/ui-components";
 
 export const GallerySection: React.FC = () => {
@@ -182,8 +182,7 @@ export const GallerySection: React.FC = () => {
                     borderColor: "rgba(212, 175, 55, 0.6)",
                   }}
                 >
-                  <Box
-                    as="img"
+                  <Image
                     src={item.src}
                     alt={item.caption}
                     w="100%"
