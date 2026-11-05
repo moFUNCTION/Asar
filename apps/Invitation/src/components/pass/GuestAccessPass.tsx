@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { buildMemoryUrls } from "@repo/react-appwrite";
 import type { InvitationRsvpDocument, InvitationDocument } from "../renderer/types";
 import { PassQrCode } from "./PassQrCode";
 import { VenueQrScanner } from "./VenueQrScanner";
@@ -29,8 +30,41 @@ export const GuestAccessPass: React.FC<GuestAccessPassProps> = ({
   const isApproved = currentRsvp.status === "approved";
   const isDeclined = currentRsvp.status === "declined";
 
-  // Construct verification URL
-  const passUrl = `http://localhost:3003?pass=${currentRsvp.$id || currentRsvp.id}&token=${currentRsvp.passToken}`;
+  // Construct canonical pass verification URL
+  const rsvpIdentifier = currentRsvp.$id || currentRsvp.id || "rsvp";
+  const passToken = currentRsvp.passToken || "";
+  const eventSlug =
+    invitation?.slug ||
+    (typeof currentRsvp.invitationId === "string"
+      ? currentRsvp.invitationId.replace(/^invitation-/, "")
+      : "") ||
+    "omar-and-layla";
+
+  const passUrl = useMemo(() => {
+    const isBrowser = typeof window !== "undefined" && Boolean(window.location);
+    const hostname = isBrowser ? window.location.hostname : "";
+    const isLocal =
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname.endsWith(".localhost") ||
+      !hostname;
+
+    if (!isLocal && isBrowser && window.location.origin) {
+      const memoryUrls = buildMemoryUrls({
+        slug: eventSlug,
+        type: "invitation",
+        port: 3003,
+      });
+      return `${memoryUrls.canonicalUrl}/pass/${rsvpIdentifier}?token=${passToken}`;
+    }
+
+    const baseOrigin =
+      isBrowser && window.location.origin && window.location.port === "3003"
+        ? window.location.origin
+        : "http://localhost:3003";
+
+    return `${baseOrigin}/pass/${rsvpIdentifier}?token=${passToken}`;
+  }, [rsvpIdentifier, passToken, eventSlug]);
 
   const handlePrint = () => {
     window.print();

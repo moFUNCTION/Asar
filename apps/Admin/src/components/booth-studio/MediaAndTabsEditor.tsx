@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import { buildMemoryUrls, validateSubdomainSlug } from "@repo/react-appwrite";
 import type { BoothMemory } from "./HeroAndTextsEditor";
 
 export interface BoothMediaItem {
@@ -36,32 +37,76 @@ export const MediaAndTabsEditor: React.FC<MediaAndTabsEditorProps> = ({
 
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const activeObjectUrlsRef = useRef<Set<string>>(new Set());
+
+  // Cleanup all tracked media preview object URLs upon unmount
+  useEffect(() => {
+    return () => {
+      activeObjectUrlsRef.current.forEach((url) => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {
+          // ignore
+        }
+      });
+      activeObjectUrlsRef.current.clear();
+    };
+  }, []);
 
   const photos = mediaItems.filter((m) => m.mediaType === "photo");
   const guestBookNotes = mediaItems.filter((m) => m.mediaType === "guestbook_note");
 
-  const landingUrl = `http://localhost:3002?memory=${memory.slug || "mina-and-maryam"}`;
+  const memoryUrls = buildMemoryUrls({
+    slug: memory.slug || "mina-and-maryam",
+    type: "booth",
+    port: 3002,
+    rendererPort: 3004,
+  });
+  const slugValidation = validateSubdomainSlug(memory.slug);
+  const landingUrl = memoryUrls.canonicalUrl;
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&color=6B1D28&bgcolor=FBF7F2&data=${encodeURIComponent(
-    landingUrl
+    memoryUrls.canonicalUrl
   )}`;
 
-  // Handle Photo Upload
+  // Handle Photo Upload with Object URL Tracking
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const files: File[] = Array.from(e.target.files);
-      const newItems: BoothMediaItem[] = files.map((file, idx) => ({
-        id: `photo_${Date.now()}_${idx}`,
-        mediaType: "photo",
-        fileUrl: URL.createObjectURL(file),
-        file,
-        captionOrNote: "",
-        sortOrder: photos.length + idx + 1,
-      }));
+      const newItems: BoothMediaItem[] = files.map((file, idx) => {
+        const objUrl = URL.createObjectURL(file);
+        activeObjectUrlsRef.current.add(objUrl);
+        return {
+          id: `photo_${Date.now()}_${idx}`,
+          mediaType: "photo",
+          fileUrl: objUrl,
+          file,
+          captionOrNote: "",
+          sortOrder: photos.length + idx + 1,
+        };
+      });
       onChangeMediaItems([...mediaItems, ...newItems]);
     }
   };
 
+  // Handle Media Deletion with Object URL Revocation
   const handleDeleteMedia = (id: string) => {
+    const itemToDelete = mediaItems.find((m) => m.id === id);
+    if (itemToDelete?.fileUrl) {
+      if (activeObjectUrlsRef.current.has(itemToDelete.fileUrl)) {
+        try {
+          URL.revokeObjectURL(itemToDelete.fileUrl);
+        } catch {
+          // ignore
+        }
+        activeObjectUrlsRef.current.delete(itemToDelete.fileUrl);
+      } else if (itemToDelete.fileUrl.startsWith("blob:")) {
+        try {
+          URL.revokeObjectURL(itemToDelete.fileUrl);
+        } catch {
+          // ignore
+        }
+      }
+    }
     onChangeMediaItems(mediaItems.filter((m) => m.id !== id));
   };
 
@@ -300,9 +345,27 @@ export const MediaAndTabsEditor: React.FC<MediaAndTabsEditorProps> = ({
           onChange={(e) => {
             if (e.target.files && e.target.files[0]) {
               const file = e.target.files[0];
+              if (memory.videoHighlightUrl) {
+                if (activeObjectUrlsRef.current.has(memory.videoHighlightUrl)) {
+                  try {
+                    URL.revokeObjectURL(memory.videoHighlightUrl);
+                  } catch {
+                    // ignore
+                  }
+                  activeObjectUrlsRef.current.delete(memory.videoHighlightUrl);
+                } else if (memory.videoHighlightUrl.startsWith("blob:")) {
+                  try {
+                    URL.revokeObjectURL(memory.videoHighlightUrl);
+                  } catch {
+                    // ignore
+                  }
+                }
+              }
+              const newVideoUrl = URL.createObjectURL(file);
+              activeObjectUrlsRef.current.add(newVideoUrl);
               onChangeMemory({
                 ...memory,
-                videoHighlightUrl: URL.createObjectURL(file),
+                videoHighlightUrl: newVideoUrl,
               });
             }
           }}
@@ -462,15 +525,35 @@ export const MediaAndTabsEditor: React.FC<MediaAndTabsEditorProps> = ({
             </p>
           </div>
 
-          <a
-            href={landingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-athar-secondary"
-            style={{ textDecoration: "none", fontSize: "0.85rem" }}
-          >
-            Open Live Memory Page ↗
-          </a>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+            <a
+              href={landingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-athar-primary"
+              style={{ textDecoration: "none", fontSize: "0.85rem" }}
+            >
+              Open Live Storefront ↗
+            </a>
+            <a
+              href={memoryUrls.devRendererUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-athar-gold"
+              style={{ textDecoration: "none", fontSize: "0.85rem" }}
+            >
+              Dedicated Renderer (:3004) ↗
+            </a>
+            <a
+              href={memoryUrls.devQueryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-athar-secondary"
+              style={{ textDecoration: "none", fontSize: "0.85rem" }}
+            >
+              Dev Test Link ↗
+            </a>
+          </div>
         </div>
 
         <div style={{ display: "flex", gap: "2rem", alignItems: "center", flexWrap: "wrap", marginTop: "1rem" }}>
@@ -506,11 +589,20 @@ export const MediaAndTabsEditor: React.FC<MediaAndTabsEditorProps> = ({
           <div style={{ flex: 1, minWidth: "240px" }}>
             <div style={{ marginBottom: "1rem" }}>
               <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--athar-text-title)" }}>
-                Landing Destination URL:
+                Canonical Storefront URL (QR Destination):
               </div>
-              <code style={{ fontSize: "0.82rem", color: "var(--athar-maroon)", wordBreak: "break-all" }}>
+              <code style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--athar-maroon)", wordBreak: "break-all" }}>
                 {landingUrl}
               </code>
+              <div style={{ fontSize: "0.78rem", color: "var(--athar-text-muted)", marginTop: "0.3rem", display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                <span>Dedicated Renderer: <code style={{ color: "var(--athar-maroon)", fontWeight: 700 }}>{memoryUrls.devRendererUrl}</code></span>
+                <span>Local Dev Loopback: <code style={{ color: "var(--athar-text-title)" }}>{memoryUrls.devQueryUrl}</code></span>
+              </div>
+              {!slugValidation.isValid && (
+                <div style={{ fontSize: "0.75rem", color: "var(--athar-status-danger)", fontWeight: 700, marginTop: "0.35rem" }}>
+                  ⚠️ Warning: {slugValidation.error}
+                </div>
+              )}
             </div>
 
             <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>

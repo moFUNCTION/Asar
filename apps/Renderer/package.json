@@ -1,0 +1,34 @@
+{
+  "name": "Renderer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "dotenv -e ../../.env -- vite",
+    "build": "dotenv -e ../../.env -- tsc -b && vite build",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@chakra-ui/react": "^3.32.0",
+    "@emotion/react": "^11.14.0",
+    "@repo/react-appwrite": "*",
+    "@repo/ui-components": "*",
+    "appwrite": "^17.0.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^6.28.0"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "@types/react": "18.2.55",
+    "@types/react-dom": "18.2.19",
+    "@vitejs/plugin-react": "^4.3.0",
+    "eslint": "^8.57.0",
+    "typescript": "5.5.4",
+    "vite": "^5.4.0",
+    "vite-tsconfig-paths": "^5.0.1"
+  }
+}

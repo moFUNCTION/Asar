@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Flex, HStack, VStack, Text, Button, Badge, SimpleGrid } from "@chakra-ui/react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAppwrite } from "@repo/react-appwrite";
 import type { AsarOrder, AsarOrderStatus } from "../dashboard/AdminOverview";
 import { PaymentReceiptInspector, type AsarPayment } from "./PaymentReceiptInspector";
@@ -21,7 +22,7 @@ export interface OrdersQueueManagerProps {
   payments: AsarPayment[];
   onOrdersUpdated: (orders: AsarOrder[]) => void;
   onPaymentsUpdated: (payments: AsarPayment[]) => void;
-  onOpenStudio: (orderId: string, serviceType: "booth" | "invitation") => void;
+  onOpenStudio?: (orderId: string, serviceType: "booth" | "invitation") => void;
 }
 
 const STAGE_ORDER: AsarOrderStatus[] = [
@@ -90,6 +91,9 @@ export const OrdersQueueManager: React.FC<OrdersQueueManagerProps> = ({
   onOpenStudio,
 }) => {
   const { databases } = useAppwrite();
+  const { orderId: routeOrderId } = useParams<{ orderId?: string }>();
+  const navigate = useNavigate();
+
   const [selectedService, setSelectedService] = useState<"all" | "booth" | "invitation">("all");
   const [selectedStage, setSelectedStage] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -101,6 +105,17 @@ export const OrdersQueueManager: React.FC<OrdersQueueManagerProps> = ({
 
   // Expanded assets view state
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+
+  // Sync route param orderId to search and expand state
+  useEffect(() => {
+    if (routeOrderId) {
+      setSearchQuery(routeOrderId);
+      const matched = orders.find((o) => o.$id === routeOrderId);
+      if (matched) {
+        setExpandedOrderId(routeOrderId);
+      }
+    }
+  }, [routeOrderId, orders]);
 
   // Notification Banner
   const [actionAlert, setActionAlert] = useState<string | null>(null);
@@ -732,7 +747,13 @@ export const OrdersQueueManager: React.FC<OrdersQueueManagerProps> = ({
                     {isBooth ? (
                       <button
                         className="btn-athar-primary"
-                        onClick={() => onOpenStudio(order.$id, "booth")}
+                        onClick={() => {
+                          if (onOpenStudio) {
+                            onOpenStudio(order.$id, "booth");
+                          } else {
+                            navigate(`/booth-studio/${order.$id}`);
+                          }
+                        }}
                         style={{ padding: "0.45rem 1.2rem", fontSize: "0.85rem" }}
                       >
                         🎙️ فتح في أستوديو هاتف أثر →
@@ -740,7 +761,13 @@ export const OrdersQueueManager: React.FC<OrdersQueueManagerProps> = ({
                     ) : (
                       <button
                         className="btn-athar-primary"
-                        onClick={() => onOpenStudio(order.$id, "invitation")}
+                        onClick={() => {
+                          if (onOpenStudio) {
+                            onOpenStudio(order.$id, "invitation");
+                          } else {
+                            navigate(`/invitation-studio/${order.$id}`);
+                          }
+                        }}
                         style={{ padding: "0.45rem 1.2rem", fontSize: "0.85rem", background: "#8C6F12" }}
                       >
                         ✉️ فتح في أستوديو الدعوات →

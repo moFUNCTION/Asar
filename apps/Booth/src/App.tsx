@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { Box } from "@chakra-ui/react";
+import React, { useState } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import { Box, Flex, Text, Button } from "@chakra-ui/react";
 import { SplashCursor } from "@repo/ui-components";
+import { useSubdomain, extractSubdomain } from "@repo/react-appwrite";
 
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
@@ -20,47 +22,23 @@ import { PrivacySection } from "./components/sections/PrivacySection";
 import { BookingModal } from "./components/sections/BookingModal";
 import { BoothMemoryPage } from "./pages/BoothMemoryPage";
 
-const getMemorySlugFromUrl = (): string | null => {
-  if (typeof window === "undefined") return null;
-  const path = window.location.pathname;
-  if (path.startsWith("/memory/")) {
-    const slug = path.replace("/memory/", "").split("/")[0].trim();
-    if (slug) return slug;
-  }
-  const searchParams = new URLSearchParams(window.location.search);
-  const memoryParam = searchParams.get("memory");
-  if (memoryParam && memoryParam.trim()) {
-    return memoryParam.trim();
-  }
-  return null;
-};
+// Export extractSubdomain helper for seamless inter-module usage
+export { extractSubdomain };
 
-export const App: React.FC = () => {
-  const [currentMemorySlug, setCurrentMemorySlug] = useState<string | null>(getMemorySlugFromUrl);
-  const [isBookingOpen, setIsBookingOpen] = useState(false);
+export interface BoothLandingViewProps {
+  autoOpenBooking?: boolean;
+}
+
+/**
+ * Standard Booth Marketing Landing Page & Booking Flow
+ * Rendered when no custom subdomain or memory slug is detected on apex host.
+ */
+export const BoothLandingView: React.FC<BoothLandingViewProps> = ({
+  autoOpenBooking = false,
+}) => {
+  const navigate = useNavigate();
+  const [isBookingOpen, setIsBookingOpen] = useState(autoOpenBooking);
   const [selectedPackage, setSelectedPackage] = useState("Athar Moment");
-
-  useEffect(() => {
-    const handleLocationChange = () => {
-      setCurrentMemorySlug(getMemorySlugFromUrl());
-    };
-    window.addEventListener("popstate", handleLocationChange);
-    return () => window.removeEventListener("popstate", handleLocationChange);
-  }, []);
-
-  const handleNavigateToMemory = (slug: string) => {
-    const newUrl = `${window.location.pathname}?memory=${slug}`;
-    window.history.pushState({}, "", newUrl);
-    setCurrentMemorySlug(slug);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleBackToLanding = () => {
-    const cleanUrl = window.location.pathname.startsWith("/memory") ? "/" : window.location.pathname;
-    window.history.pushState({}, "", cleanUrl);
-    setCurrentMemorySlug(null);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const handleOpenBooking = (pkgName?: string) => {
     if (pkgName) {
@@ -76,17 +54,6 @@ export const App: React.FC = () => {
     }
   };
 
-  // If a memory slug is active, render the generated Booth Memory Presentation Page
-  if (currentMemorySlug) {
-    return (
-      <BoothMemoryPage
-        slug={currentMemorySlug}
-        onBackToLanding={handleBackToLanding}
-      />
-    );
-  }
-
-  // Otherwise, render the standard marketing landing page
   return (
     <Box
       minH="100vh"
@@ -114,7 +81,7 @@ export const App: React.FC = () => {
         left={{ base: "18px", md: "24px" }}
         zIndex="90"
         as="button"
-        onClick={() => handleNavigateToMemory("mina-and-maryam")}
+        onClick={() => navigate("/memory/mina-and-maryam")}
         bg="var(--athar-maroon, #6B1D28)"
         color="white"
         px={{ base: 3.5, md: 5 }}
@@ -148,7 +115,7 @@ export const App: React.FC = () => {
         onWatchVideo={handleWatchVideo}
       />
 
-      {/* 02. Stats & Metrics Counter (Proof of Trust from Screen 1) */}
+      {/* 02. Stats & Metrics Counter (Proof of Trust) */}
       <StatsSection />
 
       {/* 03. "More Than A Phone" Narrative Section */}
@@ -194,6 +161,160 @@ export const App: React.FC = () => {
         initialPackage={selectedPackage}
       />
     </Box>
+  );
+};
+
+/**
+ * Luxury 404 Fallback Screen
+ * Displayed when an unknown memory heirloom path is navigated.
+ */
+export const BoothLuxuryNotFound: React.FC = () => {
+  const navigate = useNavigate();
+
+  return (
+    <Box
+      minH="100vh"
+      bg="var(--athar-bg-primary, #FDFBF7)"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      px={6}
+      py={12}
+      position="relative"
+    >
+      <Box
+        maxW="540px"
+        w="100%"
+        bg="#FFFFFF"
+        borderRadius="24px"
+        border="1px solid rgba(212, 175, 55, 0.4)"
+        boxShadow="0 20px 50px -10px rgba(107, 29, 40, 0.12)"
+        p={{ base: 8, md: 12 }}
+        textAlign="center"
+      >
+        <Flex
+          w="64px"
+          h="64px"
+          borderRadius="full"
+          bg="rgba(107, 29, 40, 0.08)"
+          color="#6B1D28"
+          align="center"
+          justify="center"
+          mx="auto"
+          mb={6}
+          fontSize="1.75rem"
+        >
+          ✦
+        </Flex>
+
+        <Text
+          fontSize="0.75rem"
+          fontWeight="700"
+          letterSpacing="0.16em"
+          color="#8C6F12"
+          textTransform="uppercase"
+          mb={2}
+        >
+          ATHAR AUDIO HEIRLOOM · 404
+        </Text>
+
+        <Text
+          fontFamily="'Playfair Display', serif"
+          fontSize={{ base: "1.6rem", md: "2rem" }}
+          fontWeight="800"
+          color="#6B1D28"
+          mb={3}
+          lineHeight={1.25}
+        >
+          Memory Heirloom Not Found
+        </Text>
+
+        <Text
+          fontSize="1.05rem"
+          fontWeight="600"
+          color="#4A4240"
+          fontFamily="var(--font-arabic-display, sans-serif)"
+          mb={4}
+        >
+          لم يتم العثور على الذكرى الصوتية الأثرية
+        </Text>
+
+        <Box h="1px" w="60px" bg="#D4AF37" mx="auto" mb={5} />
+
+        <Text
+          fontSize="0.92rem"
+          color="#7A6F6D"
+          lineHeight={1.7}
+          mb={8}
+        >
+          عذراً، لم نتمكن من العثور على سجل الذكريات الصوتية المطلوب. قد يكون الرابط غير صحيح أو تم نقله.
+        </Text>
+
+        <Button
+          onClick={() => navigate("/")}
+          bg="#6B1D28"
+          color="#FFFFFF"
+          px={8}
+          py={6}
+          borderRadius="full"
+          fontSize="0.95rem"
+          fontWeight="700"
+          boxShadow="0 8px 24px rgba(107, 29, 40, 0.35)"
+          border="1px solid #D4AF37"
+          _hover={{
+            bg: "#55141E",
+            transform: "translateY(-2px)",
+            boxShadow: "0 12px 28px rgba(107, 29, 40, 0.45)",
+          }}
+          transition="all 0.25s ease"
+        >
+          Return to Asar · العودة لمنصة أثر
+        </Button>
+      </Box>
+    </Box>
+  );
+};
+
+/**
+ * Dynamic Storefront Index for Root `/`
+ * 1. Checks 4-tier subdomain resolver (hostname *.localhost / *.asar.me or ?subdomain= / ?memory=).
+ * 2. If a slug is detected, renders BoothMemoryPage with that slug.
+ * 3. If no subdomain is detected, renders standard Booth landing page and booking flow.
+ */
+export const DynamicBoothStorefrontIndex: React.FC = () => {
+  const navigate = useNavigate();
+  const { subdomain } = useSubdomain({
+    searchParams: typeof window !== "undefined" ? window.location.search : undefined,
+  });
+
+  if (subdomain) {
+    return (
+      <BoothMemoryPage
+        slug={subdomain}
+        onBackToLanding={() => navigate("/", { replace: true })}
+      />
+    );
+  }
+
+  return <BoothLandingView />;
+};
+
+export const App: React.FC = () => {
+  return (
+    <Routes>
+      {/* 1. Dynamic Storefront Index (apex landing or subdomain memory) */}
+      <Route path="/" element={<DynamicBoothStorefrontIndex />} />
+
+      {/* 2. Direct route to booking wizard on landing page */}
+      <Route path="/book" element={<BoothLandingView autoOpenBooking={true} />} />
+
+      {/* 3. Explicit memory routes with param */}
+      <Route path="/memory/:slug" element={<BoothMemoryPage />} />
+      <Route path="/m/:slug" element={<BoothMemoryPage />} />
+
+      {/* 4. Luxury 404 Fallback */}
+      <Route path="*" element={<BoothLuxuryNotFound />} />
+    </Routes>
   );
 };
 

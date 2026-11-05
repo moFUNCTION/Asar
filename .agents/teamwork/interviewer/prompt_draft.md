@@ -1,49 +1,49 @@
-Please make 10 agents work in parallel to do the tasks from Agent_01 to Agent_10, taking into consideration ASAR Project architecture and ASAR design system, and validating every step with ASAR_PROJECT_ARCHITECTURE.md.
+Analyze all parts of project ASAR to understand the business idea, then make the project production-ready across UI/UX, responsiveness, user journey, admin dashboard, and authentication.
 
 Working directory: d:\asar
 Integrity mode: development
 
-Reference material:
-- docs/ASAR_PROJECT_ARCHITECTURE.md
-- docs/ASAR_DESIGN_SYSTEM.md
-- docs/AGENT_01_SHARED_DOMAIN_AND_UTILITIES.md
-- docs/AGENT_02_BOOTH_DYNAMIC_PLANS_AND_BOOKING.md
-- docs/AGENT_03_BOOTH_MEMORY_PAGE.md
-- docs/AGENT_04_ADMIN_SHELL_PLANS_AND_ORDERS.md
-- docs/AGENT_05_ADMIN_BOOTH_BULK_VOICE_STUDIO.md
-- docs/AGENT_06_ADMIN_INVITATION_AND_FORM_BUILDER.md
-- docs/AGENT_07_INVITATION_LANDING_AND_BOOKING.md
-- docs/AGENT_08_INVITATION_CUSTOM_RENDERER_AND_QR_PASS.md
-- docs/AGENT_09_CLIENT_PORTAL_ORDERS_AND_ASSETS.md
-- docs/AGENT_10_CLIENT_INVITATION_MAILBOX_AND_EMAILJS.md
-
 ## Requirements
 
-### R1. Shared Domain Models, Utilities & Strict File Boundaries (Agent 01)
-Implement the shared domain models, Appwrite collection and bucket constants, order pipeline state machines, Web Audio analyzer, and EmailJS dispatch service in `packages/react-appwrite` following the boundaries in `docs/AGENT_01_SHARED_DOMAIN_AND_UTILITIES.md`.
+### R1. UI/UX Consistency and Responsiveness
+Upgrade the UI/UX across all pages outside the Booth and Invitation landing pages to match the editorial luxury quality bar set by those landing pages. Ensure all pages and components are fully responsive across mobile, tablet, and desktop viewports without layout breakage or unintended horizontal overflow.
 
-### R2. Booth Dynamic Plans, Booking Flow & Memory Page (Agents 02 & 03)
-Implement the Booth dynamic plan selection, booking flow, manual payment screenshot upload in `apps/Booth`, and the Booth Memory presentation page with audio playback matching visual reference #1 and `docs/AGENT_02_BOOTH_DYNAMIC_PLANS_AND_BOOKING.md` / `docs/AGENT_03_BOOTH_MEMORY_PAGE.md`.
+### R2. Complete and Streamlined User Journeys
+Establish complete, intuitive, and unbroken customer and guest flows across the platform for both Booth Memories and Invitation Websites. Customer journeys must seamlessly cover discovery/landing, booking/ordering, and client portal management (managing RSVPs, guests, and memories), while guest journeys cover RSVP submission, passes, and dynamic site viewing.
 
-### R3. Admin Operations, Bulk Voice Studio & Form Builder (Agents 04, 05 & 06)
-Implement the Admin shell, dynamic plans management, manual payment approval/rejection, orders pipeline, bulk voice record studio with automatic filename parsing, and invitation dynamic form builder in `apps/Admin` following `docs/AGENT_04_ADMIN_SHELL_PLANS_AND_ORDERS.md`, `docs/AGENT_05_ADMIN_BOOTH_BULK_VOICE_STUDIO.md`, and `docs/AGENT_06_ADMIN_INVITATION_AND_FORM_BUILDER.md`.
+### R3. Arabic-First Admin Dashboard Redesign
+Redesign the admin dashboard design, structure, and navigation to make it intuitive, efficient, and bug-free. Deliver the admin dashboard with a native Arabic-first interface utilizing right-to-left (RTL) layout and Arabic typography.
 
-### R4. Invitation Services, Custom Renderer & QR Guest Pass (Agents 07 & 08)
-Implement the Invitation landing, package booking, custom invitation page renderer with dynamic RSVP form submission, and guest QR code access pass in `apps/Invitation` following `docs/AGENT_07_INVITATION_LANDING_AND_BOOKING.md` and `docs/AGENT_08_INVITATION_CUSTOM_RENDERER_AND_QR_PASS.md`.
+### R4. Authentication and User Data Management
+Implement robust authentication handling for user signup, login, session persistence, and role-based access. Store and synchronize user profile records in a dedicated `Users` database collection in Appwrite.
 
-### R5. Client Portal, Asset Management & Invitation Mailbox (Agents 09 & 10)
-Implement the client portal order tracking, raw assets upload, invitation RSVP mailbox with approve/decline actions, and automated EmailJS notification dispatch in `apps/Main` following `docs/AGENT_09_CLIENT_PORTAL_ORDERS_AND_ASSETS.md` and `docs/AGENT_10_CLIENT_INVITATION_MAILBOX_AND_EMAILJS.md`.
+## Verification Resources
 
-### R6. Monorepo Constraints & User Rules
-Adhere strictly to the workspace boundary rules in each agent doc. Do not run `npm run build` without specific need, and do not create scripts or code generators unless needed.
+- Test suites: Run `npm test` across the monorepo.
+- Type checking: Run `npx tsc --noEmit` across each app and package (`packages/react-appwrite`, `apps/Admin`, `apps/Booth`, `apps/Invitation`, `apps/Main`, `apps/Renderer`).
+- Design system: Refer to `docs/ASAR_DESIGN_SYSTEM.md` and benchmark against the existing Booth landing (`apps/Booth`) and Invitation landing (`apps/Invitation`) pages.
+- Database schema: Refer to `appwrite/appwrite.config.json`.
 
 ## Acceptance Criteria
 
-### Workspace & Boundary Compliance
-- [ ] Each agent module strictly respects its assigned file boundaries without modifying prohibited files in other apps or packages.
-- [ ] All 10 agent deliverables conform to the architecture rules defined in `docs/ASAR_PROJECT_ARCHITECTURE.md` and the design tokens in `docs/ASAR_DESIGN_SYSTEM.md`.
+### UI/UX & Responsiveness
+- [ ] All pages outside Booth and Invitation landing pages match the visual quality, typography, and styling established in the design system and landing pages.
+- [ ] Every page across `apps/Main`, `apps/Admin`, `apps/Booth`, `apps/Invitation`, and `apps/Renderer` is fully responsive on mobile, tablet, and desktop screens with zero horizontal overflow or clipping.
 
-### Objective Verification
-- [ ] TypeScript compilation succeeds across all modified packages and apps (`tsc --noEmit`) with zero type errors.
-- [ ] Linter checks pass without errors across all modified files.
-- [ ] Unit tests for core domain logic (order pipeline transitions, filename parsing, dynamic form validation, and audio analyzer utilities) pass without requiring a live Appwrite instance.
+### User Journey
+- [ ] Customer flow from landing page to booking/order completion operates end-to-end without broken navigation, dead ends, or missing states.
+- [ ] Client account portal allows users to view and manage their orders, booth memories, and invitation RSVPs.
+- [ ] Guest RSVP submission and dynamic preview flows function seamlessly end-to-end.
+
+### Admin Dashboard
+- [ ] The admin dashboard UI is fully rendered in Arabic with proper RTL layout and Arabic typography.
+- [ ] Navigation and management views for plans, orders, payments, booth memories, and invitations operate reliably without UI or structural errors.
+
+### Authentication & Users Collection
+- [ ] User registration, login, logout, and session persistence function reliably without authentication state desync.
+- [ ] User profile data is stored, queried, and updated in the Appwrite `Users` collection upon user registration and account updates.
+- [ ] Admin routes remain protected and accessible only to authorized administrators.
+
+### Code Quality & Verification
+- [ ] Full monorepo TypeScript verification passes with zero type errors (`npx tsc --noEmit` on all apps and packages).
+- [ ] All existing automated tests in `npm test` continue to pass, alongside new automated tests verifying the streamlined user journeys and auth handling.

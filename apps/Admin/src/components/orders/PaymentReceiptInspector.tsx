@@ -45,6 +45,7 @@ export const PaymentReceiptInspector: React.FC<PaymentReceiptInspectorProps> = (
   const [rotation, setRotation] = useState<number>(0);
   const [showRejectBox, setShowRejectBox] = useState<boolean>(false);
   const [rejectionReason, setRejectionReason] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   if (!isOpen || !order) return null;
@@ -81,9 +82,10 @@ export const PaymentReceiptInspector: React.FC<PaymentReceiptInspectorProps> = (
   const handleRejectClick = async () => {
     if (!payment) return;
     if (!rejectionReason.trim()) {
-      alert("يرجى كتابة أو اختيار سبب الرفض لتوجيه العميل لإعادة الرفع بشكل صحيح.");
+      setErrorMessage("يرجى كتابة أو اختيار سبب الرفض لتوجيه العميل لإعادة الرفع بشكل صحيح.");
       return;
     }
+    setErrorMessage(null);
     setIsSubmitting(true);
     try {
       await onReject(order.$id, payment.$id, rejectionReason.trim());
@@ -274,7 +276,10 @@ export const PaymentReceiptInspector: React.FC<PaymentReceiptInspectorProps> = (
                   {COMMON_REJECTION_REASONS.map((reason, idx) => (
                     <button
                       key={idx}
-                      onClick={() => setRejectionReason(reason)}
+                      onClick={() => {
+                        setRejectionReason(reason);
+                        setErrorMessage(null);
+                      }}
                       style={{
                         textAlign: "right",
                         fontSize: "0.78rem",
@@ -297,8 +302,30 @@ export const PaymentReceiptInspector: React.FC<PaymentReceiptInspectorProps> = (
                   placeholder="أو اكتب سبباً مخصصاً للعميل..."
                   style={{ minHeight: "70px", fontSize: "0.85rem" }}
                   value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
+                  onChange={(e) => {
+                    setRejectionReason(e.target.value);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
                 />
+
+                {errorMessage && (
+                  <Box
+                    mt={2.5}
+                    p={3}
+                    borderRadius="10px"
+                    bg="rgba(155, 44, 44, 0.08)"
+                    border="1px solid var(--athar-status-danger, #9B2C2C)"
+                    color="var(--athar-status-danger, #9B2C2C)"
+                    fontSize="0.82rem"
+                    fontWeight="700"
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
+                  >
+                    <Text as="span">⚠️</Text>
+                    <Text>{errorMessage}</Text>
+                  </Box>
+                )}
 
                 <HStack gap={2} mt={3}>
                   <Button
@@ -315,7 +342,10 @@ export const PaymentReceiptInspector: React.FC<PaymentReceiptInspectorProps> = (
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setShowRejectBox(false)}
+                    onClick={() => {
+                      setShowRejectBox(false);
+                      setErrorMessage(null);
+                    }}
                   >
                     إلغاء
                   </Button>

@@ -74,19 +74,19 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
     {
       key: "awaiting_client_assets",
       label: "Awaiting Client Assets",
-      color: "#3B82F6",
+      color: "#8C6D46",
       count: orders.filter((o) => o.orderStatus === "awaiting_client_assets").length,
     },
     {
       key: "event_scheduled",
       label: "Event Scheduled",
-      color: "#8B5CF6",
+      color: "var(--athar-maroon)",
       count: orders.filter((o) => o.orderStatus === "event_scheduled").length,
     },
     {
       key: "audio_mastering",
       label: "Audio Mastering",
-      color: "#EC4899",
+      color: "#944D59",
       count: orders.filter((o) => o.orderStatus === "audio_mastering").length,
     },
     {
@@ -464,7 +464,20 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
         </Flex>
 
         <VStack gap={3} align="stretch">
-          {orders.slice(0, 5).map((order) => {
+          {orders.length === 0 ? (
+            <Box
+              p={8}
+              textAlign="center"
+              bg="#ffffff"
+              borderRadius="14px"
+              border="1px dashed rgba(212, 175, 55, 0.4)"
+            >
+              <Text fontSize="0.95rem" fontWeight="600" color="var(--athar-text-muted)">
+                No event orders in the queue yet.
+              </Text>
+            </Box>
+          ) : (
+            orders.slice(0, 5).map((order) => {
             const isBooth = order.serviceType === "booth";
             return (
               <Box
@@ -549,7 +562,8 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({
                 </Flex>
               </Box>
             );
-          })}
+          })
+        )}
         </VStack>
       </Box>
     </Box>

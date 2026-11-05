@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Box, Flex, SimpleGrid, Text, Button, Badge } from "@chakra-ui/react";
-import { useAvatars } from "@repo/react-appwrite";
+import { useAvatars, buildMemoryUrls } from "@repo/react-appwrite";
 
 export interface QrHubManagerProps {
   orderId: string;
@@ -23,11 +23,13 @@ export const QrHubManager: React.FC<QrHubManagerProps> = ({
   const [copied, setCopied] = useState(false);
   const [viewMode, setViewMode] = useState<"card" | "table_stand">("card");
 
-  // Construct target landing URL
-  const targetUrl =
-    serviceType === "booth"
-      ? `http://localhost:3002?memory=${slug}`
-      : `http://localhost:3003?event=${slug}`;
+  // Construct canonical and dev URLs using monorepo storefront builder
+  const memoryUrls = buildMemoryUrls({
+    slug,
+    type: serviceType,
+    rendererPort: 3004,
+  });
+  const targetUrl = memoryUrls.canonicalUrl;
 
   // High resolution QR code URL via Appwrite Avatars or public fallback
   const qrImageUrl =
@@ -223,6 +225,17 @@ export const QrHubManager: React.FC<QrHubManagerProps> = ({
               >
                 {targetUrl}
               </Box>
+              <Text fontSize="0.75rem" color="var(--athar-text-muted)" mt={1.5}>
+                معاينة المطور (Storefront Renderer):{" "}
+                <a
+                  href={memoryUrls.devRendererUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ textDecoration: "underline", color: "var(--athar-maroon)", fontWeight: 700 }}
+                >
+                  {memoryUrls.devRendererUrl}
+                </a>
+              </Text>
             </Box>
           )}
         </Box>

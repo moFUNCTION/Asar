@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Box, Text, Button } from "@chakra-ui/react";
-import { AdminShell, type AdminTab } from "./components/layout/AdminShell";
+import { AdminShell } from "./components/layout/AdminShell";
 import { AdminOverview, type AsarOrder } from "./components/dashboard/AdminOverview";
 import { PlanBuilderStudio, DEFAULT_INITIAL_PLANS, type AsarPlan } from "./components/plans/PlanBuilderStudio";
 import { OrdersQueueManager } from "./components/orders/OrdersQueueManager";
 import type { AsarPayment } from "./components/orders/PaymentReceiptInspector";
+import { UsersManager } from "./components/users";
+import { useAppwrite, ASAR_DATABASE_ID, ASAR_COLLECTIONS } from "@repo/react-appwrite";
 
 declare global {
   const process: {
@@ -58,6 +61,16 @@ const BoothMemoryStudio: React.FC<{ orderId?: string | null; onBack?: () => void
 
 const InvitationStudio: React.FC<{ orderId?: string | null; onBack?: () => void }> =
   typeof ImportedInvitationStudio !== "undefined" ? ImportedInvitationStudio : FallbackInvitationStudio;
+
+const BoothStudioRouteWrapper: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const { orderId } = useParams<{ orderId?: string }>();
+  return <BoothMemoryStudio orderId={orderId || null} onBack={onBack} />;
+};
+
+const InvitationStudioRouteWrapper: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const { orderId } = useParams<{ orderId?: string }>();
+  return <InvitationStudio orderId={orderId || null} onBack={onBack} />;
+};
 
 const ORDERS_STORAGE_KEY = "asar_synced_orders";
 const PAYMENTS_STORAGE_KEY = "asar_synced_payments";
@@ -216,8 +229,8 @@ const DEFAULT_INITIAL_PAYMENTS: AsarPayment[] = [
 ];
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { databases } = useAppwrite();
 
   // Synchronized persistent state for Orders
   const [orders, setOrders] = useState<AsarOrder[]>(() => {
@@ -268,69 +281,154 @@ export const App: React.FC = () => {
     }
   }, [payments]);
 
+  // Live Appwrite sync for Orders and Payments
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCloudData() {
+      if (!databases) return;
+      try {
+        const orderRes = await databases.listDocuments(ASAR_DATABASE_ID, ASAR_COLLECTIONS.ORDERS);
+        if (isMounted && orderRes.documents.length > 0) {
+          const cloudOrders = orderRes.documents.map((d: any) => ({
+            $id: d.$id,
+            clientId: d.clientId || "",
+            clientName: d.clientName || "",
+            partnerOrOrgName: d.partnerOrOrgName || "",
+            clientEmail: d.clientEmail || "",
+            clientPhone: d.clientPhone || "",
+            serviceType: d.serviceType || "booth",
+            planId: d.planId || "",
+            planName: d.planName || "",
+            selectedAddonsJson: d.selectedAddonsJson,
+            totalAmount: Number(d.totalAmount) || 0,
+            orderStatus: d.orderStatus || "pending_payment",
+            eventDate: d.eventDate || "",
+            eventVenue: d.eventVenue || "",
+            clientSubmittedAssetsJson: d.clientSubmittedAssetsJson,
+            quotaOverridesJson: d.quotaOverridesJson,
+            adminNotes: d.adminNotes,
+            createdAt: d.$createdAt,
+            updatedAt: d.$updatedAt,
+          }));
+          setOrders((prev) => {
+            const merged = [...cloudOrders];
+            // keep demo orders that aren't overwritten
+            for (const p of prev) {
+              if (!merged.some((m) => m.$id === p.$id)) {
+                merged.push(p);
+              }
+            }
+            return merged;
+          });
+        }
+      } catch (err) {
+        console.warn("Using offline / cached orders:", err);
+      }
+
+      try {
+        const payRes = await databases.listDocuments(ASAR_DATABASE_ID, ASAR_COLLECTIONS.PAYMENTS);
+        if (isMounted && payRes.documents.length > 0) {
+          const cloudPayments = payRes.documents.map((d: any) => ({
+            $id: d.$id,
+            orderId: d.orderId || "",
+            clientId: d.clientId || "",
+            amount: Number(d.amount) || 0,
+            paymentMethod: d.paymentMethod || "instapay",
+            screenshotUrl: d.screenshotUrl || "",
+            status: d.status || "pending",
+            rejectionReason: d.rejectionReason,
+            submittedAt: d.$createdAt ? new Date(d.$createdAt).toLocaleTimeString("ar-EG") : "اليوم",
+          }));
+          setPayments((prev) => {
+            const merged = [...cloudPayments];
+            for (const p of prev) {
+              if (!merged.some((m) => m.$id === p.$id)) {
+                merged.push(p);
+              }
+            }
+            return merged;
+          });
+        }
+      } catch (err) {
+        console.warn("Using offline / cached payments:", err);
+      }
+    }
+
+    loadCloudData();
+    return () => {
+      isMounted = false;
+    };
+  }, [databases]);
+
   // Pending payments count
   const pendingPaymentsCount = orders.filter((o) => o.orderStatus === "pending_payment").length;
 
   const handleOpenStudio = (orderId: string, serviceType: "booth" | "invitation") => {
-    setSelectedOrderId(orderId);
     if (serviceType === "booth") {
-      setActiveTab("booth-studio");
+      navigate(`/booth-studio/${orderId}`);
     } else {
-      setActiveTab("invitation-studio");
+      navigate(`/invitation-studio/${orderId}`);
     }
   };
 
+  const handleBackToOrders = () => {
+    navigate("/orders");
+  };
+
   return (
-    <AdminShell
-      activeTab={activeTab}
-      onSelectTab={(tab) => {
-        setActiveTab(tab);
-      }}
-      pendingPaymentsCount={pendingPaymentsCount}
-    >
-      {/* 1. Overview Tab */}
-      {activeTab === "overview" && (
-        <AdminOverview
-          orders={orders}
-          plansCount={plans.length}
-          onNavigateTab={(tab) => setActiveTab(tab)}
-          onSelectOrderForStudio={handleOpenStudio}
+    <AdminShell pendingPaymentsCount={pendingPaymentsCount}>
+      <Routes>
+        <Route path="/" element={<Navigate to="/overview" replace />} />
+        <Route
+          path="/overview"
+          element={
+            <AdminOverview
+              orders={orders}
+              plansCount={plans.length}
+              onNavigateTab={(tab) => navigate(`/${tab}`)}
+              onSelectOrderForStudio={handleOpenStudio}
+            />
+          }
         />
-      )}
-
-      {/* 2. Plans & Limits Tab */}
-      {activeTab === "plans" && (
-        <PlanBuilderStudio
-          onPlansUpdated={(updated) => setPlans(updated)}
+        <Route
+          path="/plans"
+          element={<PlanBuilderStudio onPlansUpdated={(updated) => setPlans(updated)} />}
         />
-      )}
-
-      {/* 3. Orders & Payments Tab */}
-      {activeTab === "orders" && (
-        <OrdersQueueManager
-          orders={orders}
-          payments={payments}
-          onOrdersUpdated={(updated) => setOrders(updated)}
-          onPaymentsUpdated={(updated) => setPayments(updated)}
-          onOpenStudio={handleOpenStudio}
+        <Route
+          path="/orders"
+          element={
+            <OrdersQueueManager
+              orders={orders}
+              payments={payments}
+              onOrdersUpdated={(updated) => setOrders(updated)}
+              onPaymentsUpdated={(updated) => setPayments(updated)}
+              onOpenStudio={handleOpenStudio}
+            />
+          }
         />
-      )}
-
-      {/* 4. Booth Memory Studio (Agent 05 Integration) */}
-      {activeTab === "booth-studio" && (
-        <BoothMemoryStudio
-          orderId={selectedOrderId}
-          onBack={() => setActiveTab("orders")}
+        <Route
+          path="/orders/:orderId"
+          element={
+            <OrdersQueueManager
+              orders={orders}
+              payments={payments}
+              onOrdersUpdated={(updated) => setOrders(updated)}
+              onPaymentsUpdated={(updated) => setPayments(updated)}
+              onOpenStudio={handleOpenStudio}
+            />
+          }
         />
-      )}
-
-      {/* 5. Invitation Studio (Agent 06 Integration) */}
-      {activeTab === "invitation-studio" && (
-        <InvitationStudio
-          orderId={selectedOrderId}
-          onBack={() => setActiveTab("orders")}
+        <Route
+          path="/booth-studio/:orderId?"
+          element={<BoothStudioRouteWrapper onBack={handleBackToOrders} />}
         />
-      )}
+        <Route
+          path="/invitation-studio/:orderId?"
+          element={<InvitationStudioRouteWrapper onBack={handleBackToOrders} />}
+        />
+        <Route path="/users" element={<UsersManager />} />
+        <Route path="*" element={<Navigate to="/overview" replace />} />
+      </Routes>
     </AdminShell>
   );
 };

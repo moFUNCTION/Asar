@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Box, Flex, HStack, Text, Button } from "@chakra-ui/react";
 import { FaHeart, FaDownload, FaCheck } from "react-icons/fa";
+import { useSubdomain, useAppwrite, ASAR_COLLECTIONS, ASAR_DATABASE_ID, Query } from "@repo/react-appwrite";
 import {
   MemoryHeader,
   MemoryHero,
@@ -24,28 +26,56 @@ import type {
   MemoryTabType,
 } from "../components/memory";
 
-interface BoothMemoryPageProps {
+export interface BoothMemoryPageProps {
   slug?: string;
   onBackToLanding?: () => void;
 }
 
 export const BoothMemoryPage: React.FC<BoothMemoryPageProps> = ({
-  slug = "mina-and-maryam",
-  onBackToLanding,
+  slug: propSlug,
+  onBackToLanding: propOnBackToLanding,
 }) => {
+  const routeParams = useParams<{ slug?: string }>();
+  const { subdomain } = useSubdomain({
+    searchParams: typeof window !== "undefined" ? window.location.search : undefined,
+  });
+  const navigate = useNavigate();
+  const { databases, config } = useAppwrite();
+  const dbId = config?.databaseId || ASAR_DATABASE_ID;
+
+  // Seamless 4-tier slug resolution: prop -> routeParam -> subdomain -> fallback
+  const slug = propSlug || routeParams.slug || subdomain || "mina-and-maryam";
+
+  const onBackToLanding = propOnBackToLanding || (() => navigate("/"));
+
   const [memory, setMemory] = useState<BoothMemoryData>(() => {
     // Check localStorage cache first
     try {
       const cached = localStorage.getItem("asar_booth_memories_cache");
       if (cached) {
         const list: BoothMemoryData[] = JSON.parse(cached);
-        const found = list.find((m) => m.slug === slug);
+        const found = list.find((m) => m.slug === slug || m.id === slug);
         if (found) return found;
       }
     } catch {
       // Fallback
     }
-    return DEMO_BOOTH_MEMORY;
+
+    if (slug === "mina-and-maryam" || !slug) {
+      return DEMO_BOOTH_MEMORY;
+    }
+
+    const formattedTitle = slug
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" & ");
+
+    return {
+      ...DEMO_BOOTH_MEMORY,
+      id: slug,
+      slug,
+      coupleTitle: formattedTitle,
+    };
   });
 
   const [voiceRecords, setVoiceRecords] = useState<VoiceRecord[]>(() => {
@@ -56,22 +86,74 @@ export const BoothMemoryPage: React.FC<BoothMemoryPageProps> = ({
     return memory.guestBookNotes || DEMO_BOOTH_MEMORY.guestBookNotes;
   });
 
+  // Hydrate memory from Appwrite database or local cache
   useEffect(() => {
-    try {
-      const cached = localStorage.getItem("asar_booth_memories_cache");
-      if (cached) {
-        const list: BoothMemoryData[] = JSON.parse(cached);
-        const found = list.find((m) => m.slug === slug);
-        if (found) {
-          setMemory(found);
-          setVoiceRecords(found.voiceRecords || DEMO_BOOTH_VOICE_RECORDS);
-          setGuestBookNotes(found.guestBookNotes || DEMO_BOOTH_MEMORY.guestBookNotes);
+    let isMounted = true;
+
+    const hydrateMemory = async () => {
+      // 1. Check localStorage cache
+      try {
+        const cached = localStorage.getItem("asar_booth_memories_cache");
+        if (cached) {
+          const list: BoothMemoryData[] = JSON.parse(cached);
+          const found = list.find((m) => m.slug === slug || m.id === slug);
+          if (found && isMounted) {
+            setMemory(found);
+            setVoiceRecords(found.voiceRecords || DEMO_BOOTH_VOICE_RECORDS);
+            setGuestBookNotes(found.guestBookNotes || DEMO_BOOTH_MEMORY.guestBookNotes);
+            return;
+          }
+        }
+      } catch {
+        // Fallback
+      }
+
+      // 2. Try Appwrite database query
+      try {
+        if (databases && dbId) {
+          const response = await databases.listDocuments(
+            dbId,
+            ASAR_COLLECTIONS.BOOTH_MEMORIES,
+            [Query.equal("slug", slug), Query.limit(1)]
+          );
+          if (response.documents.length > 0 && isMounted) {
+            const doc = response.documents[0] as unknown as BoothMemoryData;
+            setMemory(doc);
+            if (doc.voiceRecords) setVoiceRecords(doc.voiceRecords);
+            if (doc.guestBookNotes) setGuestBookNotes(doc.guestBookNotes);
+            return;
+          }
+        }
+      } catch {
+        // Appwrite query fallback
+      }
+
+      // 3. Fallback to demo or customized base
+      if (isMounted) {
+        if (slug === "mina-and-maryam" || !slug) {
+          setMemory(DEMO_BOOTH_MEMORY);
+          setVoiceRecords(DEMO_BOOTH_VOICE_RECORDS);
+          setGuestBookNotes(DEMO_BOOTH_MEMORY.guestBookNotes);
+        } else {
+          const formattedTitle = slug
+            .split("-")
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(" & ");
+          setMemory((prev) => ({
+            ...prev,
+            slug,
+            coupleTitle: formattedTitle,
+          }));
         }
       }
-    } catch {
-      // Fallback
-    }
-  }, [slug]);
+    };
+
+    hydrateMemory();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [slug, databases, dbId]);
 
   // Navigation & Interactive Tabs
   const [activeTab, setActiveTab] = useState<MemoryTabType>("audio");
@@ -84,17 +166,32 @@ export const BoothMemoryPage: React.FC<BoothMemoryPageProps> = ({
   const [duration, setDuration] = useState<number>(42);
   const playbackTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
   // Modals state
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isLeaveLoveModalOpen, setIsLeaveLoveModalOpen] = useState(false);
   const [downloadKeepsakeDone, setDownloadKeepsakeDone] = useState(false);
 
-  // Stop timer on unmount
+  // Stop timer and audio stream on unmount
   useEffect(() => {
     return () => {
       if (playbackTimerRef.current) {
         clearInterval(playbackTimerRef.current);
+        playbackTimerRef.current = null;
+      }
+      if (audioElementRef.current) {
+        try {
+          audioElementRef.current.pause();
+          audioElementRef.current.src = "";
+          audioElementRef.current.ontimeupdate = null;
+          audioElementRef.current.onloadedmetadata = null;
+          audioElementRef.current.onended = null;
+          audioElementRef.current.onerror = null;
+        } catch {
+          // ignore
+        }
+        audioElementRef.current = null;
       }
       if (audioContextRef.current && audioContextRef.current.state !== "closed") {
         try {
@@ -138,47 +235,125 @@ export const BoothMemoryPage: React.FC<BoothMemoryPageProps> = ({
     }
   };
 
-  // Play / Pause voice record
+  // Helper to run timer animation (for fallback / simulated audio)
+  const startTimerSimulation = (recDuration: number, initialTime: number = 0) => {
+    if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+    const startTime = initialTime >= recDuration ? 0 : initialTime;
+    setCurrentTime(startTime);
+
+    let runningTime = startTime;
+    playbackTimerRef.current = setInterval(() => {
+      runningTime += 0.2;
+      if (runningTime >= recDuration) {
+        if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+        playbackTimerRef.current = null;
+        setCurrentTime(0);
+        setPlayingVoiceId(null);
+      } else {
+        setCurrentTime(Number(runningTime.toFixed(1)));
+      }
+    }, 200);
+  };
+
+  // Play / Pause voice record with real HTMLAudioElement streaming & chime intro
   const handleTogglePlayVoice = (record: VoiceRecord) => {
     if (playingVoiceId === record.id) {
       // Pause
+      if (audioElementRef.current) {
+        try {
+          audioElementRef.current.pause();
+        } catch {
+          // ignore
+        }
+      }
       if (playbackTimerRef.current) {
         clearInterval(playbackTimerRef.current);
         playbackTimerRef.current = null;
       }
       setPlayingVoiceId(null);
-    } else {
-      // Start or switch track
-      if (playbackTimerRef.current) {
-        clearInterval(playbackTimerRef.current);
+      return;
+    }
+
+    // Switch or start new track
+    if (audioElementRef.current) {
+      try {
+        audioElementRef.current.pause();
+        audioElementRef.current.currentTime = 0;
+      } catch {
+        // ignore
       }
-      playTelephoneChime();
-      setPlayingVoiceId(record.id);
-      const recDuration = record.durationSeconds || 42;
-      setDuration(recDuration);
+    }
+    if (playbackTimerRef.current) {
+      clearInterval(playbackTimerRef.current);
+      playbackTimerRef.current = null;
+    }
 
-      // If switching from another track or track finished, reset time to 0
-      const startTime = currentTime >= recDuration ? 0 : currentTime;
-      setCurrentTime(startTime);
+    playTelephoneChime();
+    setPlayingVoiceId(record.id);
+    const recDuration = record.durationSeconds || 42;
+    setDuration(recDuration);
 
-      let runningTime = startTime;
-      playbackTimerRef.current = setInterval(() => {
-        runningTime += 0.2;
-        if (runningTime >= recDuration) {
+    const hasAudioUrl = Boolean(record.audioUrl && record.audioUrl.trim().length > 0);
+
+    if (hasAudioUrl && typeof window !== "undefined" && typeof Audio !== "undefined") {
+      try {
+        if (!audioElementRef.current) {
+          audioElementRef.current = new Audio();
+        }
+        const audio = audioElementRef.current;
+        audio.preload = "auto";
+        audio.src = record.audioUrl!;
+
+        audio.ontimeupdate = () => {
+          if (!audio.paused && Number.isFinite(audio.currentTime)) {
+            setCurrentTime(Number(audio.currentTime.toFixed(1)));
+          }
+        };
+
+        audio.onloadedmetadata = () => {
+          if (Number.isFinite(audio.duration) && audio.duration > 0) {
+            setDuration(Math.round(audio.duration));
+          }
+        };
+
+        audio.onended = () => {
           if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
           playbackTimerRef.current = null;
           setCurrentTime(0);
           setPlayingVoiceId(null);
-        } else {
-          setCurrentTime(Number(runningTime.toFixed(1)));
+        };
+
+        audio.onerror = () => {
+          console.warn(`[BoothMemoryPage] Audio failed to load: ${record.audioUrl}. Falling back to visual simulation.`);
+          startTimerSimulation(recDuration);
+        };
+
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn("[BoothMemoryPage] Audio autoplay restricted or resource unavailable:", err);
+            startTimerSimulation(recDuration);
+          });
         }
-      }, 200);
+      } catch (err) {
+        console.warn("[BoothMemoryPage] Audio instantiation error:", err);
+        startTimerSimulation(recDuration);
+      }
+    } else {
+      startTimerSimulation(recDuration);
     }
   };
 
   // Seek current playback to specific timestamp
   const handleSeekVoice = (seconds: number) => {
     setCurrentTime(seconds);
+    if (audioElementRef.current && Number.isFinite(seconds)) {
+      try {
+        audioElementRef.current.currentTime = seconds;
+      } catch {
+        // ignore
+      }
+    }
   };
 
   // Favorite Heart Toggle on Voice Record
@@ -522,6 +697,13 @@ export const BoothMemoryPage: React.FC<BoothMemoryPageProps> = ({
         onPlayPause={() => activeRecord && handleTogglePlayVoice(activeRecord)}
         onSeek={handleSeekVoice}
         onClose={() => {
+          if (audioElementRef.current) {
+            try {
+              audioElementRef.current.pause();
+            } catch {
+              // ignore
+            }
+          }
           if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
           playbackTimerRef.current = null;
           setPlayingVoiceId(null);

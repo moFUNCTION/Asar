@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { buildMemoryUrls, validateSubdomainSlug } from "@repo/react-appwrite";
 import { HeroAndTextsEditor, type BoothMemory } from "./HeroAndTextsEditor";
 import {
   BulkVoiceUploader,
@@ -228,6 +229,15 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
 
   // Save & Publish Memory Website
   const handleSaveAndPublish = async () => {
+    const slugValidation = validateSubdomainSlug(memory.slug);
+    if (!slugValidation.isValid) {
+      setNotification({
+        type: "warning",
+        message: `⚠️ Invalid subdomain slug: ${slugValidation.error}`,
+      });
+      return;
+    }
+
     if (!overrideQuota && (voicesQuotaExceeded || photosQuotaExceeded)) {
       setNotification({
         type: "warning",
@@ -249,9 +259,16 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
 
       await new Promise((res) => setTimeout(res, 400));
 
+      const memoryUrls = buildMemoryUrls({
+        slug: memory.slug || "mina-and-maryam",
+        type: "booth",
+        port: 3002,
+        rendererPort: 3004,
+      });
+
       setNotification({
         type: "success",
-        message: `🚀 Published successfully! Website live at http://localhost:3002?memory=${memory.slug}`,
+        message: `🚀 Published successfully! Subdomain Storefront: ${memoryUrls.canonicalUrl} (Renderer: ${memoryUrls.devRendererUrl} | Dev: ${memoryUrls.devQueryUrl})`,
       });
     } catch (_e) {
       setNotification({
@@ -331,6 +348,17 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
 
           {/* Right Action Buttons */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+            <a
+              href={`http://${memory.slug || "mina-and-maryam"}.localhost:3004`}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-athar-secondary"
+              style={{ fontSize: "0.84rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+              title="Preview directly in Dedicated Storefront Renderer (Port 3004)"
+            >
+              🌐 Renderer (:3004) ↗
+            </a>
+
             <button
               type="button"
               className="btn-athar-secondary"

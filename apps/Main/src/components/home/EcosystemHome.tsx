@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Box, Flex, SimpleGrid, Text, Button, Badge } from "@chakra-ui/react";
 
 export interface EcosystemHomeProps {
@@ -14,6 +14,12 @@ export const EcosystemHome: React.FC<EcosystemHomeProps> = ({
   currentUser,
   onLogout,
 }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleMobileNav = (tab?: string) => {
+    setMobileMenuOpen(false);
+    onOpenAccount(tab);
+  };
   return (
     <Box minH="100vh" pb={16}>
       {/* Top Luxury Navigation */}
@@ -71,8 +77,8 @@ export const EcosystemHome: React.FC<EcosystemHomeProps> = ({
             </Box>
           </Flex>
 
-          {/* Navigation Shortcuts */}
-          <Flex align="center" gap={2} wrap="wrap">
+          {/* Desktop Navigation Shortcuts */}
+          <Flex align="center" gap={2} display={{ base: "none", md: "flex" }}>
             <Button
               className="btn-athar-secondary"
               onClick={() => onOpenAccount("orders")}
@@ -142,10 +148,108 @@ export const EcosystemHome: React.FC<EcosystemHomeProps> = ({
                 px={5}
                 py={2}
               >
-                دخول العميل / تجريبي ✦
+                دخول العميل ✦
               </Button>
             )}
           </Flex>
+
+          {/* Mobile Menu Button */}
+          <Flex align="center" gap={2} display={{ base: "flex", md: "none" }}>
+            {currentUser ? (
+              <Badge className="badge-emerald" fontSize="0.75rem" px={2} py={1}>
+                {currentUser.name ? currentUser.name.split(" ")[0] : "عميل أثر"}
+              </Badge>
+            ) : (
+              <Button
+                className="btn-athar-primary"
+                onClick={onOpenAuth}
+                size="xs"
+                fontSize="0.75rem"
+                px={3}
+              >
+                دخول ✦
+              </Button>
+            )}
+            <Button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              size="sm"
+              variant="outline"
+              borderColor="rgba(107, 29, 40, 0.2)"
+              fontSize="0.8rem"
+            >
+              {mobileMenuOpen ? "✕" : "☰"}
+            </Button>
+          </Flex>
+        </Flex>
+
+        {/* Mobile Dropdown Panel */}
+        {mobileMenuOpen && (
+          <Box
+            display={{ base: "block", md: "none" }}
+            mt={3}
+            pt={3}
+            borderTop="1px solid rgba(107, 29, 40, 0.08)"
+            bg="rgba(255, 255, 255, 0.98)"
+            borderRadius="16px"
+            p={4}
+            boxShadow="var(--athar-shadow-elevated)"
+          >
+            <Flex direction="column" gap={2.5}>
+              <Button
+                className="btn-athar-secondary"
+                w="100%"
+                justifyContent="start"
+                onClick={() => handleMobileNav("orders")}
+                fontSize="0.88rem"
+              >
+                👤 متابعة الطلبات (7 مراحل)
+              </Button>
+              <Button
+                className="btn-athar-secondary"
+                w="100%"
+                justifyContent="start"
+                onClick={() => handleMobileNav("assets")}
+                fontSize="0.88rem"
+              >
+                📦 تسليم المواد وصور الحفل
+              </Button>
+              <Button
+                className="btn-athar-secondary"
+                w="100%"
+                justifyContent="start"
+                onClick={() => handleMobileNav("mailbox")}
+                fontSize="0.88rem"
+              >
+                ✉️ بريد ردود الضيوف (RSVP Mailbox)
+              </Button>
+              <Button
+                className="btn-athar-secondary"
+                w="100%"
+                justifyContent="start"
+                onClick={() => handleMobileNav("qr_hub")}
+                fontSize="0.88rem"
+              >
+                🖨️ مركز بطاقات وبوسترات QR
+              </Button>
+
+              {currentUser && onLogout && (
+                <Button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onLogout();
+                  }}
+                  variant="ghost"
+                  color="var(--athar-maroon)"
+                  fontSize="0.85rem"
+                  fontWeight="700"
+                  mt={2}
+                >
+                  تسجيل الخروج من الحساب
+                </Button>
+              )}
+            </Flex>
+          </Box>
+        )}
         </Flex>
       </Box>
 
@@ -490,6 +594,54 @@ export const EcosystemHome: React.FC<EcosystemHomeProps> = ({
             </Flex>
           </Box>
         </SimpleGrid>
+
+        {/* Dedicated Storefront Renderer Runtime Strip */}
+        <Box
+          mt={6}
+          p={4}
+          borderRadius="16px"
+          bg="rgba(255, 255, 255, 0.85)"
+          border="1px solid rgba(212, 175, 55, 0.35)"
+          boxShadow="var(--athar-shadow-soft)"
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          flexWrap="wrap"
+          gap={3}
+        >
+          <Flex align="center" gap={3}>
+            <Box
+              w="36px"
+              h="36px"
+              borderRadius="10px"
+              bg="rgba(107, 29, 40, 0.08)"
+              color="var(--athar-maroon)"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              fontSize="1.2rem"
+            >
+              🌐
+            </Box>
+            <Box>
+              <Text fontSize="0.95rem" fontWeight="800" color="var(--athar-maroon)">
+                Storefront Renderer — بوابة العرض المخصصة (Port 3004)
+              </Text>
+              <Text fontSize="0.8rem" color="var(--athar-text-muted)">
+                المحرك المخصص لمعاينة وعرض ذكريات الكشك والدعوات الرقمية بالنطاقات الفرعية (*.localhost).
+              </Text>
+            </Box>
+          </Flex>
+          <a
+            href="http://localhost:3004"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-athar-secondary"
+            style={{ fontSize: "0.82rem", padding: "0.45rem 1rem", borderColor: "#D4AF37", color: "var(--athar-maroon)", fontWeight: 700 }}
+          >
+            فتح منصة العرض السحابية (:3004) ↗
+          </a>
+        </Box>
       </Box>
 
       {/* Concierge Portal Pillars Section */}

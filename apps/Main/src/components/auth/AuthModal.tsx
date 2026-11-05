@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Box, Flex, Text, Button } from "@chakra-ui/react";
-import { useAuth } from "@repo/react-appwrite";
+import { useAsarAuth } from "@repo/react-appwrite";
 
 export interface DemoClientProfile {
   id: string;
@@ -41,11 +41,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const { loginWithEmail, register, isLoading: authLoading } = useAuth();
+  const { login, register, isLoading: authLoading, error: asarAuthError, clearError } = useAsarAuth();
   const [tab, setTab] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -54,20 +55,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    clearError();
     setIsSubmitting(true);
 
     try {
-      await loginWithEmail(email, password);
-      onSuccess?.({ name: name || email.split("@")[0], email });
-      onClose();
-    } catch (err: unknown) {
-      console.warn("Appwrite auth failed or mock mode active:", err);
-      // Fallback for reviewer/demo mode when cloud credentials are not active
+      const result = await login(email, password);
       onSuccess?.({
-        name: name || email.split("@")[0] || "عميل أثر",
-        email: email || "client@asar.audio",
+        name: result.profile?.name || result.user.name || email.split("@")[0],
+        email: result.user.email || email,
       });
       onClose();
+    } catch (err: any) {
+      setErrorMsg(err?.message || "فشل تسجيل الدخول، يرجى التأكد من البريد وكلمة المرور.");
     } finally {
       setIsSubmitting(false);
     }
@@ -76,19 +75,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    clearError();
     setIsSubmitting(true);
 
     try {
-      await register(email, password, name);
-      onSuccess?.({ name, email });
-      onClose();
-    } catch (err: unknown) {
-      console.warn("Appwrite register failed or mock mode active:", err);
+      const result = await register({
+        name,
+        email,
+        password,
+        phone: phone || undefined,
+      });
       onSuccess?.({
-        name: name || "عميل أثر الجديد",
-        email: email || "client@asar.audio",
+        name: result.profile?.name || name,
+        email: result.user.email || email,
       });
       onClose();
+    } catch (err: any) {
+      setErrorMsg(err?.message || "تعذر إنشاء الحساب، يرجى المحاولة ببيانات أخرى.");
     } finally {
       setIsSubmitting(false);
     }
@@ -96,10 +99,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handle1ClickDemo = (client: DemoClientProfile) => {
     setErrorMsg(null);
-    // Set localStorage auth indicator for cross-page persistence
     try {
       localStorage.setItem("asar_active_client", JSON.stringify(client));
-    } catch (e) {
+    } catch {
       // ignore
     }
     onSuccess?.({
@@ -109,6 +111,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     });
     onClose();
   };
+
+  const displayedError = errorMsg || asarAuthError;
 
   return (
     <Box
@@ -191,7 +195,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             بوابة العميل • أثر
           </Text>
           <Text fontSize="0.85rem" color="var(--athar-text-muted)">
-            سجّل دخولك لمتابعة مراحل طلبك وتسليم مواد المناسبة
+            سجّل دخولك لمتابعة مراحل طلبك وتسليم مواد المناسبة وحسابك المعتمد
           </Text>
         </Box>
 
@@ -245,7 +249,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <Flex align="center" justify="center" gap={3} my={4}>
           <Box h="1px" flex={1} bg="rgba(107, 29, 40, 0.12)" />
           <Text fontSize="0.75rem" color="var(--athar-text-muted)">
-            أو عبر البريد الإلكتروني
+            أو عبر البريد الإلكتروني المباشر
           </Text>
           <Box h="1px" flex={1} bg="rgba(107, 29, 40, 0.12)" />
         </Flex>
@@ -267,7 +271,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             color={tab === "login" ? "white" : "var(--athar-text-muted)"}
             border="none"
             cursor="pointer"
-            onClick={() => setTab("login")}
+            onClick={() => {
+              setTab("login");
+              setErrorMsg(null);
+              clearError();
+            }}
           >
             تسجيل الدخول
           </Button>
@@ -281,14 +289,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             color={tab === "register" ? "white" : "var(--athar-text-muted)"}
             border="none"
             cursor="pointer"
-            onClick={() => setTab("register")}
+            onClick={() => {
+              setTab("register");
+              setErrorMsg(null);
+              clearError();
+            }}
           >
             حساب جديد
           </Button>
         </Flex>
 
         {/* Error Alert */}
-        {errorMsg && (
+        {displayedError && (
           <Box
             bg="var(--athar-status-danger-bg)"
             color="var(--athar-status-danger)"
@@ -297,24 +309,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             fontSize="0.82rem"
             mb={4}
           >
-            {errorMsg}
+            {displayedError}
           </Box>
         )}
 
         {/* Form */}
         <form onSubmit={tab === "login" ? handleLogin : handleRegister}>
           {tab === "register" && (
-            <Box mb={3}>
-              <label className="athar-label">الاسم الكامل (أو أسماء العروسين)</label>
-              <input
-                type="text"
-                required
-                className="athar-input"
-                placeholder="مثال: مينا ومريم"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </Box>
+            <>
+              <Box mb={3}>
+                <label className="athar-label">الاسم الكامل (أو أسماء العروسين)</label>
+                <input
+                  type="text"
+                  required
+                  className="athar-input"
+                  placeholder="مثال: مينا ومريم"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </Box>
+              <Box mb={3}>
+                <label className="athar-label">رقم الهاتف / واتساب (اختياري للتنسيق)</label>
+                <input
+                  type="tel"
+                  className="athar-input"
+                  placeholder="+20 100 000 0000"
+                  dir="ltr"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </Box>
+            </>
           )}
 
           <Box mb={3}>
@@ -334,6 +359,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <input
               type="password"
               required
+              minLength={8}
               className="athar-input"
               placeholder="••••••••"
               value={password}
@@ -349,7 +375,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             disabled={isSubmitting || authLoading}
           >
             {isSubmitting || authLoading
-              ? "جاري المعالجة..."
+              ? "جاري المعالجة والمزامنة..."
               : tab === "login"
               ? "دخول إلى حسابي ←"
               : "إنشاء الحساب ومتابعة الطلب ←"}

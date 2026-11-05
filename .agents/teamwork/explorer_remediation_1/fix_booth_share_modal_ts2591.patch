@@ -1,0 +1,11 @@
+--- a/apps/Renderer/src/components/booth/BoothShareModal.tsx
++++ b/apps/Renderer/src/components/booth/BoothShareModal.tsx
+@@ -36,7 +36,7 @@ export const BoothShareModal: React.FC<BoothShareModalProps> = ({
+     type: "booth",
+     port: 3004,
+     rendererPort: 3004,
+-    isDev: process.env.NODE_ENV !== "production",
++    isDev: Boolean(import.meta.env.DEV),
+   });
+ 
+   const canonicalUrl = urls.canonicalUrl;

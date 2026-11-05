@@ -21,6 +21,7 @@ import {
   parseWaveformPeaks,
   parseCategories,
   parseFormSchema,
+  parseUserProfile,
   DEFAULT_PLAN_LIMITS,
 } from "../src/AsarDomain/models.ts";
 
@@ -384,4 +385,20 @@ test("Seed Defaults: Default plans, Mina & Maryam demo memory and Image #1 voice
   const declinedRsvp = DEMO_INVITATION_RSVPS.find((r) => r.status === "declined");
   assert.ok(approvedRsvp?.passToken);
   assert.ok(declinedRsvp?.guestEmail);
+
+  // Users Collection & User Profile Model
+  assert.equal(ASAR_COLLECTIONS.USERS, "users");
+
+  const parsedProfile = parseUserProfile({
+    $id: "usr_doc_1",
+    userId: "usr_acc_1",
+    name: "مروان الشامي",
+    email: "marwan@example.com",
+    role: "admin",
+    phone: "+201012345678",
+  });
+  assert.ok(parsedProfile);
+  assert.equal(parsedProfile.name, "مروان الشامي");
+  assert.equal(parsedProfile.role, "admin");
+  assert.equal(parsedProfile.locale, "ar");
 });

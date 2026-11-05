@@ -1,41 +1,38 @@
-# BRIEFING — 2026-11-03T08:58:00Z
+# BRIEFING — 2026-11-05T08:40:00Z
 
 ## Mission
-Probe and document specifications and existing codebase state for Agent 01 (Shared Domain & Utils), Agent 02 (Booth Dynamic Plans & Booking), and Agent 03 (Booth Memory Page).
+Perform comprehensive specification mining and architectural survey of ASAR: business concept, Appwrite Cloud schema, @repo/react-appwrite package, authentication and user profile management, permissions, and test baselines.
 
 ## 🔒 My Identity
 - Archetype: Specification Miner
-- Roles: Read-Only Specification Miner & Explorer
+- Roles: External domain expert / Teamwork specialist
 - Working directory: d:\asar\.agents\teamwork\spec_miner_survey_1
-- Original parent: 7938576b-c672-4574-90f4-66e882c30818
-- Milestone: Survey & Specification Mining for Agents 01, 02, 03
+- Original parent: c7c5ed3b-6f62-45d0-8b8e-6d092c3f0a4f
+- Milestone: M1 - Architecture & Specification Survey
 
 ## 🔒 Key Constraints
-- Read-only: do NOT write or edit any source code or test files in packages/ or apps/
-- Only write metadata to d:\asar\.agents\teamwork\spec_miner_survey_1
-- Do not run `npm run build` without reason
-- Do not make scripts or code generators without reason
-- Prioritize authoritative spec files: docs/AGENT_01_SHARED_DOMAIN_AND_UTILITIES.md, docs/AGENT_02_BOOTH_DYNAMIC_PLANS_AND_BOOKING.md, docs/AGENT_03_BOOTH_MEMORY_PAGE.md, docs/ASAR_PROJECT_ARCHITECTURE.md, docs/ASAR_DESIGN_SYSTEM.md, docs/ASAR_BOOTH_DESIGN_SPEC.md, and existing packages/react-appwrite and apps/Booth codebases.
+- Read-only specification miner: NEVER modify or create application source files.
+- NEVER run npm run build or unnecessary build commands.
+- DO NOT create scripts or code generators unless strictly necessary for read-only exploration.
+- Only write metadata, reports, and handoffs in d:\asar\.agents\teamwork\spec_miner_survey_1\
+- Report via send_message to caller c7c5ed3b-6f62-45d0-8b8e-6d092c3f0a4f.
 
 ## Current Parent
-- Conversation ID: 7938576b-c672-4574-90f4-66e882c30818
-- Updated: not yet
+- Conversation ID: c7c5ed3b-6f62-45d0-8b8e-6d092c3f0a4f
+- Updated: 2026-11-05T08:40:00Z
 
 ## Task Summary
-- **What to build**: Survey and specification mining report (`survey_report.md`) and handoff report (`handoff.md`) covering Agent 01, 02, 03 requirements, boundaries, domain models, Appwrite IDs, pipeline states, visual/audio specs, test requirements, and existing codebase gap analysis.
-- **Success criteria**: Exhaustive, accurate survey of specs & code; clear boundaries and contracts; detailed tables of features & edge cases; verified against existing codebase.
-- **Interface contracts**: docs/AGENT_01_*, docs/AGENT_02_*, docs/AGENT_03_*, docs/ASAR_*
-- **Code layout**: packages/react-appwrite, apps/Booth
+- **What to build**: Comprehensive survey reports: `spec_survey_report.md` and `handoff.md` covering ASAR business concept, Appwrite schema, react-appwrite package, auth/profile sync, permissions, and repo test baseline.
+- **Success criteria**: Exhaustive, accurate mapping of business concepts, existing Appwrite collections, required users collection definition, authentication architecture, typescript models, hooks, route protection, and test verification methods.
+- **Interface contracts**: `d:\asar\.agents\teamwork\ORIGINAL_REQUEST.md`, `appwrite/appwrite.config.json`, `packages/react-appwrite`
+- **Code layout**: Read-only repo inspection across `apps/`, `packages/`, `appwrite/`.
 
 ## Key Decisions Made
-- Confirmed zero-conflict file boundaries for Agents 01, 02, and 03.
-- Identified that Node 24 native test runner (`node --experimental-strip-types --test`) provides offline unit test capability without requiring Appwrite or third-party test dependencies.
-- Identified Chakra UI v3 strict typing constraints (`as="img"` and `as="a"` must be avoided on `Box` in favor of native or dedicated components) to ensure clean TypeScript compilation.
-- Survey report and handoff report compiled and ready for parent orchestrator.
+- [2026-11-05]: Initialized survey workspace and dispatch record.
 
 ## Artifact Index
-- d:\asar\.agents\teamwork\spec_miner_survey_1\survey_report.md — Detailed survey report
-- d:\asar\.agents\teamwork\spec_miner_survey_1\handoff.md — 5-component handoff report
-- d:\asar\.agents\teamwork\spec_miner_survey_1\progress.md — Liveness heartbeat and progress tracking
-- d:\asar\.agents\teamwork\spec_miner_survey_1\DISPATCH.md — Original assignment prompt
-
+- `d:\asar\.agents\teamwork\spec_miner_survey_1\DISPATCH.md` — Dispatch record
+- `d:\asar\.agents\teamwork\spec_miner_survey_1\BRIEFING.md` — Working memory
+- `d:\asar\.agents\teamwork\spec_miner_survey_1\progress.md` — Liveness & progress tracker
+- `d:\asar\.agents\teamwork\spec_miner_survey_1\spec_survey_report.md` — Comprehensive survey findings
+- `d:\asar\.agents\teamwork\spec_miner_survey_1\handoff.md` — Formal 5-component handoff

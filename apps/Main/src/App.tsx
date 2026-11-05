@@ -1,33 +1,36 @@
 import React, { useState, useEffect } from "react";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { Box } from "@chakra-ui/react";
 import { EcosystemHome } from "./components/home/EcosystemHome";
 import { ClientAccountShell } from "./components/account/ClientAccountShell";
 import { AuthModal } from "./components/auth/AuthModal";
 
-export type ActiveView = "gateway" | "account";
+export const PlatformGateway: React.FC<{
+  initialAuthOpen?: boolean;
+  onOpenAccount: (defaultTab?: string) => void;
+  onOpenAuth: () => void;
+  currentUser?: { name?: string; email?: string } | null;
+  onLogout?: () => void;
+}> = ({ onOpenAccount, onOpenAuth, currentUser, onLogout }) => {
+  return (
+    <EcosystemHome
+      onOpenAccount={onOpenAccount}
+      onOpenAuth={onOpenAuth}
+      currentUser={currentUser}
+      onLogout={onLogout}
+    />
+  );
+};
 
 export const App: React.FC = () => {
-  const [view, setView] = useState<ActiveView>("gateway");
-  const [accountTab, setAccountTab] = useState<string>("orders");
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string } | null>(null);
 
-  // Check URL parameters & local session on mount
+  // Restore saved demo user or session
   useEffect(() => {
     try {
-      const params = new URLSearchParams(window.location.search);
-      const urlView = params.get("view");
-      const urlTab = params.get("tab");
-
-      if (urlView === "account") {
-        setView("account");
-        if (urlTab) setAccountTab(urlTab);
-      } else if (urlTab === "mailbox") {
-        setView("account");
-        setAccountTab("mailbox");
-      }
-
-      // Restore saved demo user or session
       const saved = localStorage.getItem("asar_active_client");
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -43,21 +46,28 @@ export const App: React.FC = () => {
     }
   }, []);
 
+  // Sync auth modal with /auth route
+  useEffect(() => {
+    if (location.pathname === "/auth") {
+      setIsAuthOpen(true);
+    }
+  }, [location.pathname]);
+
   const handleOpenAccount = (tab = "orders") => {
-    setAccountTab(tab);
-    setView("account");
+    const route = tab === "qr_hub" ? "qr-hub" : tab;
+    navigate(`/account/${route}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleBackToHome = () => {
-    setView("gateway");
+    navigate("/");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleAuthSuccess = (user: { name: string; email: string }) => {
     setCurrentUser(user);
-    // After login, transition smoothly to account view
-    setView("account");
+    setIsAuthOpen(false);
+    navigate("/account/orders");
   };
 
   const handleLogout = () => {
@@ -67,31 +77,69 @@ export const App: React.FC = () => {
       // ignore
     }
     setCurrentUser(null);
-    setView("gateway");
+    navigate("/");
+  };
+
+  const handleCloseAuth = () => {
+    setIsAuthOpen(false);
+    if (location.pathname === "/auth") {
+      navigate("/");
+    }
   };
 
   return (
     <Box minH="100vh" bg="var(--athar-bg-primary)">
-      {view === "gateway" ? (
-        <EcosystemHome
-          onOpenAccount={handleOpenAccount}
-          onOpenAuth={() => setIsAuthOpen(true)}
-          currentUser={currentUser}
-          onLogout={handleLogout}
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <PlatformGateway
+              onOpenAccount={handleOpenAccount}
+              onOpenAuth={() => setIsAuthOpen(true)}
+              currentUser={currentUser}
+              onLogout={handleLogout}
+            />
+          }
         />
-      ) : (
-        <ClientAccountShell
-          initialTab={accountTab}
-          onBackToHome={handleBackToHome}
-          onLogout={handleLogout}
-          currentUser={currentUser}
+        <Route
+          path="/auth"
+          element={
+            <PlatformGateway
+              initialAuthOpen={true}
+              onOpenAccount={handleOpenAccount}
+              onOpenAuth={() => setIsAuthOpen(true)}
+              currentUser={currentUser}
+              onLogout={handleLogout}
+            />
+          }
         />
-      )}
+        <Route
+          path="/account"
+          element={
+            <ClientAccountShell
+              onBackToHome={handleBackToHome}
+              onLogout={handleLogout}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route
+          path="/account/*"
+          element={
+            <ClientAccountShell
+              onBackToHome={handleBackToHome}
+              onLogout={handleLogout}
+              currentUser={currentUser}
+            />
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
 
       {/* Global Customer Auth Modal */}
       <AuthModal
         isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
+        onClose={handleCloseAuth}
         onSuccess={handleAuthSuccess}
       />
     </Box>

@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { buildMemoryUrls, validateSubdomainSlug } from "@repo/react-appwrite";
 
 export interface BoothMemory {
   id?: string;
@@ -36,6 +37,14 @@ export interface HeroAndTextsEditorProps {
 export const HeroAndTextsEditor: React.FC<HeroAndTextsEditorProps> = ({ memory, onChange }) => {
   const [newCatInput, setNewCatInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const memoryUrls = buildMemoryUrls({
+    slug: memory.slug || "mina-and-maryam",
+    type: "booth",
+    port: 3002,
+    rendererPort: 3004,
+  });
+  const slugValidation = validateSubdomainSlug(memory.slug);
 
   const updateField = <K extends keyof BoothMemory>(field: K, value: BoothMemory[K]) => {
     onChange({
@@ -90,7 +99,7 @@ export const HeroAndTextsEditor: React.FC<HeroAndTextsEditorProps> = ({ memory, 
           boxShadow: "var(--athar-shadow-soft)",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.2rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.2rem", flexWrap: "wrap", gap: "0.5rem" }}>
           <div>
             <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--athar-text-title)" }}>
               💍 Event Identity & Website Slug
@@ -99,15 +108,28 @@ export const HeroAndTextsEditor: React.FC<HeroAndTextsEditorProps> = ({ memory, 
               The canonical slug and title defining the client&apos;s Memory Website header and URL.
             </p>
           </div>
-          <span className="athar-badge-gold">
-            🌐 /memory/{memory.slug || "slug"}
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.25rem" }}>
+            <span className="athar-badge-gold" title="Subdomain Storefront Canonical Target">
+              🌐 Storefront: {memoryUrls.canonicalUrl}
+            </span>
+            <span style={{ fontSize: "0.72rem", color: "var(--athar-text-muted)" }}>
+              Renderer Dev:{" "}
+              <a
+                href={memoryUrls.devRendererUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: "var(--athar-maroon)", fontWeight: 700 }}
+              >
+                {memoryUrls.devRendererUrl}
+              </a>
+            </span>
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
           <div>
             <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, marginBottom: "0.35rem", color: "var(--athar-text-title)" }}>
-              Website URL Slug
+              Website URL Slug (Subdomain Storefront)
             </label>
             <input
               type="text"
@@ -115,10 +137,58 @@ export const HeroAndTextsEditor: React.FC<HeroAndTextsEditorProps> = ({ memory, 
               value={memory.slug}
               onChange={(e) => updateField("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
               placeholder="e.g. mina-and-maryam"
+              style={{
+                borderColor: !slugValidation.isValid ? "var(--athar-status-danger, #dc2626)" : undefined,
+              }}
             />
-            <span style={{ fontSize: "0.75rem", color: "var(--athar-text-muted)", marginTop: "0.25rem", display: "block" }}>
-              Live link: <code>http://localhost:3002?memory={memory.slug}</code>
-            </span>
+            {!slugValidation.isValid && (
+              <span
+                style={{
+                  fontSize: "0.75rem",
+                  color: "var(--athar-status-danger, #dc2626)",
+                  marginTop: "0.3rem",
+                  display: "block",
+                  fontWeight: 600,
+                }}
+              >
+                ⚠️ {slugValidation.error || "Subdomain must follow RFC 1123 DNS rules: lowercase letters, numbers, hyphens only, no leading/trailing hyphens, and cannot be a reserved name like admin or api."}
+              </span>
+            )}
+            <div style={{ marginTop: "0.35rem", fontSize: "0.75rem", color: "var(--athar-text-muted)", display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+              <span>
+                Canonical Storefront:{" "}
+                <a
+                  href={memoryUrls.canonicalUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "var(--athar-maroon)", fontWeight: 700 }}
+                >
+                  {memoryUrls.canonicalUrl}
+                </a>
+              </span>
+              <span>
+                Dedicated Renderer (Port 3004):{" "}
+                <a
+                  href={memoryUrls.devRendererUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "var(--athar-maroon)", textDecoration: "underline", fontWeight: 600 }}
+                >
+                  {memoryUrls.devRendererUrl}
+                </a>
+              </span>
+              <span>
+                Dev Test Link:{" "}
+                <a
+                  href={memoryUrls.devQueryUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "var(--athar-text-muted)", textDecoration: "underline" }}
+                >
+                  {memoryUrls.devQueryUrl}
+                </a>
+              </span>
+            </div>
           </div>
 
           <div>

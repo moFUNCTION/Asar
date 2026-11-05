@@ -1,0 +1,170 @@
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Aref+Ruqaa:wght@400;700&family=Cairo:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+
+:root {
+  /* Brand Primary: Royal Maroon & Burgundy */
+  --athar-maroon: #6B1D28;
+  --athar-maroon-dark: #5B1621;
+  --athar-maroon-deep: #4A0E17;
+  --athar-maroon-glow: rgba(107, 29, 40, 0.16);
+  --athar-maroon-subtle: rgba(107, 29, 40, 0.06);
+
+  /* Brand Secondary: Champagne Gold */
+  --athar-gold: #D4AF37;
+  --athar-gold-bright: #E5C158;
+  --athar-gold-light: #F1E5D1;
+  --athar-gold-muted: rgba(212, 175, 55, 0.4);
+  --athar-gold-border: rgba(212, 175, 55, 0.4);
+
+  /* Editorial Surfaces: Alabaster & Linen */
+  --athar-bg-primary: #FBF7F2;
+  --athar-bg-secondary: #F4EFEA;
+  --athar-bg-tertiary: #EDE6DC;
+  --athar-card-bg: rgba(255, 255, 255, 0.94);
+  --athar-card-border: rgba(107, 29, 40, 0.08);
+
+  /* Noir VIP Surface */
+  --athar-noir-bg: linear-gradient(170deg, #231A1E 0%, #161214 100%);
+  --athar-noir-surface: #1F1A1C;
+
+  /* Typography Colors */
+  --athar-text-title: #231F20;
+  --athar-text-body: #4A4240;
+  --athar-text-muted: #7A6F6D;
+
+  /* Status Semantic Colors (Tuned to Warm Editorial Palette) */
+  --athar-status-success: #1E6F50;
+  --athar-status-success-bg: rgba(30, 111, 80, 0.1);
+  --athar-status-warning: #B7791F;
+  --athar-status-warning-bg: rgba(212, 175, 55, 0.18);
+  --athar-status-danger: #9B2C2C;
+  --athar-status-danger-bg: rgba(155, 44, 44, 0.1);
+
+  /* Font Stacks */
+  --font-arabic-display: 'Amiri', 'Aref Ruqaa', 'Playfair Display', serif;
+  --font-latin-display: 'Playfair Display', 'Amiri', serif;
+  --font-body: 'Cairo', system-ui, -apple-system, sans-serif;
+
+  /* Radii & Shadows */
+  --athar-radius-sm: 8px;
+  --athar-radius-md: 16px;
+  --athar-radius-lg: 24px;
+  --athar-radius-xl: 32px;
+  --athar-radius-full: 9999px;
+  --athar-shadow-soft: 0 10px 30px -10px rgba(107, 29, 40, 0.06);
+  --athar-shadow-elevated: 0 24px 48px -12px rgba(107, 29, 40, 0.14);
+  --athar-shadow-gold: 0 15px 40px -10px rgba(212, 175, 55, 0.22);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  direction: rtl;
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Cairo', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--athar-bg-primary);
+  color: var(--athar-text-body);
+  direction: rtl;
+  text-align: right;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Utilities */
+.font-arabic-display {
+  font-family: 'Amiri', 'Aref Ruqaa', serif;
+}
+
+.font-poetic {
+  font-family: 'Amiri', 'Aref Ruqaa', serif;
+}
+
+.font-sans {
+  font-family: 'Cairo', system-ui, sans-serif;
+}
+
+.font-serif {
+  font-family: 'Amiri', 'Cairo', serif;
+}
+
+/* Luxury Athar Buttons */
+.btn-athar-primary {
+  background: var(--athar-maroon);
+  color: #ffffff !important;
+  padding: 0.85rem 1.85rem;
+  border-radius: var(--athar-radius-full);
+  font-weight: 700;
+  font-size: 0.98rem;
+  letter-spacing: 0.01em;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 14px rgba(107, 29, 40, 0.25);
+  text-decoration: none;
+}
+
+.btn-athar-primary:hover {
+  background: var(--athar-maroon-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(107, 29, 40, 0.35);
+}
+
+.btn-athar-secondary {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--athar-text-title) !important;
+  padding: 0.85rem 1.85rem;
+  border-radius: var(--athar-radius-full);
+  font-weight: 700;
+  font-size: 0.98rem;
+  border: 1px solid rgba(107, 29, 40, 0.16);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-decoration: none;
+}
+
+.btn-athar-secondary:hover {
+  background: #ffffff;
+  border-color: var(--athar-maroon);
+  transform: translateY(-2px);
+  box-shadow: var(--athar-shadow-soft);
+}
+
+/* Glassmorphism */
+.glass-panel {
+  background: var(--athar-card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--athar-card-border);
+  box-shadow: var(--athar-shadow-soft);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--athar-bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(107, 29, 40, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--athar-maroon);
+}

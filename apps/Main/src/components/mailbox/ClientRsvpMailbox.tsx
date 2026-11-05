@@ -3,10 +3,13 @@ import { Box, Flex, HStack, VStack, Text, Button, Badge } from "@chakra-ui/react
 import type { InvitationRsvp } from "@repo/react-appwrite";
 import {
   ASAR_COLLECTIONS,
+  ASAR_DATABASE_ID,
   DEMO_INVITATION_RSVPS,
   sendRsvpDecisionEmail,
   buildQrCodeImageUrl,
+  buildMemoryUrls,
   useCollection,
+  useAppwrite,
 } from "@repo/react-appwrite";
 
 import { CapacityProgressBar } from "./CapacityProgressBar";
@@ -33,6 +36,8 @@ export const ClientRsvpMailbox: React.FC<ClientRsvpMailboxProps> = ({
 
   // Reference clientId to ensure scope isolation
   void clientId;
+  const { databases, config } = useAppwrite();
+  const dbId = config?.databaseId || ASAR_DATABASE_ID;
 
   // Local state initialized with fallback / cache
   const [rsvps, setRsvps] = useState<InvitationRsvp[]>(() => {
@@ -109,7 +114,36 @@ export const ClientRsvpMailbox: React.FC<ClientRsvpMailboxProps> = ({
         const timestampPart = Date.now().toString(36).toUpperCase().slice(-4);
         const passToken = rsvp.passToken || `INV-PASS-${timestampPart}-${randomHex}`;
 
-        const passLink = `http://localhost:3003?pass=${rsvp.$id}&token=${passToken}`;
+        // Dynamically resolve canonical pass verification link
+        const eventSlug = (rsvp.invitationId || invitationId || "omar-and-layla")
+          .replace(/^invitation-/, "")
+          .trim()
+          .toLowerCase();
+
+        const isBrowser = typeof window !== "undefined" && Boolean(window.location);
+        const hostname = isBrowser ? window.location.hostname : "";
+        const isLocal =
+          hostname === "localhost" ||
+          hostname === "127.0.0.1" ||
+          hostname.endsWith(".localhost") ||
+          !hostname;
+
+        let passLink: string;
+        if (!isLocal && isBrowser && window.location.origin) {
+          const memoryUrls = buildMemoryUrls({
+            slug: eventSlug,
+            type: "invitation",
+            port: 3003,
+          });
+          passLink = `${memoryUrls.canonicalUrl}/pass/${rsvp.$id}?token=${passToken}`;
+        } else {
+          const baseOrigin =
+            isBrowser && window.location.origin && window.location.port === "3003"
+              ? window.location.origin
+              : "http://localhost:3003";
+          passLink = `${baseOrigin}/pass/${rsvp.$id}?token=${passToken}`;
+        }
+
         const qrCodeUrl = buildQrCodeImageUrl(passLink, 500);
 
         // Read custom EmailJS config from localStorage if saved
@@ -160,6 +194,26 @@ export const ClientRsvpMailbox: React.FC<ClientRsvpMailboxProps> = ({
         });
 
         persistRsvps(updatedList);
+
+        // Update document in Appwrite Cloud
+        try {
+          if (databases && rsvp.$id) {
+            await databases.updateDocument(
+              dbId,
+              ASAR_COLLECTIONS.INVITATION_RSVPS,
+              rsvp.$id,
+              {
+                status: "approved",
+                passToken,
+                qrCodeUrl,
+                emailSent: true,
+                respondedAt: new Date().toISOString(),
+              }
+            );
+          }
+        } catch {
+          // Safe fallback to local optimistic state
+        }
 
         if (dispatchResult.simulated) {
           showToast(
@@ -225,6 +279,24 @@ export const ClientRsvpMailbox: React.FC<ClientRsvpMailboxProps> = ({
         });
 
         persistRsvps(updatedList);
+
+        // Update document in Appwrite Cloud
+        try {
+          if (databases && rsvp.$id) {
+            await databases.updateDocument(
+              dbId,
+              ASAR_COLLECTIONS.INVITATION_RSVPS,
+              rsvp.$id,
+              {
+                status: "declined",
+                emailSent: true,
+                respondedAt: new Date().toISOString(),
+              }
+            );
+          }
+        } catch {
+          // Safe fallback to local optimistic state
+        }
 
         if (dispatchResult.simulated) {
           showToast(

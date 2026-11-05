@@ -955,7 +955,7 @@ export const InvitationBookingModal: React.FC<InvitationBookingModalProps> = ({
             {/* CTAs */}
             <Flex direction="column" gap={3}>
               <a
-                href="http://localhost:3000/account"
+                href={`http://localhost:3000/account/mailbox?orderId=${createdOrderId}`}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",

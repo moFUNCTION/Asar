@@ -415,7 +415,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             {/* Action Buttons */}
             <Flex direction="column" gap={3} w="100%" maxW="460px">
               <a
-                href={`http://localhost:3000?orderId=${submittedOrderId}`}
+                href={`http://localhost:3000/account/orders?orderId=${submittedOrderId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ textDecoration: "none" }}

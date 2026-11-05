@@ -1,12 +1,14 @@
 # Dispatch Log
 
 ## 2026-11-03T08:45:41Z
+
 Please make 10 agents work in parallel to do the tasks from Agent_01 to Agent_10, taking into consideration ASAR Project architecture and ASAR design system, and validating every step with ASAR_PROJECT_ARCHITECTURE.md.
 
 Working directory: d:\asar
 Integrity mode: development
 
 Reference material:
+
 - docs/ASAR_PROJECT_ARCHITECTURE.md
 - docs/ASAR_DESIGN_SYSTEM.md
 - docs/AGENT_01_SHARED_DOMAIN_AND_UTILITIES.md
@@ -21,11 +23,13 @@ Reference material:
 - docs/AGENT_10_CLIENT_INVITATION_MAILBOX_AND_EMAILJS.md
 
 ## 2026-11-03T11:34:13Z
+
 === VICTORY REJECTED BY INDEPENDENT AUDITOR ===
 The independent victory auditor (convId: da5b4e21-91ef-41d3-9135-57708cca874f) has evaluated the project deliverables against ORIGINAL_REQUEST.md and returned VICTORY REJECTED due to failures in the objective verification acceptance criteria:
 
 1. TypeScript Compilation Failure in apps/Booth:
-`npx tsc --noEmit -p apps/Booth/tsconfig.app.json` failed with 9 diagnostic errors in Agent 03 memory components:
+   `npx tsc --noEmit -p apps/Booth/tsconfig.app.json` failed with 9 diagnostic errors in Agent 03 memory components:
+
 - `apps/Booth/src/components/memory/VideoHighlightCard.tsx(209,16)` & `(245,17)`: Cannot find name 'HStack' (TS2304).
 - `apps/Booth/src/components/memory/AudioPlayerBar.tsx(112,17)` & `(119,17)`: Property 'noOfLines' does not exist on Text (Chakra v3 requires `lineClamp`) (TS2322).
 - `apps/Booth/src/components/memory/MemoryHeader.tsx(95,17)` & `MemoryHero.tsx(57,13)`: Property 'fallback' does not exist on Chakra v3 Image (TS2322).
@@ -34,7 +38,8 @@ The independent victory auditor (convId: da5b4e21-91ef-41d3-9135-57708cca874f) h
 - `apps/Booth/src/components/memory/VoiceCard.tsx(190,15)`: Property 'noOfLines' does not exist (TS2322).
 
 2. Linter Failures on Modified Files:
-`npm run lint` failed on modified files:
+   `npm run lint` failed on modified files:
+
 - `apps/Booth/src/components/sections/BookingModal.tsx:257:19, 992:60`: Unexpected any.
 - `apps/Booth/src/hooks/useBoothBooking.ts:540:41`: Unexpected any.
 - `apps/Admin/src/App.tsx:10:18`: Unexpected any; `14:1, 16:1`: Use "@ts-expect-error".
@@ -43,3 +48,125 @@ The independent victory auditor (convId: da5b4e21-91ef-41d3-9135-57708cca874f) h
 
 Full auditor handoff: `d:\asar\.agents\teamwork\victory_auditor_1\handoff.md`.
 
+
+## 2026-11-03T13:44:43Z
+
+Update the ASAR monorepo architecture and apps to use React Router across all apps, and implement dynamic subdomain-based rendering for Invitation and Booth memories (operating like a web builder storefront platform) while preserving Admin memory template management.
+
+Working directory: d:\asar
+Integrity mode: development
+
+## Requirements
+
+### R1. Monorepo-Wide React Router Integration
+Integrate React Router across all applications in the monorepo (`apps/*`) to establish consistent client-side routing.
+
+### R2. Subdomain-Driven Dynamic Memory Renderer App
+Implement dynamic memory rendering for Invitation memories and Booth memories based on subdomain detection (fetching and resolving the subdomain to determine what to render, similar to a web builder or Shopify storefront model). The team decides the best app structure (whether to introduce a new dedicated renderer app under `apps/` or adapt existing apps) and the subdomain resolution strategy for production and local environments.
+
+### R3. Admin Memory Template & Management Alignment
+Preserve and maintain the existing Admin management flows for memory templates, booth memories, and invitation memories, ensuring seamless compatibility with the updated dynamic renderer architecture.
+
+### R4. Architecture Documentation
+Update `docs/ASAR_PROJECT_ARCHITECTURE.md` and related documentation to reflect the updated monorepo apps, routing model, and dynamic subdomain renderer architecture.
+
+## Acceptance Criteria
+
+### Routing & Subdomain Rendering
+- [ ] React Router is configured and active across all applications in the monorepo (`apps/*`).
+- [ ] Subdomain detection reliably resolves dynamic subdomains and renders the corresponding Booth memory or Invitation memory.
+- [ ] Admin management of memory templates, booth memories, and invitation memories operates correctly with the new renderer architecture.
+- [ ] `docs/ASAR_PROJECT_ARCHITECTURE.md` is updated to reflect the revised app structure, routing, and subdomain rendering workflow.
+
+### Objective Verification
+- [ ] TypeScript compilation (`tsc --noEmit`) passes cleanly across all modified apps and packages with zero errors.
+- [ ] Linter checks pass without errors across all modified files.
+- [ ] Automated unit or integration tests for routing, subdomain resolution, and memory template rendering pass.
+
+
+## 2026-11-04T00:17:27Z
+
+Analyze competitor wedding and event platforms (including https://chungdoi.com/wedding-website and similar services) and update ASAR's architecture, implementing a modular section-based website creation editor in Admin and delivering modern interactive features across Invitation and Booth apps for production use. Separation across more than one app is fine.
+
+Integrity mode: development
+
+Reference material:
+- https://chungdoi.com/wedding-website
+
+## Requirements
+
+### R1. Competitive Analysis and Architectural Update
+Analyze https://chungdoi.com/wedding-website and comparable modern wedding/event platforms (such as WithJoy and Zola) for core feature sets, section types, and user flows. Update ASAR's architectural documentation (`docs/ASAR_PROJECT_ARCHITECTURE.md`) to define the target architecture, modular section data schema, and component responsibilities across monorepo apps (`apps/Admin`, `apps/Booth`, `apps/Invitation`, and shared packages).
+
+### R2. Admin Modular Website Creation Editor
+Implement a modular section-based editor in `apps/Admin` enabling administrators to create and manage event websites by dropping in, reordering, and configuring modular sections (including RSVP, wishing wall/guestbook, event timeline/schedule, background audio, digital gift registry / bank QR, and photo gallery) populated with structured event data.
+
+### R3. Modern Interactive Invitation and Booth Features
+Implement and integrate modern interactive features across `apps/Invitation` and `apps/Booth` powered by the admin-configured section schema, supporting interactive wishing wall messages, multi-event schedules, background music player, digital gift/blessing box with QR, guest RSVP submissions, and photo memories gallery.
+
+### R4. Workflow and Implementation Constraints
+Do not over-run `npm run build` without reason. Do not make scripts or code generators without reason, only make them if strictly needed.
+
+## Acceptance Criteria
+
+### Architecture and Analysis
+- [ ] A competitive analysis document is produced analyzing https://chungdoi.com/wedding-website and similar benchmark platforms.
+- [ ] `docs/ASAR_PROJECT_ARCHITECTURE.md` is updated to define the modular section schema, data flow, and app boundaries across Admin, Invitation, and Booth.
+
+### Admin Section Editor
+- [ ] Admin app includes a functional modular section editor allowing admins to add, reorder, edit data for, and remove website sections (RSVP, wishing wall, event schedule, audio soundtrack, gift registry/QR, photo gallery).
+- [ ] Website configuration and section data are persisted and retrieved using the established data layer.
+
+### Invitation & Booth Interactive Experience
+- [ ] Invitation web app dynamically renders the configured modular sections based on the event data schema.
+- [ ] Guests can submit RSVP responses and post messages to the interactive wishing wall.
+- [ ] Background audio player controls and event schedule timeline are functional on the rendered invitation site.
+- [ ] Digital gift/blessing section displays payment QR and gifting details as configured.
+- [ ] Booth app photo memories align with the updated data architecture and event sections.
+
+### Quality and Constraints
+- [ ] Automated tests and workspace checks (e.g. typechecking) pass across modified packages and apps.
+- [ ] `npm run build` is not run excessively or without clear cause.
+- [ ] No unnecessary code generators or standalone scripts are created.
+
+
+## 2026-11-04T22:12:20Z
+
+Audit and stabilize invitation and booth memory generation across the workspace apps for production readiness, enhance the UI/UX across Admin and all apps using the ASAR Warm Vintage Editorial luxury design system, and create an agent onboarding guide in docs/AGENT_GUIDE.md.
+
+Integrity mode: development
+
+## Verification Resources
+- Existing repository test suite including 144+ unit and stress tests covering generation and core features.
+
+## Requirements
+
+### R1. Stable Invitation and Booth Memory Generation
+Audit all applications across the monorepo to ensure core workflows function as expected, achieving stable, reliable generation of invitations and booth memories under standard and edge conditions without crashes or state desynchronization. Do not run `npm run build` unnecessarily, and do not create ad-hoc scripts or code generators unless strictly needed.
+
+### R2. Workspace UI/UX Overhaul
+Modernize and enhance the user interface and user experience across the Admin application and all client applications (Booth, Invitation, Main, Renderer), delivering cohesive layouts, intuitive navigation, and visual styling adhering to the ASAR Warm Vintage Editorial luxury design system.
+
+### R3. Comprehensive Agent Guide
+Create `docs/AGENT_GUIDE.md` documenting every part of the repository—including system architecture, application boundaries, shared packages, data flows, and development practices—so future agents can continue work cleanly without conflicts.
+
+## Acceptance Criteria
+
+### Generation Stability & Workflow
+- [ ] All existing 144+ unit and stress tests pass.
+- [ ] Invitation generation consistently produces valid outputs across expected formats and inputs without runtime exceptions.
+- [ ] Booth memory generation reliably processes and renders outputs without failure or memory exhaustion.
+- [ ] All workspace apps (Admin, Booth, Invitation, Main, Renderer) launch and operate their core features without unhandled errors.
+
+### UI/UX Quality
+- [ ] Admin dashboard and all application views provide modern, responsive layouts following the ASAR Warm Vintage Editorial luxury design system.
+- [ ] Navigation, typography, color palettes, and interaction states are polished and consistent across all apps.
+
+### Agent Documentation
+- [ ] `docs/AGENT_GUIDE.md` exists and contains an architectural overview, breakdown of all apps and packages, end-to-end data flows, and conflict-prevention guidelines for future agents.
+
+## Orchestration Context
+- Working directory: .agents/teamwork/orchestrator/
+- Original request file: d:\asar\.agents\teamwork\ORIGINAL_REQUEST.md
+- Parent sentinel conversation ID: 648c9059-4cc4-42ee-9304-66fe872baa22
+- Workspace root: d:\asar

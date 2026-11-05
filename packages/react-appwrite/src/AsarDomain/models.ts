@@ -118,6 +118,8 @@ export interface BoothMemory {
   orderId?: string;
   clientId?: string;
   slug: string;
+  subdomain?: string;
+  customDomain?: string;
   eventHeaderTag?: string; // "THE WEDDING OF"
   coupleTitle: string; // "Mina & Maryam"
   tagline?: string; // "Same People. Different Voices. A Lasting Athar."
@@ -248,6 +250,8 @@ export interface AsarInvitation {
   orderId?: string;
   clientId?: string;
   slug: string;
+  subdomain?: string;
+  customDomain?: string;
   eventTitle: string;
   occasionType: InvitationOccasionType;
   eventDate: string;
@@ -415,4 +419,43 @@ export function parseSectionsConfig(
   if (!sectionsJson) return [];
   const parsed = safeJsonParse<unknown>(sectionsJson, []);
   return Array.isArray(parsed) ? (parsed as InvitationSectionBlock[]) : [];
+}
+
+// =============================================================
+// ASAR User Profile Model
+// =============================================================
+
+export type AsarUserRole = "client" | "admin";
+
+export interface AsarUserProfile {
+  $id?: string;
+  $createdAt?: string;
+  $updatedAt?: string;
+  userId: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: AsarUserRole;
+  avatarUrl?: string;
+  organization?: string;
+  locale?: string;
+  metadataJson?: string;
+}
+
+export function parseUserProfile(doc: any): AsarUserProfile | null {
+  if (!doc || typeof doc !== "object") return null;
+  return {
+    $id: doc.$id,
+    $createdAt: doc.$createdAt,
+    $updatedAt: doc.$updatedAt,
+    userId: doc.userId || doc.$id || "",
+    name: doc.name || "",
+    email: doc.email || "",
+    phone: doc.phone || undefined,
+    role: (doc.role === "admin" ? "admin" : "client") as AsarUserRole,
+    avatarUrl: doc.avatarUrl || undefined,
+    organization: doc.organization || undefined,
+    locale: doc.locale || "ar",
+    metadataJson: doc.metadataJson || undefined,
+  };
 }

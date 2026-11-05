@@ -34,24 +34,24 @@ export const MemoryActionBar: React.FC<MemoryActionBarProps> = ({
         bg="rgba(251, 247, 242, 0.95)"
         backdropFilter="blur(16px)"
         borderTop="1px solid rgba(107, 29, 40, 0.1)"
-        py={3.5}
+        py={{ base: 2, sm: 3.5 }}
         px={{ base: 3, sm: 6 }}
         boxShadow="0 -10px 30px rgba(107, 29, 40, 0.05)"
       >
         <Box maxW="1100px" mx="auto">
           <Flex
-            gap={{ base: 3, sm: 4 }}
-            direction={{ base: "column", sm: "row" }}
-            align="stretch"
+            gap={{ base: 2, sm: 4 }}
+            direction="row"
+            align="center"
           >
             {/* Left Button: Download All Messages */}
             <Button
               as="button"
               flex="1"
               h="auto"
-              py={3.5}
-              px={5}
-              borderRadius="18px"
+              py={{ base: 2, sm: 3.5 }}
+              px={{ base: 2.5, sm: 5 }}
+              borderRadius={{ base: "14px", sm: "18px" }}
               bg="#FFFFFF"
               border="1.5px solid rgba(107, 29, 40, 0.15)"
               boxShadow="0 4px 14px rgba(107, 29, 40, 0.05)"
@@ -65,10 +65,10 @@ export const MemoryActionBar: React.FC<MemoryActionBarProps> = ({
                 transform: "translateY(-2px)",
               }}
             >
-              <HStack gap={3.5} w="100%" justify="flex-start">
+              <HStack gap={{ base: 2, sm: 3.5 }} w="100%" justify={{ base: "center", sm: "flex-start" }}>
                 <Flex
-                  w="38px"
-                  h="38px"
+                  w={{ base: "30px", sm: "38px" }}
+                  h={{ base: "30px", sm: "38px" }}
                   borderRadius="full"
                   bg="rgba(107, 29, 40, 0.06)"
                   color="var(--athar-maroon, #6B1D28)"
@@ -76,18 +76,19 @@ export const MemoryActionBar: React.FC<MemoryActionBarProps> = ({
                   justify="center"
                   flexShrink={0}
                 >
-                  <FaDownload size={15} />
+                  <FaDownload size={13} />
                 </Flex>
                 <Box textAlign="left">
                   <Text
-                    fontSize="0.95rem"
+                    fontSize={{ base: "0.82rem", sm: "0.95rem" }}
                     fontWeight="700"
                     color="var(--athar-maroon-dark, #5B1621)"
                     lineHeight="1.2"
+                    whiteSpace="nowrap"
                   >
-                    {isDownloading ? "Preparing Archive ..." : "Download All Messages"}
+                    {isDownloading ? "Preparing..." : "Download All"}
                   </Text>
-                  <Text fontSize="0.75rem" color="var(--athar-text-muted, #7A6F6D)">
+                  <Text fontSize="0.75rem" color="var(--athar-text-muted, #7A6F6D)" display={{ base: "none", md: "block" }}>
                     Keep your memories forever
                   </Text>
                 </Box>
@@ -99,9 +100,9 @@ export const MemoryActionBar: React.FC<MemoryActionBarProps> = ({
               as="button"
               flex="1"
               h="auto"
-              py={3.5}
-              px={5}
-              borderRadius="18px"
+              py={{ base: 2, sm: 3.5 }}
+              px={{ base: 2.5, sm: 5 }}
+              borderRadius={{ base: "14px", sm: "18px" }}
               bg="var(--athar-maroon, #6B1D28)"
               color="white"
               border="1.5px solid var(--athar-maroon, #6B1D28)"
@@ -114,10 +115,10 @@ export const MemoryActionBar: React.FC<MemoryActionBarProps> = ({
                 transform: "translateY(-2px)",
               }}
             >
-              <HStack gap={3.5} w="100%" justify="flex-start">
+              <HStack gap={{ base: 2, sm: 3.5 }} w="100%" justify={{ base: "center", sm: "flex-start" }}>
                 <Flex
-                  w="38px"
-                  h="38px"
+                  w={{ base: "30px", sm: "38px" }}
+                  h={{ base: "30px", sm: "38px" }}
                   borderRadius="full"
                   bg="rgba(255, 255, 255, 0.15)"
                   color="#F1E5D1"
@@ -125,13 +126,13 @@ export const MemoryActionBar: React.FC<MemoryActionBarProps> = ({
                   justify="center"
                   flexShrink={0}
                 >
-                  <FaShareAlt size={15} />
+                  <FaShareAlt size={13} />
                 </Flex>
                 <Box textAlign="left">
-                  <Text fontSize="0.95rem" fontWeight="700" color="white" lineHeight="1.2">
+                  <Text fontSize={{ base: "0.82rem", sm: "0.95rem" }} fontWeight="700" color="white" lineHeight="1.2" whiteSpace="nowrap">
                     Share Love
                   </Text>
-                  <Text fontSize="0.75rem" color="rgba(255, 255, 255, 0.8)">
+                  <Text fontSize="0.75rem" color="rgba(255, 255, 255, 0.8)" display={{ base: "none", md: "block" }}>
                     With Family & Friends
                   </Text>
                 </Box>

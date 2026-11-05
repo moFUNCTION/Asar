@@ -1,4 +1,27 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+
+/**
+ * Safely revokes a single object URL created during audio ingestion.
+ */
+export function revokeVoiceObjectUrl(url?: string): void {
+  if (!url || !url.startsWith("blob:")) return;
+  try {
+    URL.revokeObjectURL(url);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Safely revokes all object URLs in a collection of voice records.
+ */
+export function revokeAllVoiceObjectUrls(records: Array<{ audioUrl?: string }>): void {
+  for (const record of records) {
+    if (record.audioUrl) {
+      revokeVoiceObjectUrl(record.audioUrl);
+    }
+  }
+}
 
 // =============================================================
 // Interfaces & Types
@@ -35,6 +58,8 @@ export interface BulkVoiceUploaderProps {
   categories: string[];
   activeCategory?: string;
   onAddRecords: (records: BoothVoiceRecord[]) => void;
+  onDeleteRecord?: (id: string, audioUrl?: string) => void;
+  onClearRecords?: () => void;
 }
 
 // =============================================================
@@ -617,11 +642,52 @@ export const BulkVoiceUploader: React.FC<BulkVoiceUploaderProps> = ({
   categories,
   activeCategory,
   onAddRecords,
+  onDeleteRecord,
+  onClearRecords,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState({ current: 0, total: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const activeObjectUrlsRef = useRef<Set<string>>(new Set());
+
+  // Cleanup all tracked object URLs upon unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      activeObjectUrlsRef.current.forEach((url) => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {
+          // ignore
+        }
+      });
+      activeObjectUrlsRef.current.clear();
+    };
+  }, []);
+
+  // Handler for explicit voice deletion or object URL revocation
+  const handleDeleteVoice = useCallback((url?: string, recordId?: string) => {
+    if (url && activeObjectUrlsRef.current.has(url)) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {
+        // ignore
+      }
+      activeObjectUrlsRef.current.delete(url);
+    } else if (url && url.startsWith("blob:")) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {
+        // ignore
+      }
+    }
+    if (recordId && onDeleteRecord) {
+      onDeleteRecord(recordId, url);
+    }
+  }, [onDeleteRecord]);
+
+  void handleDeleteVoice;
+  void onClearRecords;
 
   const processFiles = useCallback(
     async (files: File[]) => {
@@ -644,6 +710,7 @@ export const BulkVoiceUploader: React.FC<BulkVoiceUploaderProps> = ({
         const meta = await extractAudioMetadata(file, 48);
 
         const objectUrl = URL.createObjectURL(file);
+        activeObjectUrlsRef.current.add(objectUrl);
 
         newRecords.push({
           id: `voice_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 7)}`,

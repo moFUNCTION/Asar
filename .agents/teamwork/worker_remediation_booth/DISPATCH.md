@@ -1,12 +1,15 @@
 # Dispatch: worker_remediation_booth
 
 ## Mission
+
 Fix the 9 TypeScript compilation errors in `apps/Booth/src/components/memory/*` and linter errors in `apps/Booth/src/components/sections/BookingModal.tsx` and `apps/Booth/src/hooks/useBoothBooking.ts`.
 
 ## Working Directory
+
 `.agents/teamwork/worker_remediation_booth`
 
 ## Specific Instructions
+
 1. Read `d:\asar\.agents\teamwork\ORIGINAL_REQUEST.md` and `d:\asar\.agents\teamwork\victory_auditor_1\handoff.md`.
 2. Fix TypeScript errors in `apps/Booth/src/components/memory/*`:
    - `VideoHighlightCard.tsx`: Import `HStack` from `@chakra-ui/react`.
@@ -21,4 +24,3 @@ Fix the 9 TypeScript compilation errors in `apps/Booth/src/components/memory/*` 
    `npx tsc --noEmit -p apps/Booth/tsconfig.app.json`
    and check linting on modified files.
 5. Write `handoff.md` with verification outputs.
-

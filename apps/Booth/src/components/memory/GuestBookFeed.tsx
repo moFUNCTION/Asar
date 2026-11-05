@@ -109,7 +109,7 @@ export const GuestBookFeed: React.FC<GuestBookFeedProps> = ({
                     {note.authorName[0]}
                   </Flex>
                   <Box>
-                    <Text fontSize="0.95rem" fontWeight="700" color="var(--athar-text-title, #231F20)">
+                    <Text fontSize="0.95rem" fontWeight="700" color="var(--athar-text-title, #231F20)" dir="auto">
                       {note.authorName}
                     </Text>
                     <Text fontSize="0.75rem" color="var(--athar-text-muted, #7A6F6D)">

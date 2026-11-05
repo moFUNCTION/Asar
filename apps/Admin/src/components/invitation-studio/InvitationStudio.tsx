@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { useAppwrite } from "@repo/react-appwrite";
+import {
+  useAppwrite,
+  buildMemoryUrls,
+  validateSubdomainSlug,
+  parseModularWebsiteConfig,
+  validateModularWebsiteConfig,
+  createDefaultModularWebsiteConfig,
+  type ModularWebsiteConfig,
+  type EventSection,
+} from "@repo/react-appwrite";
 import {
   ThemeAndEffectsPanel,
   THEME_PRESETS,
@@ -7,7 +16,7 @@ import {
 } from "./ThemeAndEffectsPanel";
 import {
   SectionBlocksManager,
-  DEFAULT_SECTION_BLOCKS,
+  projectModernSectionsToLegacyBlocks,
   type InvitationSectionBlock,
 } from "./SectionBlocksManager";
 import {
@@ -19,6 +28,7 @@ import {
   type DynamicFormField,
 } from "./DynamicFormSchemaBuilder";
 import { LiveInvitationPreview } from "./LiveInvitationPreview";
+import { LiveModularPreview } from "./LiveModularPreview";
 
 export interface InvitationStudioProps {
   orderId?: string | null;
@@ -135,12 +145,21 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
   const currentDemoOrder = DEMO_ORDERS[selectedOrderId] || DEMO_ORDERS["ORD-915"];
 
   const [activeTab, setActiveTab] = useState<"theme" | "sections" | "form">("theme");
+  const [previewEngine, setPreviewEngine] = useState<"modular" | "classic">("modular");
   const [occasionType, setOccasionType] = useState<AsarInvitationDocument["occasionType"]>(
     currentDemoOrder.occasionType
   );
   const [slug, setSlug] = useState<string>("omar-and-layla");
   const [eventTitle, setEventTitle] = useState<string>(currentDemoOrder.eventTitle);
   const [maxCapacity, setMaxCapacity] = useState<number>(currentDemoOrder.maxCapacity);
+
+  const invitationUrls = buildMemoryUrls({
+    slug: slug || "omar-and-layla",
+    type: "invitation",
+    port: 3003,
+    rendererPort: 3004,
+  });
+  const slugValidation = validateSubdomainSlug(slug);
 
   // Theme Config State
   const [themeConfig, setThemeConfig] = useState<InvitationThemeConfig>(() => {
@@ -149,8 +168,31 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
     return THEME_PRESETS["royal-wedding"].config;
   });
 
-  // Section Blocks State
-  const [blocks, setBlocks] = useState<InvitationSectionBlock[]>(DEFAULT_SECTION_BLOCKS);
+  // Modular Website Config State (v2.0)
+  const [modularConfig, setModularConfig] = useState<ModularWebsiteConfig>(() => {
+    // Attempt load from localStorage cache
+    const savedActive = localStorage.getItem("asar_active_invitation");
+    if (savedActive) {
+      try {
+        const parsedDoc = JSON.parse(savedActive);
+        if (parsedDoc?.sectionsConfigJson) {
+          return parseModularWebsiteConfig(parsedDoc.sectionsConfigJson);
+        }
+      } catch (err: unknown) {
+        console.warn("Failed to load active invitation cache", err);
+      }
+    }
+    return createDefaultModularWebsiteConfig({
+      coupleTitle: currentDemoOrder.eventTitle,
+      eventDate: currentDemoOrder.eventDate,
+      venueName: currentDemoOrder.venueName,
+    });
+  });
+
+  // Legacy Section Blocks State kept synchronized
+  const [blocks, setBlocks] = useState<InvitationSectionBlock[]>(() =>
+    projectModernSectionsToLegacyBlocks(modularConfig.sections)
+  );
 
   // Dynamic Form Schema State (Always enforce mandatory guestEmail)
   const [formFields, setFormFields] = useState<DynamicFormField[]>(() => {
@@ -168,6 +210,16 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
     setToastMessage(msg);
     setToastType(type);
     setTimeout(() => setToastMessage(null), 4500);
+  };
+
+  // Modern sections update handler
+  const handleModularSectionsChange = (newSections: EventSection[]) => {
+    setModularConfig((prev) => ({
+      ...prev,
+      sections: newSections,
+      metadata: { lastEditedAt: new Date().toISOString() },
+    }));
+    setBlocks(projectModernSectionsToLegacyBlocks(newSections));
   };
 
   // Switch demo order
@@ -194,7 +246,41 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
         setThemeConfig(THEME_PRESETS["royal-wedding"].config);
       }
 
-      // Update blocks
+      // Update modularConfig sections
+      setModularConfig((prev) => {
+        const updated = prev.sections.map((sec) => {
+          if (sec.type === "cover_hero") {
+            return {
+              ...sec,
+              coupleTitle: orderData.eventTitle,
+              dateDisplay: orderData.eventDate,
+              venueDisplay: orderData.venueName,
+            };
+          }
+          if (sec.type === "venue_location") {
+            return {
+              ...sec,
+              venueName: orderData.venueName,
+              address: orderData.venueAddress,
+              mapEmbedUrl: orderData.venueMapUrl,
+            };
+          }
+          if (sec.type === "live_countdown") {
+            return {
+              ...sec,
+              targetDateIso: `${orderData.eventDate}T${orderData.eventTime || "19:00"}:00.000Z`,
+            };
+          }
+          return sec;
+        });
+        return {
+          ...prev,
+          sections: updated,
+          metadata: { lastEditedAt: new Date().toISOString() },
+        };
+      });
+
+      // Update legacy blocks
       setBlocks((prev) =>
         prev.map((b) => {
           if (b.type === "hero") {
@@ -234,7 +320,35 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
     setMaxCapacity(orderData.maxCapacity);
     setOccasionType(orderData.occasionType);
 
-    // 2. Update Hero and Venue blocks
+    // 2. Update modular sections
+    setModularConfig((prev) => {
+      const updated = prev.sections.map((sec) => {
+        if (sec.type === "cover_hero") {
+          return {
+            ...sec,
+            coupleTitle: orderData.eventTitle,
+            dateDisplay: orderData.eventDate,
+            venueDisplay: orderData.venueName,
+          };
+        }
+        if (sec.type === "venue_location") {
+          return {
+            ...sec,
+            venueName: orderData.venueName,
+            address: orderData.venueAddress,
+            mapEmbedUrl: orderData.venueMapUrl,
+          };
+        }
+        return sec;
+      });
+      return {
+        ...prev,
+        sections: updated,
+        metadata: { lastEditedAt: new Date().toISOString() },
+      };
+    });
+
+    // 3. Update legacy blocks
     setBlocks((prev) =>
       prev.map((b) => {
         if (b.type === "hero") {
@@ -258,7 +372,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
       })
     );
 
-    // 3. Generate dynamic form fields from client requested list
+    // 4. Generate dynamic form fields from client requested list
     const generated = generateFieldsFromClientRequests(orderData.requestedFields);
     const merged = enforceMandatoryEmailConstraint([...MANDATORY_SYSTEM_FIELDS, ...generated]);
     setFormFields(merged);
@@ -271,11 +385,26 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
 
   // Save and Publish
   const handleSaveAndPublish = async () => {
+    // 0. Validate Subdomain Slug
+    const slugCheck = validateSubdomainSlug(slug);
+    if (!slugCheck.isValid) {
+      showToast(`Cannot publish: Invalid subdomain slug (${slugCheck.error})`, "error");
+      return;
+    }
+
     // 1. Validate Form Schema
     const validation = validateFormSchema(formFields);
     if (!validation.isValid) {
       showToast(`Cannot publish: ${validation.errors[0]}`, "error");
       setActiveTab("form");
+      return;
+    }
+
+    // 2. Validate Modular Website Config (v2.0)
+    const configCheck = validateModularWebsiteConfig(modularConfig);
+    if (!configCheck.isValid) {
+      showToast(`Cannot publish: ${configCheck.errors[0]}`, "error");
+      setActiveTab("sections");
       return;
     }
 
@@ -296,9 +425,9 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
         venueMapUrl: currentDemoOrder.venueMapUrl,
         maxCapacity,
         themeConfigJson: JSON.stringify(themeConfig),
-        sectionsConfigJson: JSON.stringify(blocks),
+        sectionsConfigJson: JSON.stringify(modularConfig),
         formSchemaJson: JSON.stringify(formFields),
-        qrCodeUrl: `http://localhost:3003?event=${slug}`,
+        qrCodeUrl: invitationUrls.canonicalUrl,
         isPublished: true,
       };
 
@@ -322,7 +451,6 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
         try {
           await databases.createDocument("asar-db", "invitations", invitationPayload.id, invitationPayload);
         } catch {
-          // If document already exists, try update
           try {
             await databases.updateDocument("asar-db", "invitations", invitationPayload.id, invitationPayload);
           } catch {
@@ -331,7 +459,10 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
         }
       }
 
-      showToast(`🚀 Custom Invitation Published! URL: http://localhost:3003?event=${slug}`, "success");
+      showToast(
+        `🚀 Custom Modular Invitation Published! Storefront: ${invitationUrls.canonicalUrl} (Renderer: ${invitationUrls.devRendererUrl} | Dev: ${invitationUrls.devQueryUrl})`,
+        "success"
+      );
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : "Unknown error";
       showToast(`Error saving invitation: ${errMsg}`, "error");
@@ -340,7 +471,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
     }
   };
 
-  const invitationUrl = `http://localhost:3003?event=${slug}`;
+  const activeSectionsCount = modularConfig.sections.filter((s) => s.enabled).length;
 
   return (
     <div
@@ -432,42 +563,46 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 alignItems: "center",
                 justifyContent: "center",
                 color: "#FFF",
-                fontWeight: 800,
-                fontSize: "0.9rem",
+                fontSize: "1.2rem",
+                boxShadow: "0 2px 6px rgba(107, 29, 40, 0.25)",
               }}
             >
-              IS
+              ✉️
             </div>
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <h2 style={{ fontSize: "1.05rem", fontWeight: 800, color: "#231F20", margin: 0 }}>
-                  Invitation Studio
-                </h2>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                 <span
                   style={{
-                    fontSize: "0.72rem",
+                    fontSize: "0.95rem",
                     fontWeight: 700,
-                    textTransform: "uppercase",
-                    padding: "0.15rem 0.5rem",
-                    borderRadius: "999px",
-                    background: "rgba(212, 175, 55, 0.2)",
-                    color: "#856404",
-                    border: "1px solid rgba(212, 175, 55, 0.4)",
+                    color: "#231F20",
+                    fontFamily: "Amiri, Georgia, serif",
                   }}
                 >
-                  {occasionType}
+                  ASAR Modular Website Studio
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.68rem",
+                    padding: "0.15rem 0.45rem",
+                    borderRadius: "4px",
+                    background: "rgba(107, 29, 40, 0.1)",
+                    color: "#6B1D28",
+                    fontWeight: 700,
+                  }}
+                >
+                  R2 Editor
                 </span>
               </div>
-              <div style={{ fontSize: "0.78rem", color: "#7A6F6D" }}>
-                Order #{selectedOrderId} • {eventTitle}
+              <div style={{ fontSize: "0.75rem", color: "#7A6F6D" }}>
+                Active: <b>{currentDemoOrder.clientName}</b> ({currentDemoOrder.partnerOrOrgName}) • {occasionType}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Center: Controls (Order switch, Occasion, Max Capacity) */}
+        {/* Center: Quick Switch Demo Order, Capacity & Slug */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-          {/* Order Switcher */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
             <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#7A6F6D" }}>Order:</span>
             <select
@@ -478,41 +613,14 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 borderRadius: "6px",
                 border: "1px solid rgba(0,0,0,0.15)",
                 fontSize: "0.8rem",
-                fontWeight: 600,
+                fontWeight: 700,
                 background: "#FFF",
+                color: "#6B1D28",
               }}
             >
-              {Object.keys(DEMO_ORDERS).map((ordId) => (
-                <option key={ordId} value={ordId}>
-                  #{ordId} - {DEMO_ORDERS[ordId].eventTitle}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Occasion Switcher */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#7A6F6D" }}>Occasion:</span>
-            <select
-              value={occasionType}
-              onChange={(e) =>
-                setOccasionType(e.target.value as AsarInvitationDocument["occasionType"])
-              }
-              style={{
-                padding: "0.35rem 0.6rem",
-                borderRadius: "6px",
-                border: "1px solid rgba(0,0,0,0.15)",
-                fontSize: "0.8rem",
-                fontWeight: 600,
-                background: "#FFF",
-              }}
-            >
-              <option value="wedding">Wedding (زفاف)</option>
-              <option value="engagement">Engagement (خطوبة)</option>
-              <option value="gala">VIP Gala (حفل خيري/رسمي)</option>
-              <option value="festival">Music & Art Festival (مهرجان)</option>
-              <option value="corporate">Corporate Summit (مؤتمر أعمال)</option>
-              <option value="graduation">Graduation (تخرج)</option>
+              <option value="ORD-915">ORD-915 (Omar & Layla - Wedding)</option>
+              <option value="ORD-916">ORD-916 (Athar VIP Gala)</option>
+              <option value="ORD-917">ORD-917 (Alex Indie Sound Fest)</option>
             </select>
           </div>
 
@@ -537,10 +645,55 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
             />
             <span style={{ fontSize: "0.75rem", color: "#7A6F6D" }}>guests</span>
           </div>
+
+          {/* Subdomain Slug Input */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#6B1D28" }}>Slug:</span>
+            <input
+              type="text"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
+              placeholder="e.g. omar-and-layla"
+              style={{
+                width: "150px",
+                padding: "0.35rem 0.5rem",
+                borderRadius: "6px",
+                border: !slugValidation.isValid ? "1.5px solid #dc2626" : "1px solid rgba(0,0,0,0.15)",
+                fontSize: "0.8rem",
+                fontWeight: 700,
+                background: "#FFF",
+              }}
+              title="RFC 1123 DNS Subdomain Slug"
+            />
+          </div>
         </div>
 
         {/* Right: Actions */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <a
+            href={invitationUrls.devRendererUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              background: "rgba(212, 175, 55, 0.15)",
+              color: "#856404",
+              border: "1px solid rgba(212, 175, 55, 0.5)",
+              borderRadius: "8px",
+              padding: "0.45rem 0.85rem",
+              fontSize: "0.82rem",
+              fontWeight: 700,
+              cursor: "pointer",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.3rem",
+              transition: "all 0.2s ease",
+            }}
+            title="Preview directly in Dedicated Storefront Renderer (Port 3004)"
+          >
+            🌐 Renderer (:3004) ↗
+          </a>
+
           <button
             type="button"
             onClick={handleApplyClientRequests}
@@ -599,6 +752,104 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
           </button>
         </div>
       </header>
+
+      {/* Subdomain Storefront Status Strip */}
+      <div
+        style={{
+          background: "#FFFFFF",
+          borderBottom: "1px solid rgba(107, 29, 40, 0.08)",
+          padding: "0.5rem 1.5rem",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "0.75rem",
+          fontSize: "0.78rem",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.02)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+          <span style={{ fontWeight: 700, color: "#6B1D28" }}>
+            🌐 Subdomain Storefront:
+          </span>
+          <a
+            href={invitationUrls.canonicalUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{ fontWeight: 700, color: "#6B1D28", textDecoration: "underline" }}
+          >
+            {invitationUrls.canonicalUrl}
+          </a>
+          <span
+            style={{
+              fontSize: "0.68rem",
+              fontWeight: 700,
+              padding: "0.1rem 0.4rem",
+              borderRadius: "4px",
+              background: "rgba(212, 175, 55, 0.2)",
+              color: "#856404",
+              border: "1px solid rgba(212, 175, 55, 0.4)",
+            }}
+          >
+            Canonical
+          </span>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "#7A6F6D", flexWrap: "wrap" }}>
+          <span>Dev Previews:</span>
+          <a
+            href={invitationUrls.devRendererUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: "#6B1D28", textDecoration: "underline", fontFamily: "monospace", fontWeight: 700 }}
+            title="Dedicated Storefront Renderer (Port 3004)"
+          >
+            Renderer (3004) ↗
+          </a>
+          <span>•</span>
+          <a
+            href={invitationUrls.devQueryUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: "#7A6F6D", textDecoration: "underline", fontFamily: "monospace" }}
+          >
+            {invitationUrls.devQueryUrl}
+          </a>
+          <span>•</span>
+          <a
+            href={invitationUrls.devLocalhostUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: "#7A6F6D", textDecoration: "underline", fontFamily: "monospace" }}
+          >
+            {invitationUrls.devLocalhostUrl}
+          </a>
+        </div>
+      </div>
+
+      {!slugValidation.isValid && (
+        <div
+          style={{
+            background: "rgba(220, 38, 38, 0.08)",
+            border: "1px solid rgba(220, 38, 38, 0.25)",
+            borderRadius: "8px",
+            padding: "0.45rem 1rem",
+            margin: "0.75rem 1.5rem 0 1.5rem",
+            fontSize: "0.78rem",
+            color: "#dc2626",
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+          }}
+        >
+          <span>⚠️</span>
+          <span>
+            {slugValidation.error ||
+              "Subdomain must follow RFC 1123 DNS rules: lowercase letters, numbers, hyphens only, no leading/trailing hyphens, and cannot be a reserved name like admin or api."}
+          </span>
+        </div>
+      )}
 
       {/* Main Split-Screen Workspace */}
       <main
@@ -663,7 +914,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 transition: "all 0.2s ease",
               }}
             >
-              2. Composable Page Sections ({blocks.filter((b) => b.isVisible).length})
+              2. Modular Page Sections ({activeSectionsCount})
             </button>
 
             <button
@@ -714,9 +965,16 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
               }}
             >
               <SectionBlocksManager
+                sections={modularConfig.sections}
+                onSectionsChange={handleModularSectionsChange}
                 blocks={blocks}
                 onChange={setBlocks}
                 onNavigateToFormBuilder={() => setActiveTab("form")}
+                defaultContext={{
+                  coupleTitle: eventTitle,
+                  eventDate: currentDemoOrder.eventDate,
+                  venueName: currentDemoOrder.venueName,
+                }}
               />
             </div>
           )}
@@ -744,12 +1002,67 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
 
         {/* Right Column (40%): Live Interactive Mobile / Desktop Preview */}
         <div>
-          <LiveInvitationPreview
-            themeConfig={themeConfig}
-            blocks={blocks}
-            formFields={formFields}
-            eventSlug={slug}
-          />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              marginBottom: "0.5rem",
+              gap: "0.35rem",
+            }}
+          >
+            <span style={{ fontSize: "0.72rem", color: "#777", fontWeight: 600 }}>Preview Engine:</span>
+            <button
+              type="button"
+              onClick={() => setPreviewEngine("modular")}
+              style={{
+                background: previewEngine === "modular" ? "#6B1D28" : "rgba(0,0,0,0.05)",
+                color: previewEngine === "modular" ? "#FFF" : "#555",
+                border: "none",
+                borderRadius: "6px",
+                padding: "0.2rem 0.5rem",
+                fontSize: "0.72rem",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Modular v2.0
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreviewEngine("classic")}
+              style={{
+                background: previewEngine === "classic" ? "#6B1D28" : "rgba(0,0,0,0.05)",
+                color: previewEngine === "classic" ? "#FFF" : "#555",
+                border: "none",
+                borderRadius: "6px",
+                padding: "0.2rem 0.5rem",
+                fontSize: "0.72rem",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Classic
+            </button>
+          </div>
+
+          {previewEngine === "modular" ? (
+            <LiveModularPreview
+              themeConfig={themeConfig}
+              sections={modularConfig.sections}
+              eventSlug={slug}
+              onSelectSection={() => {
+                setActiveTab("sections");
+              }}
+            />
+          ) : (
+            <LiveInvitationPreview
+              themeConfig={themeConfig}
+              blocks={blocks}
+              formFields={formFields}
+              eventSlug={slug}
+            />
+          )}
         </div>
       </main>
 
@@ -839,9 +1152,9 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 }}
               >
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-                    invitationUrl
-                  )}&color=6B1D28`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
+                    invitationUrls.canonicalUrl
+                  )}&color=6B1D28&bgcolor=FBF7F2`}
                   alt="Invitation QR Code"
                   style={{ width: "100%", height: "100%" }}
                 />
@@ -850,8 +1163,17 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
               <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#6B1D28" }}>
                 {eventTitle}
               </div>
-              <div style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#7A6F6D" }}>
-                {invitationUrl}
+              <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "#6B1D28", wordBreak: "break-all" }}>
+                {invitationUrls.canonicalUrl}
+              </div>
+              <div style={{ fontSize: "0.7rem", color: "#7A6F6D" }}>
+                Subdomain Storefront Canonical Target
+              </div>
+              <div style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "#7A6F6D" }}>
+                Renderer Dev: {invitationUrls.devRendererUrl}
+              </div>
+              <div style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "#7A6F6D" }}>
+                Dev Test: {invitationUrls.devQueryUrl}
               </div>
             </div>
 
@@ -859,8 +1181,8 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
               <button
                 type="button"
                 onClick={() => {
-                  navigator.clipboard?.writeText(invitationUrl);
-                  showToast("Copied invitation link to clipboard!", "info");
+                  navigator.clipboard?.writeText(invitationUrls.canonicalUrl);
+                  showToast("Copied canonical storefront link to clipboard!", "info");
                 }}
                 style={{
                   flex: 1,

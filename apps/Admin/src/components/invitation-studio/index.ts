@@ -8,7 +8,11 @@ export type {
   ThemeAndEffectsPanelProps,
 } from "./ThemeAndEffectsPanel";
 
-export { SectionBlocksManager, DEFAULT_SECTION_BLOCKS } from "./SectionBlocksManager";
+export {
+  SectionBlocksManager,
+  DEFAULT_SECTION_BLOCKS,
+  projectModernSectionsToLegacyBlocks,
+} from "./SectionBlocksManager";
 export type {
   InvitationSectionBlock,
   SectionBlockType,
@@ -16,6 +20,24 @@ export type {
   DressCodeColor,
   SectionBlocksManagerProps,
 } from "./SectionBlocksManager";
+
+export {
+  SectionPaletteModal,
+  SECTION_CATALOG,
+  createDefaultSectionForType,
+} from "./SectionPaletteModal";
+export type {
+  SectionPaletteModalProps,
+  SectionCatalogItem,
+} from "./SectionPaletteModal";
+
+export { ModularSectionList } from "./ModularSectionList";
+export type { ModularSectionListProps } from "./ModularSectionList";
+
+export { LiveModularPreview } from "./LiveModularPreview";
+export type { LiveModularPreviewProps } from "./LiveModularPreview";
+
+export * from "./inspectors";
 
 export {
   DynamicFormSchemaBuilder,

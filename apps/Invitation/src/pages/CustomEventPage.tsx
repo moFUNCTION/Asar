@@ -1,4 +1,16 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  useSubdomain,
+  useAppwrite,
+  ASAR_COLLECTIONS,
+  ASAR_DATABASE_ID,
+  Query,
+  parseModularWebsiteConfig,
+  createDefaultModularWebsiteConfig,
+  type ModularWebsiteConfig,
+  type EventSection,
+} from "@repo/react-appwrite";
 import type {
   InvitationDocument,
   ThemeConfig,
@@ -7,15 +19,8 @@ import type {
   DressCodeConfig,
   DynamicFormField,
 } from "../components/renderer/types";
-import {
-  ThemeWrapper,
-  EventHeroSection,
-  EventCountdownSection,
-  EventScheduleSection,
-  EventLocationMap,
-  EventMediaGallery,
-  DynamicRsvpForm,
-} from "../components/renderer";
+import { ThemeWrapper } from "../components/renderer";
+import { ModularSectionDispatcher } from "../components/modular-renderer";
 
 export interface CustomEventPageProps {
   slug?: string;
@@ -145,11 +150,65 @@ export const INVITATION_PRESETS: Record<string, InvitationDocument> = {
 };
 
 export const CustomEventPage: React.FC<CustomEventPageProps> = ({
-  slug = "omar-and-layla",
-  onBack,
-  onOpenPass,
+  slug: propSlug,
+  onBack: propOnBack,
+  onOpenPass: propOnOpenPass,
 }) => {
-  // 1. Resolve invitation from preset, localStorage, or fallback
+  const routeParams = useParams<{ slug?: string }>();
+  const { subdomain } = useSubdomain({
+    searchParams: typeof window !== "undefined" ? window.location.search : undefined,
+  });
+  const navigate = useNavigate();
+  const { databases, config } = useAppwrite();
+  const dbId = config?.databaseId || ASAR_DATABASE_ID;
+
+  // Seamless 4-tier slug resolution: prop -> routeParam -> subdomain -> fallback
+  const slug = propSlug || routeParams.slug || subdomain || "omar-and-layla";
+
+  const onBack = propOnBack || (() => navigate("/"));
+  const onOpenPass = propOnOpenPass || ((rsvpId: string) => navigate(`/pass/${rsvpId}`));
+
+  const [remoteInvitation, setRemoteInvitation] = useState<InvitationDocument | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchRemote = async () => {
+      if (INVITATION_PRESETS[slug]) return;
+
+      try {
+        const cache = localStorage.getItem("asar_invitations_cache");
+        if (cache) {
+          const list: InvitationDocument[] = JSON.parse(cache);
+          const match = list.find((item) => item.slug === slug || item.$id === slug);
+          if (match) return;
+        }
+      } catch {
+        // Fallback
+      }
+
+      try {
+        if (databases && dbId) {
+          const res = await databases.listDocuments(
+            dbId,
+            ASAR_COLLECTIONS.INVITATIONS,
+            [Query.equal("slug", slug), Query.limit(1)]
+          );
+          if (res.documents.length > 0 && isMounted) {
+            setRemoteInvitation(res.documents[0] as unknown as InvitationDocument);
+          }
+        }
+      } catch {
+        // Appwrite query fallback
+      }
+    };
+
+    fetchRemote();
+    return () => {
+      isMounted = false;
+    };
+  }, [slug, databases, dbId]);
+
+  // 1. Resolve invitation from preset, localStorage, Appwrite, or fallback
   const invitation: InvitationDocument | null = useMemo(() => {
     // Check built-in rich presets
     if (INVITATION_PRESETS[slug]) {
@@ -168,8 +227,12 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
       // Ignore
     }
 
+    if (remoteInvitation) {
+      return remoteInvitation;
+    }
+
     return null;
-  }, [slug]);
+  }, [slug, remoteInvitation]);
 
   // Parse theme config
   const themeConfig: ThemeConfig = useMemo(() => {
@@ -186,7 +249,7 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
 
   const isNoir = themeConfig.themeVariant === "noir-obsidian";
 
-  // Parse custom sections data
+  // Parse legacy custom sections data for backward compatibility
   const scheduleItems: ScheduleItem[] | undefined = useMemo(() => {
     if (!invitation?.scheduleJson) return undefined;
     if (typeof invitation.scheduleJson === "string") {
@@ -234,6 +297,112 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
     }
     return invitation.formSchemaJson;
   }, [invitation?.formSchemaJson]);
+
+  // Build unified ModularWebsiteConfig (supports both modern v2 sectionsConfigJson and legacy block fields)
+  const modularConfig: ModularWebsiteConfig = useMemo(() => {
+    if (!invitation) {
+      return createDefaultModularWebsiteConfig();
+    }
+
+    // Case 1: Configured explicitly via sectionsConfigJson (modern v2 or migrated v1 array)
+    if (invitation.sectionsConfigJson) {
+      return parseModularWebsiteConfig(invitation.sectionsConfigJson);
+    }
+
+    // Case 2: Populate default modular website config with invitation's specific metadata & legacy blocks
+    const coupleTitle = invitation.coupleOrHostNames || invitation.eventTitle || "Omar & Layla";
+    const eventDate = invitation.eventDate || "2026-11-20";
+    const venueName = invitation.venueName || "Four Seasons Alexandria";
+
+    const baseConfig = createDefaultModularWebsiteConfig({
+      coupleTitle,
+      eventDate,
+      venueName,
+    });
+
+    const adaptedSections = baseConfig.sections.map((sec): EventSection => {
+      if (sec.type === "cover_hero") {
+        return {
+          ...sec,
+          coupleTitle,
+          coverImageUrl: invitation.heroImageUrl || sec.coverImageUrl,
+          dateDisplay: eventDate,
+          venueDisplay: venueName,
+          tagline: invitation.tagline || sec.tagline,
+        };
+      }
+      if (sec.type === "live_countdown") {
+        return {
+          ...sec,
+          targetDateIso: eventDate ? `${eventDate}T19:30:00.000Z` : sec.targetDateIso,
+        };
+      }
+      if (sec.type === "event_schedule" && scheduleItems && scheduleItems.length > 0) {
+        return {
+          ...sec,
+          scheduleItems: scheduleItems.map((item, i) => ({
+            id: `sched-legacy-${i}`,
+            time: item.timeOrYear,
+            eventName: item.title,
+            calendarDescription: item.description,
+            dressCode: item.badge,
+            locationName: venueName,
+            address: invitation.venueAddress,
+          })),
+        };
+      }
+      if (sec.type === "photo_gallery" && galleryItems && galleryItems.length > 0) {
+        return {
+          ...sec,
+          images: galleryItems.map((img) => ({
+            id: img.id,
+            url: img.imageUrl,
+            caption: img.caption,
+            category: "Celebration",
+          })),
+        };
+      }
+      if (sec.type === "venue_location") {
+        return {
+          ...sec,
+          venueName,
+          address: invitation.venueAddress || sec.address,
+          mapEmbedUrl: invitation.venueMapUrl || sec.mapEmbedUrl,
+          parkingNote: dressCodeConfig?.notes || sec.parkingNote,
+          dressCodeTitle: dressCodeConfig?.title || sec.dressCodeTitle,
+          dressCodeSwatches: dressCodeConfig?.swatches
+            ? dressCodeConfig.swatches.map((s) => ({ hex: s.hex, label: s.name }))
+            : sec.dressCodeSwatches,
+        };
+      }
+      if (sec.type === "dynamic_rsvp" && formSchema && formSchema.length > 0) {
+        return {
+          ...sec,
+          formSchema: formSchema.map((f) => ({
+            id: f.id,
+            name: f.name,
+            labelEn: f.label,
+            labelAr: f.label,
+            type: (f.type === "tel" ? "phone" : f.type) as import("@repo/react-appwrite").DynamicFormFieldType,
+            required: f.required ?? false,
+            locked: f.isLocked ?? false,
+            placeholderEn: f.placeholder,
+            placeholderAr: f.placeholder,
+            helperTextEn: f.helperText,
+            helperTextAr: f.helperText,
+            defaultValue: f.defaultValue ? String(f.defaultValue) : undefined,
+          })),
+        };
+      }
+      return sec;
+    });
+
+    return {
+      version: "2.0",
+      sections: adaptedSections,
+      themeConfig: typeof invitation.themeConfigJson === "object" ? (invitation.themeConfigJson as Record<string, unknown>) : undefined,
+    };
+  }, [invitation, scheduleItems, galleryItems, dressCodeConfig, formSchema]);
 
   // If slug not found, show elegant luxury 404
   if (!invitation) {
@@ -367,46 +536,16 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
         </div>
       </header>
 
-      {/* Main Page Blocks Stack */}
-      <main>
-        {/* 1. Hero Block */}
-        <EventHeroSection
-          invitation={invitation}
-          onRsvpClick={() => {
-            document.getElementById("rsvp-section")?.scrollIntoView({ behavior: "smooth" });
-          }}
-        />
-
-        {/* 2. Live Countdown Block */}
-        <EventCountdownSection
-          eventDate={invitation.eventDate}
-          eventTime={invitation.eventTime}
-          isNoir={isNoir}
-        />
-
-        {/* 3. Story & Schedule Block */}
-        <EventScheduleSection items={scheduleItems} isNoir={isNoir} />
-
-        {/* 4. Media & Memories Gallery Block */}
-        <EventMediaGallery gallery={galleryItems} isNoir={isNoir} />
-
-        {/* 5. Venue Map & Dress Code Block */}
-        <EventLocationMap
-          venueName={invitation.venueName}
-          venueAddress={invitation.venueAddress}
-          venueMapUrl={invitation.venueMapUrl}
-          dressCode={dressCodeConfig}
-          isNoir={isNoir}
-        />
-
-        {/* 6. Dynamic RSVP Form Block */}
-        <DynamicRsvpForm
-          invitation={invitation}
-          schema={formSchema}
-          isNoir={isNoir}
-          onPreviewPass={onOpenPass}
-        />
-      </main>
+      {/* Dynamic Modular Sections Dispatcher */}
+      <ModularSectionDispatcher
+        config={modularConfig}
+        invitation={invitation}
+        isNoir={isNoir}
+        onOpenPass={onOpenPass}
+        onRsvpClick={() => {
+          document.getElementById("rsvp-section")?.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
 
       {/* Footer */}
       <footer
