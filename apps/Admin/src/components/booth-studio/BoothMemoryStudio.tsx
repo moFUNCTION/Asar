@@ -55,10 +55,13 @@ const DEFAULT_ORDERS: ActiveOrderOption[] = [
       eventDateDisplay: "12 July 2026",
       eventLocationDisplay: "Alexandria, Egypt",
       highlightBadge: "Together Always",
-      coupleQuote: "Every voice here is a piece of our forever ... كل صوت هنا هو قطعة من حكايتنا",
-      thankYouMessage: "Thank you for filling our wedding with love, laughter, and lasting memories. We cherish every single word.",
-      heroImageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
-      categories: ["Family", "Friends", "Colleagues", "Special Guests"],
+      coupleQuote:
+        "Every voice here is a piece of our forever ... كل صوت هنا هو قطعة من حكايتنا",
+      thankYouMessage:
+        "Thank you for filling our wedding with love, laughter, and lasting memories. We cherish every single word.",
+      heroImageUrl:
+        "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
+      categories: ["العائلة", "الأصدقاء", "زملاء العمل", "ضيوف مميزون"],
     },
   },
   {
@@ -79,7 +82,7 @@ const DEFAULT_ORDERS: ActiveOrderOption[] = [
       highlightBadge: "Golden Athar",
       coupleQuote: "أجمل أثر هو حبكم اللي منور ليلتنا",
       thankYouMessage: "شكراً لكل من شاركنا فرحتنا وترك لنا صوته ذكرى لا تُنسى",
-      categories: ["Family", "Friends", "Colleagues"],
+      categories: ["العائلة", "الأصدقاء", "زملاء العمل"],
     },
   },
   {
@@ -100,7 +103,7 @@ const DEFAULT_ORDERS: ActiveOrderOption[] = [
       highlightBadge: "Eternal Bond",
       coupleQuote: "أصواتكم في قلوبنا إلى الأبد",
       thankYouMessage: "بمحبتكم اكتملت ليلتنا، دمتم لنا سنداً وفرحة",
-      categories: ["Family", "Friends", "Colleagues", "VIP Guests"],
+      categories: ["العائلة", "الأصدقاء", "زملاء العمل", "كبار الشخصيات VIP"],
     },
   },
 ];
@@ -113,12 +116,15 @@ const INITIAL_MEMORY: BoothMemory = {
   eventDateDisplay: "12 July 2026",
   eventLocationDisplay: "Alexandria, Egypt",
   highlightBadge: "Together Always",
-  coupleQuote: "Every voice here is a piece of our forever ... كل صوت هنا هو قطعة من حكايتنا",
-  heroImageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
+  coupleQuote:
+    "Every voice here is a piece of our forever ... كل صوت هنا هو قطعة من حكايتنا",
+  heroImageUrl:
+    "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
   videoHighlightTitle: "30 Seconds of Your Day",
   thankYouTitle: "Thank You for Being Part of Our Story",
-  thankYouMessage: "Thank you from the bottom of our hearts for filling our wedding with love, laughter, and lasting memories.",
-  categories: ["Family", "Friends", "Colleagues", "Special Guests"],
+  thankYouMessage:
+    "Thank you from the bottom of our hearts for filling our wedding with love, laughter, and lasting memories.",
+  categories: ["العائلة", "الأصدقاء", "زملاء العمل", "ضيوف مميزون"],
   isPrivateLocked: false,
   accessPinCode: "2026",
   isPublished: true,
@@ -129,7 +135,7 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
   onBack,
 }) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string>(
-    orderId || DEFAULT_ORDERS[0].id
+    orderId || DEFAULT_ORDERS[0].id,
   );
   const [activeStudioTab, setActiveStudioTab] = useState<
     "hero" | "voices" | "media" | "thankyou_qr"
@@ -160,14 +166,16 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
     {
       id: "media_1",
       mediaType: "photo",
-      fileUrl: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80",
+      fileUrl:
+        "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80",
       captionOrNote: "The Vow Exchange & Sunset",
       sortOrder: 1,
     },
     {
       id: "media_2",
       mediaType: "photo",
-      fileUrl: "https://images.unsplash.com/photo-1519225424988-825590059080?auto=format&fit=crop&w=600&q=80",
+      fileUrl:
+        "https://images.unsplash.com/photo-1519225424988-825590059080?auto=format&fit=crop&w=600&q=80",
       captionOrNote: "First Dance under fairy lights",
       sortOrder: 2,
     },
@@ -175,7 +183,8 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
       id: "media_3",
       mediaType: "guestbook_note",
       authorName: "Sarah & Omar",
-      captionOrNote: "May your lives be blessed with unending joy and peaceful mornings!",
+      captionOrNote:
+        "May your lives be blessed with unending joy and peaceful mornings!",
       sortOrder: 1,
     },
   ]);
@@ -187,14 +196,17 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
   } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const activeOrder = DEFAULT_ORDERS.find((o) => o.id === selectedOrderId) || DEFAULT_ORDERS[0];
+  const activeOrder =
+    DEFAULT_ORDERS.find((o) => o.id === selectedOrderId) || DEFAULT_ORDERS[0];
   const maxVoices = activeOrder.limits.maxVoices;
   const maxPhotos = activeOrder.limits.maxPhotos;
   const hasVideoHighlight = activeOrder.limits.hasVideoHighlight;
 
-  const voicesQuotaExceeded = maxVoices !== -1 && voiceRecords.length > maxVoices;
+  const voicesQuotaExceeded =
+    maxVoices !== -1 && voiceRecords.length > maxVoices;
   const photosQuotaExceeded =
-    maxPhotos !== -1 && mediaItems.filter((m) => m.mediaType === "photo").length > maxPhotos;
+    maxPhotos !== -1 &&
+    mediaItems.filter((m) => m.mediaType === "photo").length > maxPhotos;
 
   useEffect(() => {
     if (orderId) {
@@ -211,17 +223,21 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
         coupleTitle: assets.coupleTitle || prev.coupleTitle,
         eventHeaderTag: assets.eventHeaderTag || prev.eventHeaderTag,
         eventDateDisplay: assets.eventDateDisplay || prev.eventDateDisplay,
-        eventLocationDisplay: assets.eventLocationDisplay || prev.eventLocationDisplay,
+        eventLocationDisplay:
+          assets.eventLocationDisplay || prev.eventLocationDisplay,
         highlightBadge: assets.highlightBadge || prev.highlightBadge,
         coupleQuote: assets.coupleQuote || prev.coupleQuote,
         thankYouMessage: assets.thankYouMessage || prev.thankYouMessage,
         heroImageUrl: assets.heroImageUrl || prev.heroImageUrl,
-        categories: assets.categories && assets.categories.length > 0 ? assets.categories : prev.categories,
+        categories:
+          assets.categories && assets.categories.length > 0
+            ? assets.categories
+            : prev.categories,
       }));
 
       setNotification({
         type: "success",
-        message: `📥 Personalization assets for "${activeOrder.clientName}" loaded successfully!`,
+        message: `📥 تم استيراد بيانات وتخصيصات العميل "${activeOrder.clientName}" بنجاح!`,
       });
       setTimeout(() => setNotification(null), 4000);
     }
@@ -233,7 +249,7 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
     if (!slugValidation.isValid) {
       setNotification({
         type: "warning",
-        message: `⚠️ Invalid subdomain slug: ${slugValidation.error}`,
+        message: `⚠️ اسم النطاق الفرعي (Slug) غير صالح: ${slugValidation.error}`,
       });
       return;
     }
@@ -241,7 +257,8 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
     if (!overrideQuota && (voicesQuotaExceeded || photosQuotaExceeded)) {
       setNotification({
         type: "warning",
-        message: "⚠️ Plan quota exceeded! Please remove excess tracks or toggle 'Override Quota (VIP)'.",
+        message:
+          "⚠️ تم تجاوز كوتا الباقة المحددة! يرجى حذف الملفات الزائدة أو تفعيل 'تجاوز كوتا الباقة (VIP)'.",
       });
       return;
     }
@@ -250,10 +267,23 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
 
     try {
       // 1. Sync to localStorage for immediate cross-tab preview
-      const updatedMemory = { ...memory, isPublished: true, orderId: selectedOrderId };
-      localStorage.setItem("asar_booth_memories_cache", JSON.stringify(updatedMemory));
-      localStorage.setItem("asar_booth_voices_cache", JSON.stringify(voiceRecords));
-      localStorage.setItem("asar_booth_media_cache", JSON.stringify(mediaItems));
+      const updatedMemory = {
+        ...memory,
+        isPublished: true,
+        orderId: selectedOrderId,
+      };
+      localStorage.setItem(
+        "asar_booth_memories_cache",
+        JSON.stringify(updatedMemory),
+      );
+      localStorage.setItem(
+        "asar_booth_voices_cache",
+        JSON.stringify(voiceRecords),
+      );
+      localStorage.setItem(
+        "asar_booth_media_cache",
+        JSON.stringify(mediaItems),
+      );
 
       setMemory(updatedMemory);
 
@@ -268,12 +298,12 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
 
       setNotification({
         type: "success",
-        message: `🚀 Published successfully! Subdomain Storefront: ${memoryUrls.canonicalUrl} (Renderer: ${memoryUrls.devRendererUrl} | Dev: ${memoryUrls.devQueryUrl})`,
+        message: `🚀 تم النشر بنجاح! رابط المنصة الفرعي: ${memoryUrls.canonicalUrl} (منصة العرض: ${memoryUrls.devRendererUrl} | التطوير: ${memoryUrls.devQueryUrl})`,
       });
     } catch (_e) {
       setNotification({
         type: "warning",
-        message: "Saved locally! Live synchronization complete.",
+        message: "تم الحفظ محلياً! اكتملت المزامنة بنجاح.",
       });
     } finally {
       setIsSaving(false);
@@ -321,12 +351,14 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
                 className="btn-athar-secondary"
                 style={{ fontSize: "0.82rem", padding: "0.45rem 0.9rem" }}
               >
-                ← Back to Orders
+                ← العودة لطابور الطلبات
               </button>
             )}
 
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}
+              >
                 <span style={{ fontSize: "1.4rem" }}>🎙️</span>
                 <h2
                   style={{
@@ -336,27 +368,49 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
                     margin: 0,
                   }}
                 >
-                  Booth Memory Studio
+                  استوديو ذكريات هاتف أثر
                 </h2>
-                <span className="athar-badge-gold">Admin Curation Suite</span>
+                <span className="athar-badge-gold">
+                  منظومة التنسيق والإدارة
+                </span>
               </div>
-              <p style={{ fontSize: "0.82rem", color: "var(--athar-text-muted)", margin: "0.2rem 0 0 0" }}>
-                Assemble, master, and publish the couple&apos;s digital audio heirloom with live mobile mirroring.
+              <p
+                style={{
+                  fontSize: "0.82rem",
+                  color: "var(--athar-text-muted)",
+                  margin: "0.2rem 0 0 0",
+                }}
+              >
+                تجميع، هندسة ونشر الأثر الصوتي التذكاري الفاخر مع محاكاة حية
+                لشاشات الجوال.
               </p>
             </div>
           </div>
 
           {/* Right Action Buttons */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              flexWrap: "wrap",
+            }}
+          >
             <a
               href={`http://${memory.slug || "mina-and-maryam"}.localhost:3004`}
               target="_blank"
               rel="noreferrer"
               className="btn-athar-secondary"
-              style={{ fontSize: "0.84rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
-              title="Preview directly in Dedicated Storefront Renderer (Port 3004)"
+              style={{
+                fontSize: "0.84rem",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.3rem",
+              }}
+              title="معاينة مباشرة في منصة العرض المستقلة (Port 3004)"
             >
-              🌐 Renderer (:3004) ↗
+              🌐 منصة العرض (:3004) ↗
             </a>
 
             <button
@@ -364,9 +418,9 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
               className="btn-athar-secondary"
               onClick={handlePullClientAssets}
               style={{ fontSize: "0.84rem" }}
-              title="Auto-fill couple names, date, venue, quote, and categories from client portal submission"
+              title="استيراد بيانات العروسين، التاريخ، المكان، العبارة التذكارية والفئات تلقائياً من بوابة العميل"
             >
-              📥 Pull Client Submitted Assets
+              📥 استيراد بيانات ومواد العميل
             </button>
 
             <button
@@ -375,7 +429,7 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
               onClick={() => setActiveStudioTab("thankyou_qr")}
               style={{ fontSize: "0.84rem" }}
             >
-              📱 Generate & Download Landing QR
+              📱 توليد وتحميل رمز QR
             </button>
 
             <button
@@ -385,7 +439,7 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
               disabled={isSaving}
               style={{ fontSize: "0.86rem", padding: "0.65rem 1.4rem" }}
             >
-              {isSaving ? "⏳ Publishing..." : "🚀 Save & Publish Memory Website"}
+              {isSaving ? "⏳ جاري النشر..." : "🚀 حفظ ونشر موقع الذكريات"}
             </button>
           </div>
         </div>
@@ -404,8 +458,14 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
         >
           {/* Order Switcher */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-            <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--athar-text-title)" }}>
-              Active Order:
+            <span
+              style={{
+                fontSize: "0.82rem",
+                fontWeight: 700,
+                color: "var(--athar-text-title)",
+              }}
+            >
+              الطلب النشط:
             </span>
             <select
               value={selectedOrderId}
@@ -427,7 +487,14 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
           </div>
 
           {/* Plan Quota Meter Badges */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              flexWrap: "wrap",
+            }}
+          >
             {/* Voices Quota */}
             <span
               className={
@@ -437,8 +504,9 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
               }
               style={{ fontSize: "0.78rem" }}
             >
-              🎙️ Voices: {voiceRecords.length} / {maxVoices === -1 ? "Unlimited" : maxVoices}
-              {voicesQuotaExceeded && !overrideQuota && " (Exceeded)"}
+              🎙️ التسجيلات: {voiceRecords.length} /{" "}
+              {maxVoices === -1 ? "غير محدود" : maxVoices}
+              {voicesQuotaExceeded && !overrideQuota && " (تجاوز الكوتا)"}
             </span>
 
             {/* Photos Quota */}
@@ -450,16 +518,22 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
               }
               style={{ fontSize: "0.78rem" }}
             >
-              📸 Photos: {mediaItems.filter((m) => m.mediaType === "photo").length} /{" "}
-              {maxPhotos === -1 ? "Unlimited" : maxPhotos}
+              📸 الصور:{" "}
+              {mediaItems.filter((m) => m.mediaType === "photo").length} /{" "}
+              {maxPhotos === -1 ? "غير محدود" : maxPhotos}
             </span>
 
             {/* Video Highlight */}
             <span
-              className={hasVideoHighlight ? "athar-badge-success" : "athar-badge-warning"}
+              className={
+                hasVideoHighlight
+                  ? "athar-badge-success"
+                  : "athar-badge-warning"
+              }
               style={{ fontSize: "0.78rem" }}
             >
-              🎬 Video: {hasVideoHighlight ? "Enabled ✓" : "Not in Plan"}
+              🎬 فيديو الهايلايت:{" "}
+              {hasVideoHighlight ? "مفعّل ✓" : "غير مشمول في الباقة"}
             </span>
 
             {/* Quota Override Toggle */}
@@ -481,7 +555,11 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
                 onChange={(e) => setOverrideQuota(e.target.checked)}
                 style={{ accentColor: "var(--athar-gold)" }}
               />
-              <span>{overrideQuota ? "VIP Quota Override (ON)" : "Override Quota"}</span>
+              <span>
+                {overrideQuota
+                  ? "تجاوز الكوتا الاستثنائي (VIP) مفعّل"
+                  : "تجاوز كوتا الباقة"}
+              </span>
             </label>
           </div>
         </div>
@@ -504,14 +582,14 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
               notification.type === "success"
                 ? "var(--athar-status-success-bg)"
                 : notification.type === "warning"
-                ? "var(--athar-status-warning-bg)"
-                : "rgba(107, 29, 40, 0.08)",
+                  ? "var(--athar-status-warning-bg)"
+                  : "rgba(107, 29, 40, 0.08)",
             color:
               notification.type === "success"
                 ? "var(--athar-status-success)"
                 : notification.type === "warning"
-                ? "var(--athar-status-warning)"
-                : "var(--athar-maroon)",
+                  ? "var(--athar-status-warning)"
+                  : "var(--athar-maroon)",
             border: `1px solid currentColor`,
           }}
         >
@@ -541,21 +619,31 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
             }}
           >
             {[
-              { id: "hero", label: "1. Hero, Texts & Privacy", icon: "💍" },
+              { id: "hero", label: "١. الواجهة والنصوص والخصوصية", icon: "💍" },
               {
                 id: "voices",
-                label: `2. Bulk Voice Studio (${voiceRecords.length})`,
+                label: `٢. استوديو التسجيلات الصوتية (${voiceRecords.length})`,
                 icon: "🎙️",
               },
-              { id: "media", label: "3. Photos, Video & Notes", icon: "📸" },
-              { id: "thankyou_qr", label: "4. Thank You & QR Kit", icon: "📱" },
+              {
+                id: "media",
+                label: "٣. الصور والفيديو ودفتر الرسائل",
+                icon: "📸",
+              },
+              {
+                id: "thankyou_qr",
+                label: "٤. بطاقات الشكر ورمز QR",
+                icon: "📱",
+              },
             ].map((tab) => {
               const isActive = activeStudioTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => setActiveStudioTab(tab.id as typeof activeStudioTab)}
+                  onClick={() =>
+                    setActiveStudioTab(tab.id as typeof activeStudioTab)
+                  }
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -563,7 +651,9 @@ export const BoothMemoryStudio: React.FC<BoothMemoryStudioProps> = ({
                     padding: "0.6rem 1.1rem",
                     borderRadius: "12px",
                     border: "none",
-                    background: isActive ? "var(--athar-maroon)" : "transparent",
+                    background: isActive
+                      ? "var(--athar-maroon)"
+                      : "transparent",
                     color: isActive ? "#ffffff" : "var(--athar-text-title)",
                     fontWeight: 800,
                     fontSize: "0.88rem",

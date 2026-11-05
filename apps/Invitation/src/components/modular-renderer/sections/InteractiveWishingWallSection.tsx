@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import type { WishingWallSection as WishingWallSectionModel } from "@repo/react-appwrite";
 import {
   useAppwrite,
+  useCollection,
+  useMutations,
   ASAR_COLLECTIONS,
   ASAR_DATABASE_ID,
-  ID,
-  Query,
 } from "@repo/react-appwrite";
 
 export interface InteractiveWishingWallSectionProps {
@@ -33,13 +33,11 @@ const AVATAR_COLORS = [
   "radial-gradient(circle at 35% 35%, #2B3A67, #131B33)",
 ];
 
-export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSectionProps> = ({
-  section,
-  invitationId,
-  isNoir = false,
-}) => {
+export const InteractiveWishingWallSection: React.FC<
+  InteractiveWishingWallSectionProps
+> = ({ section, invitationId, isNoir = false }) => {
   const maxMessageLength = section.maxMessageLength || 280;
-  const { databases, config } = useAppwrite();
+  const { config } = useAppwrite();
   const dbId = config?.databaseId || ASAR_DATABASE_ID;
 
   // Initial wishes
@@ -48,7 +46,8 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
       id: "w-1",
       author: "د. طارق ومنى منصور",
       role: "العائلة · Family",
-      message: "ألف مبارك لأجمل عروسين! بارك الله لكما وبارك عليكما وجمع بينكما في خير وسعادة لا تنتهي. ❤️✨",
+      message:
+        "ألف مبارك لأجمل عروسين! بارك الله لكما وبارك عليكما وجمع بينكما في خير وسعادة لا تنتهي. ❤️✨",
       date: "منذ ساعتين",
       likes: 14,
       color: AVATAR_COLORS[0],
@@ -57,7 +56,8 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
       id: "w-2",
       author: "نوران الشناوي",
       role: "صديقة العروس · Best Friend",
-      message: "Can't wait to dance and celebrate under the Alexandria stars! You two are pure magic together. Congratulations! 💐🎉",
+      message:
+        "Can't wait to dance and celebrate under the Alexandria stars! You two are pure magic together. Congratulations! 💐🎉",
       date: "منذ 4 ساعات",
       likes: 9,
       color: AVATAR_COLORS[1],
@@ -66,7 +66,8 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
       id: "w-3",
       author: "كريم وياسمين",
       role: "الأصدقاء · Friends",
-      message: "نسأل الله أن يجعل أيامكم القادمة كلها مودة ورحمة وتوفيق. في انتظار الليلة الكبيرة بكل شغف! 🥂",
+      message:
+        "نسأل الله أن يجعل أيامكم القادمة كلها مودة ورحمة وتوفيق. في انتظار الليلة الكبيرة بكل شغف! 🥂",
       date: "أمس",
       likes: 12,
       color: AVATAR_COLORS[2],
@@ -80,12 +81,16 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
   const [formError, setFormError] = useState("");
   const [showCelebration, setShowCelebration] = useState(false);
 
-  const cacheKey = invitationId ? `asar_wishing_wall_${invitationId}` : "asar_wishing_wall_cache";
+  const cacheKey = invitationId
+    ? `asar_wishing_wall_${invitationId}`
+    : "asar_wishing_wall_cache";
 
   // Load cached wishes on mount
   useEffect(() => {
     try {
-      const cached = localStorage.getItem(cacheKey) || localStorage.getItem("asar_wishing_wall_cache");
+      const cached =
+        localStorage.getItem(cacheKey) ||
+        localStorage.getItem("asar_wishing_wall_cache");
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -104,51 +109,56 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
     } catch {
       // fallback to defaults
     }
+  }, [cacheKey]);
 
-    // Query live wishes from Appwrite Cloud
-    const fetchRemoteWishes = async () => {
-      if (!databases) return;
-      try {
-        const queries = [Query.orderDesc("$createdAt"), Query.limit(50)];
-        if (invitationId) {
-          queries.push(Query.equal("invitationId", invitationId));
-        }
-        const res = await databases.listDocuments(
-          dbId,
-          ASAR_COLLECTIONS.WISHING_WALL_MESSAGES,
-          queries
-        );
-        if (res.documents && res.documents.length > 0) {
-          const remoteWishes: WishEntry[] = res.documents.map((doc: any) => ({
-            id: doc.$id,
-            author: doc.author,
-            role: doc.role || "ضيف الحفل · Guest",
-            message: doc.message,
-            date: new Date(doc.$createdAt).toLocaleDateString("ar-EG", {
+  // Reactive Wishing Wall collection via useCollection hook
+  const wishWhere = useMemo(() => {
+    return invitationId ? { invitationId } : undefined;
+  }, [invitationId]);
+
+  const { data: cloudWishes } = useCollection(
+    dbId,
+    ASAR_COLLECTIONS.WISHING_WALL_MESSAGES,
+    {
+      where: wishWhere as any,
+      realtime: true,
+    },
+  );
+
+  const { createDocument, updateDocument } = useMutations(
+    dbId,
+    ASAR_COLLECTIONS.WISHING_WALL_MESSAGES,
+  );
+
+  useEffect(() => {
+    if (cloudWishes && cloudWishes.length > 0) {
+      const remoteWishes: WishEntry[] = cloudWishes.map((doc: any) => ({
+        id: doc.$id,
+        author: doc.author,
+        role: doc.role || "ضيف الحفل · Guest",
+        message: doc.message,
+        date: doc.$createdAt
+          ? new Date(doc.$createdAt).toLocaleDateString("ar-EG", {
               month: "short",
               day: "numeric",
-            }),
-            likes: doc.likes || 0,
-            color: doc.color || AVATAR_COLORS[0],
-          }));
-          setWishes((prev) => {
-            const seen = new Set<string>();
-            const merged: WishEntry[] = [];
-            for (const item of [...remoteWishes, ...prev]) {
-              if (!seen.has(item.id)) {
-                seen.add(item.id);
-                merged.push(item);
-              }
-            }
-            return merged;
-          });
+            })
+          : "الآن",
+        likes: doc.likes || 0,
+        color: doc.color || AVATAR_COLORS[0],
+      }));
+      setWishes((prev) => {
+        const seen = new Set<string>();
+        const merged: WishEntry[] = [];
+        for (const item of [...remoteWishes, ...prev]) {
+          if (!seen.has(item.id)) {
+            seen.add(item.id);
+            merged.push(item);
+          }
         }
-      } catch {
-        // Safe fallback
-      }
-    };
-    fetchRemoteWishes();
-  }, [databases, dbId, invitationId, cacheKey]);
+        return merged;
+      });
+    }
+  }, [cloudWishes]);
 
   // Post new wish (Optimistic Update)
   const handleSubmit = (e: React.FormEvent) => {
@@ -160,7 +170,9 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
     }
 
     if (!message.trim()) {
-      setFormError("يرجى كتابة رسالة التهنئة / Please write your blessing message");
+      setFormError(
+        "يرجى كتابة رسالة التهنئة / Please write your blessing message",
+      );
       return;
     }
 
@@ -169,7 +181,8 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
       return;
     }
 
-    const randomColor = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
+    const randomColor =
+      AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
     const newWish: WishEntry = {
       id: `w-${Date.now()}`,
       author: authorName.trim(),
@@ -195,28 +208,19 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
       // ignore
     }
 
-    // Persist to Appwrite Cloud
-    if (databases) {
-      try {
-        databases
-          .createDocument(
-            dbId,
-            ASAR_COLLECTIONS.WISHING_WALL_MESSAGES,
-            ID.unique(),
-            {
-              invitationId: invitationId || "invitation-omar-and-layla",
-              author: authorName.trim(),
-              role: guestRole,
-              message: message.trim(),
-              likes: 1,
-              color: randomColor,
-              isApproved: true,
-            }
-          )
-          .catch(() => {});
-      } catch {
-        // Optimistic cache intact
-      }
+    // Persist to Appwrite Cloud via useMutations
+    try {
+      createDocument({
+        invitationId: invitationId || "invitation-omar-and-layla",
+        author: authorName.trim(),
+        role: guestRole,
+        message: message.trim(),
+        likes: 1,
+        color: randomColor,
+        isApproved: true,
+      }).catch(() => {});
+    } catch {
+      // Optimistic cache intact
     }
 
     setShowCelebration(true);
@@ -231,19 +235,14 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
       prev.map((item) => {
         if (item.id === id) {
           const nextLiked = !item.hasLiked;
-          const newLikes = nextLiked ? item.likes + 1 : Math.max(0, item.likes - 1);
+          const newLikes = nextLiked
+            ? item.likes + 1
+            : Math.max(0, item.likes - 1);
 
-          // Update in Appwrite Cloud if not a temporary client-generated id
-          if (databases && !id.startsWith("w-")) {
+          // Update in Appwrite Cloud via useMutations
+          if (!id.startsWith("w-")) {
             try {
-              databases
-                .updateDocument(
-                  dbId,
-                  ASAR_COLLECTIONS.WISHING_WALL_MESSAGES,
-                  id,
-                  { likes: newLikes }
-                )
-                .catch(() => {});
+              updateDocument(id, { likes: newLikes }).catch(() => {});
             } catch {
               // ignore
             }
@@ -256,7 +255,7 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
           };
         }
         return item;
-      })
+      }),
     );
   };
 
@@ -318,7 +317,8 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
               margin: "0 auto",
             }}
           >
-            {section.greetingPrompt || "شاركونا دعواتكم الصادقة وكلماتكم الطيبة لتبقى ذكرى خالدة في قلوبنا."}
+            {section.greetingPrompt ||
+              "شاركونا دعواتكم الصادقة وكلماتكم الطيبة لتبقى ذكرى خالدة في قلوبنا."}
           </p>
         </div>
 
@@ -350,7 +350,8 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
             background: isNoir
               ? "linear-gradient(145deg, rgba(35, 26, 30, 0.94), rgba(22, 18, 20, 0.97))"
               : "linear-gradient(145deg, #FFFFFF, #FAF4ED)",
-            border: "1.5px solid var(--athar-gold-border, rgba(212, 175, 55, 0.4))",
+            border:
+              "1.5px solid var(--athar-gold-border, rgba(212, 175, 55, 0.4))",
             boxShadow: "0 10px 30px rgba(0, 0, 0, 0.05)",
             marginBottom: "3rem",
           }}
@@ -371,7 +372,9 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                     fontSize: "0.82rem",
                     fontWeight: 700,
                     marginBottom: "0.35rem",
-                    color: isNoir ? "#FFFFFF" : "var(--athar-text-title, #231F20)",
+                    color: isNoir
+                      ? "#FFFFFF"
+                      : "var(--athar-text-title, #231F20)",
                   }}
                 >
                   الاسم الكريم · Your Name *
@@ -388,8 +391,11 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                     width: "100%",
                     padding: "0.75rem 1rem",
                     borderRadius: "12px",
-                    border: "1.5px solid var(--athar-gold-border, rgba(212, 175, 55, 0.35))",
-                    backgroundColor: isNoir ? "rgba(20, 15, 17, 0.7)" : "#FFFFFF",
+                    border:
+                      "1.5px solid var(--athar-gold-border, rgba(212, 175, 55, 0.35))",
+                    backgroundColor: isNoir
+                      ? "rgba(20, 15, 17, 0.7)"
+                      : "#FFFFFF",
                     color: isNoir ? "#FFFFFF" : "#231F20",
                     fontSize: "0.9rem",
                     outline: "none",
@@ -404,7 +410,9 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                     fontSize: "0.82rem",
                     fontWeight: 700,
                     marginBottom: "0.35rem",
-                    color: isNoir ? "#FFFFFF" : "var(--athar-text-title, #231F20)",
+                    color: isNoir
+                      ? "#FFFFFF"
+                      : "var(--athar-text-title, #231F20)",
                   }}
                 >
                   صلة القرابة · Relationship
@@ -416,7 +424,8 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                     width: "100%",
                     padding: "0.75rem 1rem",
                     borderRadius: "12px",
-                    border: "1.5px solid var(--athar-gold-border, rgba(212, 175, 55, 0.35))",
+                    border:
+                      "1.5px solid var(--athar-gold-border, rgba(212, 175, 55, 0.35))",
                     backgroundColor: isNoir ? "#231A1E" : "#FFFFFF",
                     color: isNoir ? "#FFFFFF" : "#231F20",
                     fontSize: "0.9rem",
@@ -424,21 +433,35 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                   }}
                 >
                   <option value="العائلة · Family">العائلة · Family</option>
-                  <option value="صديق مقرب · Best Friend">صديق مقرب · Best Friend</option>
+                  <option value="صديق مقرب · Best Friend">
+                    صديق مقرب · Best Friend
+                  </option>
                   <option value="الأصدقاء · Friend">الأصدقاء · Friend</option>
-                  <option value="الزملاء · Colleague">الزملاء · Colleague</option>
-                  <option value="ضيف خاص · Special Guest">ضيف خاص · Special Guest</option>
+                  <option value="الزملاء · Colleague">
+                    الزملاء · Colleague
+                  </option>
+                  <option value="ضيف خاص · Special Guest">
+                    ضيف خاص · Special Guest
+                  </option>
                 </select>
               </div>
             </div>
 
             <div style={{ marginBottom: "1rem" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.35rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "0.35rem",
+                }}
+              >
                 <label
                   style={{
                     fontSize: "0.82rem",
                     fontWeight: 700,
-                    color: isNoir ? "#FFFFFF" : "var(--athar-text-title, #231F20)",
+                    color: isNoir
+                      ? "#FFFFFF"
+                      : "var(--athar-text-title, #231F20)",
                   }}
                 >
                   رسالة التهنئة والدعاء · Blessing Message *
@@ -446,7 +469,10 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                 <span
                   style={{
                     fontSize: "0.75rem",
-                    color: message.length > maxMessageLength ? "#E53E3E" : "var(--athar-gold, #D4AF37)",
+                    color:
+                      message.length > maxMessageLength
+                        ? "#E53E3E"
+                        : "var(--athar-gold, #D4AF37)",
                     fontWeight: 600,
                   }}
                 >
@@ -460,12 +486,16 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                   if (formError) setFormError("");
                 }}
                 rows={3}
-                placeholder={section.placeholder || "اكتب كلمات دافئة تخلد ذكرى هذه الليلة السعيدة..."}
+                placeholder={
+                  section.placeholder ||
+                  "اكتب كلمات دافئة تخلد ذكرى هذه الليلة السعيدة..."
+                }
                 style={{
                   width: "100%",
                   padding: "0.75rem 1rem",
                   borderRadius: "12px",
-                  border: "1.5px solid var(--athar-gold-border, rgba(212, 175, 55, 0.35))",
+                  border:
+                    "1.5px solid var(--athar-gold-border, rgba(212, 175, 55, 0.35))",
                   backgroundColor: isNoir ? "rgba(20, 15, 17, 0.7)" : "#FFFFFF",
                   color: isNoir ? "#FFFFFF" : "#231F20",
                   fontSize: "0.9rem",
@@ -476,7 +506,13 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
             </div>
 
             {formError && (
-              <div style={{ color: "#E53E3E", fontSize: "0.82rem", marginBottom: "0.85rem" }}>
+              <div
+                style={{
+                  color: "#E53E3E",
+                  fontSize: "0.82rem",
+                  marginBottom: "0.85rem",
+                }}
+              >
                 {formError}
               </div>
             )}
@@ -507,7 +543,9 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
         </div>
 
         {/* Wishes Stream Feed */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}
+        >
           {wishes.map((wish) => {
             const initial = wish.author.trim().charAt(0) || "أ";
 
@@ -520,7 +558,8 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                   background: isNoir
                     ? "linear-gradient(145deg, rgba(35, 26, 30, 0.88), rgba(22, 18, 20, 0.94))"
                     : "linear-gradient(145deg, #FFFFFF, #FAF4ED)",
-                  border: "1px solid var(--athar-gold-border, rgba(212, 175, 55, 0.35))",
+                  border:
+                    "1px solid var(--athar-gold-border, rgba(212, 175, 55, 0.35))",
                   boxShadow: "0 6px 18px rgba(0, 0, 0, 0.03)",
                   transition: "transform 0.2s ease, border-color 0.2s ease",
                 }}
@@ -535,7 +574,13 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                   }}
                 >
                   {/* Guest Avatar & Identity */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                    }}
+                  >
                     <div
                       style={{
                         width: "42px",
@@ -563,12 +608,20 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                         style={{
                           fontSize: "0.98rem",
                           fontWeight: 700,
-                          color: isNoir ? "#FFFFFF" : "var(--athar-text-title, #231F20)",
+                          color: isNoir
+                            ? "#FFFFFF"
+                            : "var(--athar-text-title, #231F20)",
                         }}
                       >
                         {wish.author}
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                        }}
+                      >
                         <span
                           style={{
                             fontSize: "0.72rem",
@@ -578,7 +631,14 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                         >
                           {wish.role}
                         </span>
-                        <span style={{ fontSize: "0.7rem", color: isNoir ? "#A8A8B7" : "var(--athar-text-muted, #7A6F6D)" }}>
+                        <span
+                          style={{
+                            fontSize: "0.7rem",
+                            color: isNoir
+                              ? "#A8A8B7"
+                              : "var(--athar-text-muted, #7A6F6D)",
+                          }}
+                        >
                           • {wish.date}
                         </span>
                       </div>
@@ -592,9 +652,13 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                       onClick={() => handleToggleLike(wish.id)}
                       style={{
                         background: wish.hasLiked
-                          ? (isNoir ? "rgba(229, 62, 62, 0.25)" : "rgba(107, 29, 40, 0.08)")
+                          ? isNoir
+                            ? "rgba(229, 62, 62, 0.25)"
+                            : "rgba(107, 29, 40, 0.08)"
                           : "transparent",
-                        border: wish.hasLiked ? "1px solid #E53E3E" : "1px solid rgba(212, 175, 55, 0.25)",
+                        border: wish.hasLiked
+                          ? "1px solid #E53E3E"
+                          : "1px solid rgba(212, 175, 55, 0.25)",
                         borderRadius: "9999px",
                         padding: "0.35rem 0.75rem",
                         cursor: "pointer",
@@ -602,7 +666,11 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                         alignItems: "center",
                         gap: "0.35rem",
                         fontSize: "0.82rem",
-                        color: wish.hasLiked ? "#E53E3E" : (isNoir ? "#D6C7B2" : "var(--athar-text-muted, #7A6F6D)"),
+                        color: wish.hasLiked
+                          ? "#E53E3E"
+                          : isNoir
+                            ? "#D6C7B2"
+                            : "var(--athar-text-muted, #7A6F6D)",
                         transition: "all 0.2s ease",
                       }}
                     >
@@ -618,7 +686,9 @@ export const InteractiveWishingWallSection: React.FC<InteractiveWishingWallSecti
                   style={{
                     fontSize: "0.95rem",
                     lineHeight: 1.65,
-                    color: isNoir ? "#E6DACB" : "var(--athar-text-body, #4A4240)",
+                    color: isNoir
+                      ? "#E6DACB"
+                      : "var(--athar-text-body, #4A4240)",
                     margin: 0,
                     whiteSpace: "pre-wrap",
                   }}

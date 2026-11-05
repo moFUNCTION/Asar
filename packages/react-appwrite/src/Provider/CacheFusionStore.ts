@@ -11,6 +11,48 @@ export class CacheFusionStore implements ICacheFusionStore {
   // Listeners for query keys or document keys
   private listeners = new Map<string, Set<() => void>>();
 
+  // Maximum LRU entries capacity limit
+  readonly maxEntries: number;
+
+  constructor(maxEntries = 500) {
+    this.maxEntries = maxEntries;
+  }
+
+  get documentCache(): Map<string, Models.Document> {
+    return this.documents;
+  }
+
+  get collectionCache(): Map<string, { documents: Models.Document[]; total: number }> {
+    return this.collectionQueries;
+  }
+
+  private setDocumentKey(key: string, doc: Models.Document): void {
+    if (this.documents.has(key)) {
+      this.documents.delete(key);
+    } else if (this.documents.size >= this.maxEntries) {
+      const oldestKey = this.documents.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.documents.delete(oldestKey);
+      }
+    }
+    this.documents.set(key, doc);
+  }
+
+  private setCollectionQueryKey(
+    key: string,
+    data: { documents: Models.Document[]; total: number }
+  ): void {
+    if (this.collectionQueries.has(key)) {
+      this.collectionQueries.delete(key);
+    } else if (this.collectionQueries.size >= this.maxEntries) {
+      const oldestKey = this.collectionQueries.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.collectionQueries.delete(oldestKey);
+      }
+    }
+    this.collectionQueries.set(key, data);
+  }
+
   private getDocKey(databaseId: string, collectionId: string, documentId: string): string {
     return `doc:${databaseId}:${collectionId}:${documentId}`;
   }
@@ -25,7 +67,12 @@ export class CacheFusionStore implements ICacheFusionStore {
     documentId: string
   ): (T & Models.Document) | undefined {
     const key = this.getDocKey(databaseId, collectionId, documentId);
-    return this.documents.get(key) as (T & Models.Document) | undefined;
+    const doc = this.documents.get(key);
+    if (doc !== undefined) {
+      this.documents.delete(key);
+      this.documents.set(key, doc);
+    }
+    return doc as (T & Models.Document) | undefined;
   }
 
   setDocument<T = any>(
@@ -35,7 +82,7 @@ export class CacheFusionStore implements ICacheFusionStore {
   ): void {
     if (!document || !document.$id) return;
     const key = this.getDocKey(databaseId, collectionId, document.$id);
-    this.documents.set(key, document);
+    this.setDocumentKey(key, document);
 
     // Also update this document inside any matching collection queries
     const collPrefix = this.getCollPrefix(databaseId, collectionId);
@@ -45,7 +92,7 @@ export class CacheFusionStore implements ICacheFusionStore {
         if (index !== -1) {
           const updated = [...data.documents];
           updated[index] = document;
-          this.collectionQueries.set(qKey, { ...data, documents: updated });
+          this.setCollectionQueryKey(qKey, { ...data, documents: updated });
           this.notify(qKey);
         }
       }
@@ -64,7 +111,7 @@ export class CacheFusionStore implements ICacheFusionStore {
       if (qKey.startsWith(collPrefix)) {
         const filtered = data.documents.filter((d) => d.$id !== documentId);
         if (filtered.length !== data.documents.length) {
-          this.collectionQueries.set(qKey, {
+          this.setCollectionQueryKey(qKey, {
             documents: filtered,
             total: Math.max(0, data.total - 1),
           });
@@ -81,6 +128,8 @@ export class CacheFusionStore implements ICacheFusionStore {
   ): { documents: (T & Models.Document)[]; total: number } | undefined {
     const data = this.collectionQueries.get(queryKey);
     if (!data) return undefined;
+    this.collectionQueries.delete(queryKey);
+    this.collectionQueries.set(queryKey, data);
     return data as { documents: (T & Models.Document)[]; total: number };
   }
 
@@ -88,19 +137,19 @@ export class CacheFusionStore implements ICacheFusionStore {
     queryKey: string,
     data: { documents: (T & Models.Document)[]; total: number }
   ): void {
-    this.collectionQueries.set(queryKey, data);
+    this.setCollectionQueryKey(queryKey, data);
     // Also warm the document cache
     for (const doc of data.documents) {
       if (doc.$databaseId && doc.$collectionId && doc.$id) {
         const docKey = this.getDocKey(doc.$databaseId, doc.$collectionId, doc.$id);
-        this.documents.set(docKey, doc);
+        this.setDocumentKey(docKey, doc);
       }
     }
     this.notify(queryKey);
   }
 
   handleRealtimeEvent<T = any>(event: RealtimeEventPayload<T>): void {
-    if (!event || !event.payload || !event.payload.$id) return;
+    if (!event || !event.payload || !event.payload.$id || !Array.isArray(event.events)) return;
     const doc = event.payload;
     const databaseId = doc.$databaseId;
     const collectionId = doc.$collectionId;
@@ -123,7 +172,7 @@ export class CacheFusionStore implements ICacheFusionStore {
     if (isCreate) {
       // Add to document cache
       const docKey = this.getDocKey(databaseId, collectionId, doc.$id);
-      this.documents.set(docKey, doc);
+      this.setDocumentKey(docKey, doc);
 
       // Prepend to matching collection queries (zero re-fetch sync)
       const collPrefix = this.getCollPrefix(databaseId, collectionId);
@@ -131,7 +180,7 @@ export class CacheFusionStore implements ICacheFusionStore {
         if (qKey.startsWith(collPrefix)) {
           const exists = data.documents.some((d) => d.$id === doc.$id);
           if (!exists) {
-            this.collectionQueries.set(qKey, {
+            this.setCollectionQueryKey(qKey, {
               documents: [doc, ...data.documents],
               total: data.total + 1,
             });

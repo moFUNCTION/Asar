@@ -29,6 +29,7 @@ export interface InvitationBookingModalProps {
   onClose: () => void;
   initialPackage?: InvitationPlan | string;
   initialAddons?: string[];
+  plans?: InvitationPlan[];
 }
 
 export const InvitationBookingModal: React.FC<InvitationBookingModalProps> = ({
@@ -36,8 +37,10 @@ export const InvitationBookingModal: React.FC<InvitationBookingModalProps> = ({
   onClose,
   initialPackage,
   initialAddons = [],
+  plans = DEFAULT_INVITATION_PLANS,
 }) => {
   const appwrite = useContext(AppwriteContext);
+  const availablePlans = plans && plans.length > 0 ? plans : DEFAULT_INVITATION_PLANS;
 
   // Form State
   const [step, setStep] = useState<number>(1);
@@ -54,8 +57,8 @@ export const InvitationBookingModal: React.FC<InvitationBookingModalProps> = ({
   const resolvedInitialPlan =
     typeof initialPackage === "object" && initialPackage !== null
       ? initialPackage
-      : DEFAULT_INVITATION_PLANS.find((p) => p.name === initialPackage) ||
-        DEFAULT_INVITATION_PLANS[0];
+      : availablePlans.find((p) => p.name === initialPackage) ||
+        availablePlans[0];
 
   const [selectedPlanId, setSelectedPlanId] = useState<string>(resolvedInitialPlan.id);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>(initialAddons);
@@ -82,7 +85,7 @@ export const InvitationBookingModal: React.FC<InvitationBookingModalProps> = ({
   if (!isOpen) return null;
 
   const currentPlan =
-    DEFAULT_INVITATION_PLANS.find((p) => p.id === selectedPlanId) || DEFAULT_INVITATION_PLANS[0];
+    availablePlans.find((p) => p.id === selectedPlanId) || availablePlans[0];
 
   const totalAddonsPrice = selectedAddonIds.reduce((sum, id) => {
     const item = DEFAULT_INVITATION_ADDONS.find((a) => a.id === id);
@@ -185,7 +188,7 @@ export const InvitationBookingModal: React.FC<InvitationBookingModalProps> = ({
       if (appwrite?.storage) {
         try {
           const uploadRes = await appwrite.storage.createFile(
-            "payment_receipts",
+            "asar_storage",
             "unique()",
             screenshotFile as File
           );

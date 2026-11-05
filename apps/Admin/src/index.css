@@ -39,8 +39,8 @@
   --athar-status-danger-bg: rgba(155, 44, 44, 0.1);
 
   /* Font Stacks */
-  --font-arabic-display: 'Amiri', 'Aref Ruqaa', 'Playfair Display', serif;
-  --font-latin-display: 'Playfair Display', 'Amiri', serif;
+  --font-arabic-display: 'Cairo', system-ui, -apple-system, sans-serif;
+  --font-latin-display: 'Playfair Display', 'Cairo', serif;
   --font-body: 'Cairo', system-ui, -apple-system, sans-serif;
 
   /* Radii & Shadows */

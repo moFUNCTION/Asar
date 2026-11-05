@@ -3,9 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   useSubdomain,
   useAppwrite,
+  useCollection,
   ASAR_COLLECTIONS,
   ASAR_DATABASE_ID,
-  Query,
   parseModularWebsiteConfig,
   createDefaultModularWebsiteConfig,
   type ModularWebsiteConfig,
@@ -39,7 +39,8 @@ export const INVITATION_PRESETS: Record<string, InvitationDocument> = {
     eventTime: "19:30 AST",
     venueName: "فندق فورسيزونز سان ستيفانو - الإسكندرية",
     venueAddress: "طريق الجيش، سان ستيفانو، الإسكندرية، مصر",
-    tagline: "يتشرفان بدعوة سيادتكم لمشاركتهما فرحة العمر في ليلة لا تُنسى على ضفاف البحر الأبيض المتوسط.",
+    tagline:
+      "يتشرفان بدعوة سيادتكم لمشاركتهما فرحة العمر في ليلة لا تُنسى على ضفاف البحر الأبيض المتوسط.",
     heroImageUrl:
       "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
     themeConfigJson: {
@@ -51,14 +52,16 @@ export const INVITATION_PRESETS: Record<string, InvitationDocument> = {
     },
     dressCodeJson: {
       title: "أزياء السهرة الرسمية الفاخرة · Black Tie & Evening Glamour",
-      description: "يسعدنا تألقكم بأزياء السهرة الرسمية التي تليق بهذه الليلة الاستثنائية.",
+      description:
+        "يسعدنا تألقكم بأزياء السهرة الرسمية التي تليق بهذه الليلة الاستثنائية.",
       swatches: [
         { name: "العنابي الملكي", hex: "#6B1D28" },
         { name: "الذهب الشامباني", hex: "#D4AF37" },
         { name: "الأسود الأنيق", hex: "#1F1A1C" },
         { name: "الألباستر الدافئ", hex: "#FBF7F2" },
       ],
-      notes: "خدمة صف السيارات (Valet Parking) متوفرة مجاناً لجميع السادة الضيوف عند المدخل الرئيسي.",
+      notes:
+        "خدمة صف السيارات (Valet Parking) متوفرة مجاناً لجميع السادة الضيوف عند المدخل الرئيسي.",
     },
   },
 
@@ -72,7 +75,8 @@ export const INVITATION_PRESETS: Record<string, InvitationDocument> = {
     eventTime: "18:00 CLT",
     venueName: "The Greek Campus - وسط البلد، القاهرة",
     venueAddress: "28 شارع الفلكي، باب اللوق، وسط البلد، القاهرة",
-    tagline: "ملتقى كبار الموسيقيين والفنانين المستقلين في أسبوع من الإبداع والشغف في قلب القاهرة التاريخية.",
+    tagline:
+      "ملتقى كبار الموسيقيين والفنانين المستقلين في أسبوع من الإبداع والشغف في قلب القاهرة التاريخية.",
     heroImageUrl:
       "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80",
     themeConfigJson: {
@@ -86,31 +90,36 @@ export const INVITATION_PRESETS: Record<string, InvitationDocument> = {
       {
         timeOrYear: "18:00",
         title: "حفل الافتتاح ومعرض الفنون التشكيلية",
-        description: "استقبال الحضور وجولة بين المعارض الفنية المستقلة وعروض العزف الحي.",
+        description:
+          "استقبال الحضور وجولة بين المعارض الفنية المستقلة وعروض العزف الحي.",
         badge: "Opening",
       },
       {
         timeOrYear: "19:30",
         title: "الفرقة الرئيسية: إيقاعات الجاز الشرقي",
-        description: "عرض موسيقي ساحر يدمج المقامات الشرقية الأصيلة مع إيقاعات الجاز العالمي.",
+        description:
+          "عرض موسيقي ساحر يدمج المقامات الشرقية الأصيلة مع إيقاعات الجاز العالمي.",
         badge: "Main Stage",
       },
       {
         timeOrYear: "21:30",
         title: "جلسة العزف الارتجالي الحرة (Jam Session)",
-        description: "جلسة تفاعلية مفتوحة يشارك فيها نخبة من عازفي الساكسفون والبيانو والدرامز.",
+        description:
+          "جلسة تفاعلية مفتوحة يشارك فيها نخبة من عازفي الساكسفون والبيانو والدرامز.",
         badge: "Jam Session",
       },
     ],
     dressCodeJson: {
       title: "أزياء عصرية أنيقة · Creative Smart Casual",
-      description: "نرحب بإطلالاتكم الإبداعية المريحة التي تعبر عن الروح الفنية للمهرجان.",
+      description:
+        "نرحب بإطلالاتكم الإبداعية المريحة التي تعبر عن الروح الفنية للمهرجان.",
       swatches: [
         { name: "الذهب الدافئ", hex: "#B7791F" },
         { name: "الأزرق الليلي", hex: "#1E3A8A" },
         { name: "الكريمي الهادئ", hex: "#F4EFEA" },
       ],
-      notes: "يُرجى إبراز بطاقة الدخول الرقمية (QR Code) عند بوابات التذاكر الإلكترونية.",
+      notes:
+        "يُرجى إبراز بطاقة الدخول الرقمية (QR Code) عند بوابات التذاكر الإلكترونية.",
     },
   },
 
@@ -124,7 +133,8 @@ export const INVITATION_PRESETS: Record<string, InvitationDocument> = {
     eventTime: "19:30 AST",
     venueName: "The Grand Pavilion, St. Regis Almasa Hotel",
     venueAddress: "Al Masa Capital, New Administrative Capital, Cairo",
-    tagline: "أمسية استثنائية تحتفي برواد الأعمال والمبتكرين وصناع القرار في الوطن العربي في أجواء راقية.",
+    tagline:
+      "أمسية استثنائية تحتفي برواد الأعمال والمبتكرين وصناع القرار في الوطن العربي في أجواء راقية.",
     heroImageUrl:
       "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80",
     themeConfigJson: {
@@ -138,13 +148,15 @@ export const INVITATION_PRESETS: Record<string, InvitationDocument> = {
     },
     dressCodeJson: {
       title: "أزياء السهرة الرسمية السوداء VIP · Black Tie VIP",
-      description: "الأمسية تتطلب بدلات رسمية كاملة (Black Tie Tuxedo) وفساتين سهرة راقية.",
+      description:
+        "الأمسية تتطلب بدلات رسمية كاملة (Black Tie Tuxedo) وفساتين سهرة راقية.",
       swatches: [
         { name: "الأسود الأوبسيديان", hex: "#161214" },
         { name: "الذهب الملكي", hex: "#D4AF37" },
         { name: "الرمادي الفحمي", hex: "#2B282A" },
       ],
-      notes: "الدخول حصري لحاملي بطاقات VIP المعتمدة مسبقاً مع مقاعد مخصصة بالاسم.",
+      notes:
+        "الدخول حصري لحاملي بطاقات VIP المعتمدة مسبقاً مع مقاعد مخصصة بالاسم.",
     },
   },
 };
@@ -156,63 +168,49 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
 }) => {
   const routeParams = useParams<{ slug?: string }>();
   const { subdomain } = useSubdomain({
-    searchParams: typeof window !== "undefined" ? window.location.search : undefined,
+    searchParams:
+      typeof window !== "undefined" ? window.location.search : undefined,
   });
   const navigate = useNavigate();
-  const { databases, config } = useAppwrite();
+  const { config } = useAppwrite();
   const dbId = config?.databaseId || ASAR_DATABASE_ID;
 
   // Seamless 4-tier slug resolution: prop -> routeParam -> subdomain -> fallback
   const slug = propSlug || routeParams.slug || subdomain || "omar-and-layla";
 
   const onBack = propOnBack || (() => navigate("/"));
-  const onOpenPass = propOnOpenPass || ((rsvpId: string) => navigate(`/pass/${rsvpId}`));
+  const onOpenPass =
+    propOnOpenPass || ((rsvpId: string) => navigate(`/pass/${rsvpId}`));
 
-  const [remoteInvitation, setRemoteInvitation] = useState<InvitationDocument | null>(null);
+  const [remoteInvitation, setRemoteInvitation] =
+    useState<InvitationDocument | null>(null);
+
+  // Hydrate from Appwrite Database reactively via useCollection hook
+  const inviteWhere = useMemo(() => {
+    return slug ? { slug } : undefined;
+  }, [slug]);
+
+  const { data: cloudInvites } = useCollection<InvitationDocument>(
+    dbId,
+    ASAR_COLLECTIONS.INVITATIONS,
+    {
+      where: inviteWhere as any,
+      limit: 1,
+      enabled: Boolean(inviteWhere),
+      realtime: true,
+    },
+  );
 
   useEffect(() => {
-    let isMounted = true;
-    const fetchRemote = async () => {
-      if (INVITATION_PRESETS[slug]) return;
+    if (cloudInvites && cloudInvites.length > 0) {
+      setRemoteInvitation(cloudInvites[0]);
+    }
+  }, [cloudInvites]);
 
-      try {
-        const cache = localStorage.getItem("asar_invitations_cache");
-        if (cache) {
-          const list: InvitationDocument[] = JSON.parse(cache);
-          const match = list.find((item) => item.slug === slug || item.$id === slug);
-          if (match) return;
-        }
-      } catch {
-        // Fallback
-      }
-
-      try {
-        if (databases && dbId) {
-          const res = await databases.listDocuments(
-            dbId,
-            ASAR_COLLECTIONS.INVITATIONS,
-            [Query.equal("slug", slug), Query.limit(1)]
-          );
-          if (res.documents.length > 0 && isMounted) {
-            setRemoteInvitation(res.documents[0] as unknown as InvitationDocument);
-          }
-        }
-      } catch {
-        // Appwrite query fallback
-      }
-    };
-
-    fetchRemote();
-    return () => {
-      isMounted = false;
-    };
-  }, [slug, databases, dbId]);
-
-  // 1. Resolve invitation from preset, localStorage, Appwrite, or fallback
+  // 1. Resolve invitation: Appwrite DB takes precedence, then local cache, then presets
   const invitation: InvitationDocument | null = useMemo(() => {
-    // Check built-in rich presets
-    if (INVITATION_PRESETS[slug]) {
-      return INVITATION_PRESETS[slug];
+    if (remoteInvitation) {
+      return remoteInvitation;
     }
 
     // Check localStorage cache if modified in studio
@@ -220,15 +218,18 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
       const cache = localStorage.getItem("asar_invitations_cache");
       if (cache) {
         const list: InvitationDocument[] = JSON.parse(cache);
-        const match = list.find((item) => item.slug === slug || item.$id === slug);
+        const match = list.find(
+          (item) => item.slug === slug || item.$id === slug,
+        );
         if (match) return match;
       }
     } catch {
       // Ignore
     }
 
-    if (remoteInvitation) {
-      return remoteInvitation;
+    // Check built-in rich presets
+    if (INVITATION_PRESETS[slug]) {
+      return INVITATION_PRESETS[slug];
     }
 
     return null;
@@ -310,7 +311,8 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
     }
 
     // Case 2: Populate default modular website config with invitation's specific metadata & legacy blocks
-    const coupleTitle = invitation.coupleOrHostNames || invitation.eventTitle || "Omar & Layla";
+    const coupleTitle =
+      invitation.coupleOrHostNames || invitation.eventTitle || "Omar & Layla";
     const eventDate = invitation.eventDate || "2026-11-20";
     const venueName = invitation.venueName || "Four Seasons Alexandria";
 
@@ -334,10 +336,16 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
       if (sec.type === "live_countdown") {
         return {
           ...sec,
-          targetDateIso: eventDate ? `${eventDate}T19:30:00.000Z` : sec.targetDateIso,
+          targetDateIso: eventDate
+            ? `${eventDate}T19:30:00.000Z`
+            : sec.targetDateIso,
         };
       }
-      if (sec.type === "event_schedule" && scheduleItems && scheduleItems.length > 0) {
+      if (
+        sec.type === "event_schedule" &&
+        scheduleItems &&
+        scheduleItems.length > 0
+      ) {
         return {
           ...sec,
           scheduleItems: scheduleItems.map((item, i) => ({
@@ -351,7 +359,11 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
           })),
         };
       }
-      if (sec.type === "photo_gallery" && galleryItems && galleryItems.length > 0) {
+      if (
+        sec.type === "photo_gallery" &&
+        galleryItems &&
+        galleryItems.length > 0
+      ) {
         return {
           ...sec,
           images: galleryItems.map((img) => ({
@@ -371,7 +383,10 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
           parkingNote: dressCodeConfig?.notes || sec.parkingNote,
           dressCodeTitle: dressCodeConfig?.title || sec.dressCodeTitle,
           dressCodeSwatches: dressCodeConfig?.swatches
-            ? dressCodeConfig.swatches.map((s) => ({ hex: s.hex, label: s.name }))
+            ? dressCodeConfig.swatches.map((s) => ({
+                hex: s.hex,
+                label: s.name,
+              }))
             : sec.dressCodeSwatches,
         };
       }
@@ -383,7 +398,9 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
             name: f.name,
             labelEn: f.label,
             labelAr: f.label,
-            type: (f.type === "tel" ? "phone" : f.type) as import("@repo/react-appwrite").DynamicFormFieldType,
+            type: (f.type === "tel"
+              ? "phone"
+              : f.type) as import("@repo/react-appwrite").DynamicFormFieldType,
             required: f.required ?? false,
             locked: f.isLocked ?? false,
             placeholderEn: f.placeholder,
@@ -400,7 +417,10 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
     return {
       version: "2.0",
       sections: adaptedSections,
-      themeConfig: typeof invitation.themeConfigJson === "object" ? (invitation.themeConfigJson as Record<string, unknown>) : undefined,
+      themeConfig:
+        typeof invitation.themeConfigJson === "object"
+          ? (invitation.themeConfigJson as Record<string, unknown>)
+          : undefined,
     };
   }, [invitation, scheduleItems, galleryItems, dressCodeConfig, formSchema]);
 
@@ -447,11 +467,16 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
               marginBottom: "2rem",
             }}
           >
-            لم نتمكن من العثور على موقع الدعوة المطلوب بالرابط: (<code>{slug}</code>). يرجى التأكد من
-            صحة الرابط أو العودة لصفحة الخدمات الرئيسية.
+            لم نتمكن من العثور على موقع الدعوة المطلوب بالرابط: (
+            <code>{slug}</code>). يرجى التأكد من صحة الرابط أو العودة لصفحة
+            الخدمات الرئيسية.
           </p>
           {onBack && (
-            <button type="button" onClick={onBack} className="btn-athar-primary">
+            <button
+              type="button"
+              onClick={onBack}
+              className="btn-athar-primary"
+            >
               ← العودة إلى منصة الدعوات
             </button>
           )}
@@ -461,7 +486,10 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
   }
 
   return (
-    <ThemeWrapper themeConfig={themeConfig} dir={themeConfig.direction || "rtl"}>
+    <ThemeWrapper
+      themeConfig={themeConfig}
+      dir={themeConfig.direction || "rtl"}
+    >
       {/* Top Floating Luxury Header */}
       <header
         style={{
@@ -543,7 +571,9 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
         isNoir={isNoir}
         onOpenPass={onOpenPass}
         onRsvpClick={() => {
-          document.getElementById("rsvp-section")?.scrollIntoView({ behavior: "smooth" });
+          document
+            .getElementById("rsvp-section")
+            ?.scrollIntoView({ behavior: "smooth" });
         }}
       />
 
@@ -558,10 +588,20 @@ export const CustomEventPage: React.FC<CustomEventPageProps> = ({
           backgroundColor: isNoir ? "#161214" : "var(--athar-bg-secondary)",
         }}
       >
-        <div style={{ marginBottom: "0.5rem", fontWeight: 700, color: "var(--athar-gold)" }}>
-          ✦ أثر لتخليد الذكريات وتنظيم الدعوات الفاخرة · ATHAR LUXURY EXPERIENCES ✦
+        <div
+          style={{
+            marginBottom: "0.5rem",
+            fontWeight: 700,
+            color: "var(--athar-gold)",
+          }}
+        >
+          ✦ أثر لتخليد الذكريات وتنظيم الدعوات الفاخرة · ATHAR LUXURY
+          EXPERIENCES ✦
         </div>
-        <p>جميع الحقوق محفوظة © {new Date().getFullYear()} · صُممت هذه الدعوة لتليق بمقام ضيوفكم الكرام</p>
+        <p>
+          جميع الحقوق محفوظة © {new Date().getFullYear()} · صُممت هذه الدعوة
+          لتليق بمقام ضيوفكم الكرام
+        </p>
       </footer>
     </ThemeWrapper>
   );

@@ -4,6 +4,7 @@ import { Box } from "@chakra-ui/react";
 import { EcosystemHome } from "./components/home/EcosystemHome";
 import { ClientAccountShell } from "./components/account/ClientAccountShell";
 import { AuthModal } from "./components/auth/AuthModal";
+import { RequireAuth } from "@repo/react-appwrite";
 
 export const PlatformGateway: React.FC<{
   initialAuthOpen?: boolean;
@@ -116,21 +117,25 @@ export const App: React.FC = () => {
         <Route
           path="/account"
           element={
-            <ClientAccountShell
-              onBackToHome={handleBackToHome}
-              onLogout={handleLogout}
-              currentUser={currentUser}
-            />
+            <RequireAuth fallback={<Navigate to="/auth" replace />}>
+              <ClientAccountShell
+                onBackToHome={handleBackToHome}
+                onLogout={handleLogout}
+                currentUser={currentUser}
+              />
+            </RequireAuth>
           }
         />
         <Route
           path="/account/*"
           element={
-            <ClientAccountShell
-              onBackToHome={handleBackToHome}
-              onLogout={handleLogout}
-              currentUser={currentUser}
-            />
+            <RequireAuth fallback={<Navigate to="/auth" replace />}>
+              <ClientAccountShell
+                onBackToHome={handleBackToHome}
+                onLogout={handleLogout}
+                currentUser={currentUser}
+              />
+            </RequireAuth>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

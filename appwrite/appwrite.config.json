@@ -60,9 +60,30 @@
             "logging": true,
             "events": [],
             "schedule": "",
-            "timeout": 15,
-            "commands": "",
-            "scopes": [],
+            "timeout": 30,
+            "commands": "npm install",
+            "scopes": [
+                "databases.read",
+                "databases.write",
+                "collections.read",
+                "collections.write",
+                "documents.read",
+                "documents.write"
+            ],
+            "vars": [
+                {
+                    "key": "APPWRITE_DATABASE_ID",
+                    "value": "asar-db"
+                },
+                {
+                    "key": "APPWRITE_COLLECTION_RSVPS",
+                    "value": "invitation_rsvps"
+                },
+                {
+                    "key": "APPWRITE_COLLECTION_INVITATIONS",
+                    "value": "invitations"
+                }
+            ],
             "buildSpecification": "s-2vcpu-2gb",
             "runtimeSpecification": "s-0.5vcpu-512mb",
             "deploymentRetention": 0
@@ -82,9 +103,77 @@
             "logging": true,
             "events": [],
             "schedule": "",
-            "timeout": 15,
-            "commands": "",
+            "timeout": 30,
+            "commands": "npm install",
             "scopes": [],
+            "vars": [],
+            "buildSpecification": "s-2vcpu-2gb",
+            "runtimeSpecification": "s-0.5vcpu-512mb",
+            "deploymentRetention": 0
+        },
+        {
+            "$id": "send-rsvp-notification",
+            "name": "Send RSVP Notification",
+            "runtime": "node-22",
+            "path": "functions/send-rsvp-notification",
+            "entrypoint": "src/main.js",
+            "execute": [
+                "team:admins",
+                "users",
+                "any"
+            ],
+            "enabled": true,
+            "logging": true,
+            "events": [],
+            "schedule": "",
+            "timeout": 30,
+            "commands": "npm install",
+            "scopes": [
+                "messages.read",
+                "messages.write"
+            ],
+            "vars": [
+                {
+                    "key": "APPWRITE_DATABASE_ID",
+                    "value": "asar-db"
+                }
+            ],
+            "buildSpecification": "s-2vcpu-2gb",
+            "runtimeSpecification": "s-0.5vcpu-512mb",
+            "deploymentRetention": 0
+        },
+        {
+            "$id": "sync-user-role",
+            "name": "Sync User Role",
+            "runtime": "node-22",
+            "path": "functions/sync-user-role",
+            "entrypoint": "src/main.js",
+            "execute": [
+                "team:admins",
+                "users"
+            ],
+            "enabled": true,
+            "logging": true,
+            "events": [
+                "users.*.create"
+            ],
+            "schedule": "",
+            "timeout": 30,
+            "commands": "npm install",
+            "scopes": [
+                "users.read",
+                "users.write",
+                "teams.read",
+                "teams.write",
+                "databases.read",
+                "databases.write"
+            ],
+            "vars": [
+                {
+                    "key": "APPWRITE_DATABASE_ID",
+                    "value": "asar-db"
+                }
+            ],
             "buildSpecification": "s-2vcpu-2gb",
             "runtimeSpecification": "s-0.5vcpu-512mb",
             "deploymentRetention": 0
@@ -1467,6 +1556,15 @@
                         "passToken"
                     ],
                     "orders": []
+                },
+                {
+                    "key": "idx_guest_email",
+                    "type": "key",
+                    "status": "available",
+                    "columns": [
+                        "guestEmail"
+                    ],
+                    "orders": []
                 }
             ]
         },
@@ -1554,6 +1652,19 @@
                         "invitationId"
                     ],
                     "orders": []
+                },
+                {
+                    "key": "idx_invitation_created",
+                    "type": "key",
+                    "status": "available",
+                    "columns": [
+                        "invitationId",
+                        "$createdAt"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "DESC"
+                    ]
                 }
             ]
         },

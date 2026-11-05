@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { Box, Flex, HStack, VStack, Text, Button, Badge, SimpleGrid } from "@chakra-ui/react";
-import { useAppwrite, ASAR_DATABASE_ID, ASAR_COLLECTIONS, type AsarUserProfile, parseUserProfile } from "@repo/react-appwrite";
+import {
+  Box,
+  Flex,
+  HStack,
+  VStack,
+  Text,
+  Button,
+  Badge,
+  SimpleGrid,
+} from "@chakra-ui/react";
+import {
+  useCollection,
+  useMutations,
+  type AsarUserProfile,
+} from "@repo/react-appwrite";
+import { ASAR_DATABASE_ID, ASAR_COLLECTIONS } from "../../services/asarService";
 
 export interface UsersManagerProps {
   onRefresh?: () => void;
@@ -54,11 +68,23 @@ const DEMO_USERS: AsarUserProfile[] = [
 ];
 
 export const UsersManager: React.FC<UsersManagerProps> = () => {
-  const { databases } = useAppwrite();
+  const {
+    data: cloudUsers,
+    loading: isDocsLoading,
+    refetch: refreshUsers,
+  } = useCollection<AsarUserProfile>(ASAR_DATABASE_ID, ASAR_COLLECTIONS.USERS, {
+    realtime: true,
+  });
+  const { updateDocument } = useMutations<AsarUserProfile>(
+    ASAR_DATABASE_ID,
+    ASAR_COLLECTIONS.USERS,
+  );
+
   const [users, setUsers] = useState<AsarUserProfile[]>(DEMO_USERS);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "client">("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "client">(
+    "all",
+  );
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   const showNotice = (msg: string) => {
@@ -66,45 +92,37 @@ export const UsersManager: React.FC<UsersManagerProps> = () => {
     setTimeout(() => setActionNotice(null), 3500);
   };
 
-  // Fetch users from Appwrite Database
-  const fetchUsers = async () => {
-    setIsLoading(true);
-    try {
-      if (databases) {
-        const response = await databases.listDocuments(ASAR_DATABASE_ID, ASAR_COLLECTIONS.USERS);
-        if (response.documents.length > 0) {
-          const parsed = response.documents.map((d) => parseUserProfile(d)).filter((p): p is AsarUserProfile => p !== null);
-          setUsers(parsed);
-          setIsLoading(false);
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn("Using fallback demo users:", e);
-    }
-    setUsers(DEMO_USERS);
-    setIsLoading(false);
-  };
-
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (cloudUsers && cloudUsers.length > 0) {
+      setUsers((prev) => {
+        const merged: AsarUserProfile[] = [...(cloudUsers as AsarUserProfile[])];
+        for (const p of prev) {
+          if (!merged.some((m) => m.userId === p.userId)) {
+            merged.push(p);
+          }
+        }
+        return merged;
+      });
+    }
+  }, [cloudUsers]);
 
   const handleToggleRole = async (user: AsarUserProfile) => {
     const newRole = user.role === "admin" ? "client" : "admin";
     try {
-      if (databases && user.$id) {
-        await databases.updateDocument(ASAR_DATABASE_ID, ASAR_COLLECTIONS.USERS, user.$id, {
+      if (user.$id) {
+        await updateDocument(user.$id, {
           role: newRole,
         });
       }
       setUsers((prev) =>
-        prev.map((u) => (u.userId === user.userId ? { ...u, role: newRole } : u))
+        prev.map((u) =>
+          u.userId === user.userId ? { ...u, role: newRole } : u,
+        ),
       );
       showNotice(
         newRole === "admin"
           ? `✦ تم ترقية "${user.name}" إلى مسؤول في النظام بنجاح.`
-          : `✓ تم تعديل رتبة "${user.name}" إلى عميل.`
+          : `✓ تم تعديل رتبة "${user.name}" إلى عميل.`,
       );
     } catch (e: any) {
       showNotice(`تعذر تحديث الصلاحية: ${e?.message || "خطأ غير معروف"}`);
@@ -154,7 +172,12 @@ export const UsersManager: React.FC<UsersManagerProps> = () => {
       <Flex justify="space-between" align="center" wrap="wrap" gap={4} mb={6}>
         <Box>
           <HStack gap={2} mb={1}>
-            <Text fontSize="1.6rem" fontWeight="900" color="var(--athar-maroon)" fontFamily="var(--font-arabic-display)">
+            <Text
+              fontSize="1.6rem"
+              fontWeight="900"
+              color="var(--athar-maroon)"
+              fontFamily="var(--font-arabic-display)"
+            >
               دليل المستخدمين والحسابات
             </Text>
             <Badge
@@ -170,28 +193,53 @@ export const UsersManager: React.FC<UsersManagerProps> = () => {
             </Badge>
           </HStack>
           <Text fontSize="0.88rem" color="var(--athar-text-muted)">
-            إدارة حسابات أصحاب الحفلات، الصلاحيات، وسجلات الدخول المرتبطة بقاعدة بيانات أثر (Appwrite Users).
+            إدارة حسابات أصحاب الحفلات، الصلاحيات، وسجلات الدخول المرتبطة بقاعدة
+            بيانات أثر (Appwrite Users).
           </Text>
         </Box>
 
         <HStack gap={3}>
-          <Box px={4} py={2} bg="#ffffff" borderRadius="12px" border="1px solid var(--athar-card-border)">
-            <Text fontSize="0.75rem" color="var(--athar-text-muted)">المدراء</Text>
-            <Text fontSize="1.1rem" fontWeight="800" color="var(--athar-maroon)">{adminCount}</Text>
+          <Box
+            px={4}
+            py={2}
+            bg="#ffffff"
+            borderRadius="12px"
+            border="1px solid var(--athar-card-border)"
+          >
+            <Text fontSize="0.75rem" color="var(--athar-text-muted)">
+              المدراء
+            </Text>
+            <Text
+              fontSize="1.1rem"
+              fontWeight="800"
+              color="var(--athar-maroon)"
+            >
+              {adminCount}
+            </Text>
           </Box>
-          <Box px={4} py={2} bg="#ffffff" borderRadius="12px" border="1px solid var(--athar-card-border)">
-            <Text fontSize="0.75rem" color="var(--athar-text-muted)">العملاء</Text>
-            <Text fontSize="1.1rem" fontWeight="800" color="#8C6F12">{clientCount}</Text>
+          <Box
+            px={4}
+            py={2}
+            bg="#ffffff"
+            borderRadius="12px"
+            border="1px solid var(--athar-card-border)"
+          >
+            <Text fontSize="0.75rem" color="var(--athar-text-muted)">
+              العملاء
+            </Text>
+            <Text fontSize="1.1rem" fontWeight="800" color="#8C6F12">
+              {clientCount}
+            </Text>
           </Box>
           <Button
-            onClick={fetchUsers}
-            disabled={isLoading}
+            onClick={() => refreshUsers?.()}
+            disabled={isDocsLoading}
             className="btn-athar-secondary"
             fontSize="0.85rem"
             px={4}
             py={2}
           >
-            {isLoading ? "جاري التحديث..." : "تحديث القائمة ⟳"}
+            {isDocsLoading ? "جاري التحديث..." : "تحديث القائمة ⟳"}
           </Button>
         </HStack>
       </Flex>
@@ -239,8 +287,13 @@ export const UsersManager: React.FC<UsersManagerProps> = () => {
                   border: "none",
                   transition: "all 0.2s ease",
                   backgroundColor:
-                    roleFilter === filter.id ? "var(--athar-maroon)" : "rgba(107, 29, 40, 0.05)",
-                  color: roleFilter === filter.id ? "#ffffff" : "var(--athar-text-body)",
+                    roleFilter === filter.id
+                      ? "var(--athar-maroon)"
+                      : "rgba(107, 29, 40, 0.05)",
+                  color:
+                    roleFilter === filter.id
+                      ? "#ffffff"
+                      : "var(--athar-text-body)",
                 }}
               >
                 {filter.label}
@@ -253,8 +306,15 @@ export const UsersManager: React.FC<UsersManagerProps> = () => {
       {/* User Cards Grid */}
       {filteredUsers.length === 0 ? (
         <Box textAlign="center" py={16} className="athar-card" bg="#ffffff">
-          <Text fontSize="2.5rem" mb={2}>🔍</Text>
-          <Text fontSize="1.1rem" fontWeight="800" color="var(--athar-maroon)" mb={1}>
+          <Text fontSize="2.5rem" mb={2}>
+            🔍
+          </Text>
+          <Text
+            fontSize="1.1rem"
+            fontWeight="800"
+            color="var(--athar-maroon)"
+            mb={1}
+          >
             لم يتم العثور على مستخدمين
           </Text>
           <Text fontSize="0.88rem" color="var(--athar-text-muted)">
@@ -279,8 +339,16 @@ export const UsersManager: React.FC<UsersManagerProps> = () => {
                 p={5}
                 position="relative"
                 border="1px solid"
-                borderColor={isAdmin ? "rgba(212, 175, 55, 0.4)" : "var(--athar-card-border)"}
-                boxShadow={isAdmin ? "0 4px 18px rgba(212, 175, 55, 0.12)" : "var(--athar-shadow-soft)"}
+                borderColor={
+                  isAdmin
+                    ? "rgba(212, 175, 55, 0.4)"
+                    : "var(--athar-card-border)"
+                }
+                boxShadow={
+                  isAdmin
+                    ? "0 4px 18px rgba(212, 175, 55, 0.12)"
+                    : "var(--athar-shadow-soft)"
+                }
               >
                 <Flex justify="space-between" align="start" mb={4}>
                   <HStack gap={3}>
@@ -288,7 +356,11 @@ export const UsersManager: React.FC<UsersManagerProps> = () => {
                       w="44px"
                       h="44px"
                       borderRadius="full"
-                      bg={isAdmin ? "var(--athar-maroon)" : "rgba(107, 29, 40, 0.08)"}
+                      bg={
+                        isAdmin
+                          ? "var(--athar-maroon)"
+                          : "rgba(107, 29, 40, 0.08)"
+                      }
                       color={isAdmin ? "#ffffff" : "var(--athar-maroon)"}
                       display="flex"
                       alignItems="center"
@@ -297,12 +369,18 @@ export const UsersManager: React.FC<UsersManagerProps> = () => {
                       fontSize="0.95rem"
                       fontFamily="var(--font-arabic-display)"
                       border="1px solid"
-                      borderColor={isAdmin ? "var(--athar-gold)" : "transparent"}
+                      borderColor={
+                        isAdmin ? "var(--athar-gold)" : "transparent"
+                      }
                     >
                       {initials || "أ"}
                     </Box>
                     <Box>
-                      <Text fontWeight="800" fontSize="1rem" color="var(--athar-text-title)">
+                      <Text
+                        fontWeight="800"
+                        fontSize="1rem"
+                        color="var(--athar-text-title)"
+                      >
                         {user.name}
                       </Text>
                       <Text fontSize="0.78rem" color="var(--athar-text-muted)">
@@ -312,7 +390,11 @@ export const UsersManager: React.FC<UsersManagerProps> = () => {
                   </HStack>
 
                   <Badge
-                    bg={isAdmin ? "rgba(212, 175, 55, 0.16)" : "rgba(107, 29, 40, 0.06)"}
+                    bg={
+                      isAdmin
+                        ? "rgba(212, 175, 55, 0.16)"
+                        : "rgba(107, 29, 40, 0.06)"
+                    }
                     color={isAdmin ? "#8C6F12" : "var(--athar-maroon)"}
                     px={2.5}
                     py={1}
@@ -320,29 +402,47 @@ export const UsersManager: React.FC<UsersManagerProps> = () => {
                     fontSize="0.72rem"
                     fontWeight="800"
                     border="1px solid"
-                    borderColor={isAdmin ? "rgba(212, 175, 55, 0.4)" : "rgba(107, 29, 40, 0.1)"}
+                    borderColor={
+                      isAdmin
+                        ? "rgba(212, 175, 55, 0.4)"
+                        : "rgba(107, 29, 40, 0.1)"
+                    }
                   >
                     {isAdmin ? "✦ مسؤول نظام" : "عميل أثر"}
                   </Badge>
                 </Flex>
 
-                <VStack align="stretch" gap={2} fontSize="0.82rem" color="var(--athar-text-body)" mb={4}>
+                <VStack
+                  align="stretch"
+                  gap={2}
+                  fontSize="0.82rem"
+                  color="var(--athar-text-body)"
+                  mb={4}
+                >
                   {user.phone && (
                     <HStack justify="space-between">
-                      <Text color="var(--athar-text-muted)">الهاتف / واتساب:</Text>
-                      <Text fontWeight="700" dir="ltr">{user.phone}</Text>
+                      <Text color="var(--athar-text-muted)">
+                        الهاتف / واتساب:
+                      </Text>
+                      <Text fontWeight="700" dir="ltr">
+                        {user.phone}
+                      </Text>
                     </HStack>
                   )}
                   {user.organization && (
                     <HStack justify="space-between">
-                      <Text color="var(--athar-text-muted)">الجهة / الحفل:</Text>
+                      <Text color="var(--athar-text-muted)">
+                        الجهة / الحفل:
+                      </Text>
                       <Text fontWeight="700">{user.organization}</Text>
                     </HStack>
                   )}
                   <HStack justify="space-between">
                     <Text color="var(--athar-text-muted)">تاريخ التسجيل:</Text>
                     <Text fontWeight="600">
-                      {user.$createdAt ? new Date(user.$createdAt).toLocaleDateString("ar-EG") : "حساب معتمد"}
+                      {user.$createdAt
+                        ? new Date(user.$createdAt).toLocaleDateString("ar-EG")
+                        : "حساب معتمد"}
                     </Text>
                   </HStack>
                 </VStack>
@@ -355,10 +455,16 @@ export const UsersManager: React.FC<UsersManagerProps> = () => {
                     width="100%"
                     fontSize="0.78rem"
                     fontWeight="800"
-                    color={isAdmin ? "var(--athar-text-muted)" : "var(--athar-maroon)"}
+                    color={
+                      isAdmin
+                        ? "var(--athar-text-muted)"
+                        : "var(--athar-maroon)"
+                    }
                     _hover={{ bg: "rgba(107, 29, 40, 0.05)" }}
                   >
-                    {isAdmin ? "تحويل إلى عميل عادي ↓" : "ترقية إلى مسؤول نظام ✦"}
+                    {isAdmin
+                      ? "تحويل إلى عميل عادي ↓"
+                      : "ترقية إلى مسؤول نظام ✦"}
                   </Button>
                 </Box>
               </Box>
@@ -369,4 +475,3 @@ export const UsersManager: React.FC<UsersManagerProps> = () => {
     </Box>
   );
 };
-

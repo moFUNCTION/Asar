@@ -1,49 +1,45 @@
-Analyze all parts of project ASAR to understand the business idea, then make the project production-ready across UI/UX, responsiveness, user journey, admin dashboard, and authentication.
+Analyze the documentation files describing Asar, connect and verify all data with Appwrite, implement all missing cloud functions, redesign the Admin dashboard with Cairo font and a smooth auth journey, replace dummy components, and ensure smooth user journeys across all apps to make the project ship-ready.
 
 Working directory: d:\asar
-Integrity mode: development
+Integrity mode: demo
+The team must NOT: Use pre-built libraries or frameworks for core functionality
 
 ## Requirements
 
-### R1. UI/UX Consistency and Responsiveness
-Upgrade the UI/UX across all pages outside the Booth and Invitation landing pages to match the editorial luxury quality bar set by those landing pages. Ensure all pages and components are fully responsive across mobile, tablet, and desktop viewports without layout breakage or unintended horizontal overflow.
+### R1. Documentation Analysis and Monorepo Production Readiness
+Analyze all documentation files in `docs/` (including `AGENT_01` through `AGENT_10`, `ASAR_PROJECT_ARCHITECTURE.md`, `ASAR_DESIGN_SYSTEM.md`, and `ASAR_BOOTH_DESIGN_SPEC.md`) and the reference architecture in `d:\lyder-eco`. Resolve incomplete implementations, dummy components, and missing connections across all apps (`apps/Admin`, `apps/Booth`, `apps/Invitation`, `apps/Main`, `apps/Renderer`) and packages to make the Asar project ship-ready. Avoid running `npm run build` repeatedly without reason and avoid creating unneeded scripts or code generators.
 
-### R2. Complete and Streamlined User Journeys
-Establish complete, intuitive, and unbroken customer and guest flows across the platform for both Booth Memories and Invitation Websites. Customer journeys must seamlessly cover discovery/landing, booking/ordering, and client portal management (managing RSVPs, guests, and memories), while guest journeys cover RSVP submission, passes, and dynamic site viewing.
+### R2. Appwrite Data Connection and Cloud Functions
+Verify that all data models, collections, and relations in the Asar apps match the Appwrite project schema (`asar-db` on endpoint `https://fra.cloud.appwrite.io/v1`). Implement all missing cloud functions in `appwrite/functions/` (referencing `appwrite/appwrite.config.json` and standard patterns in `d:\lyder-eco`) with full business logic, environment variable definitions, error handling, and deployment readiness.
 
-### R3. Arabic-First Admin Dashboard Redesign
-Redesign the admin dashboard design, structure, and navigation to make it intuitive, efficient, and bug-free. Deliver the admin dashboard with a native Arabic-first interface utilizing right-to-left (RTL) layout and Arabic typography.
+### R3. Admin Dashboard Redesign and Authentication Journey
+Redesign `apps/Admin` to resolve usability and UX flaws, utilizing the 'Cairo' font for typography and an intuitive luxury design. Verify and fix the authentication journey in the Admin dashboard so that auth flows, role-based access, and session management work flawlessly.
 
-### R4. Authentication and User Data Management
-Implement robust authentication handling for user signup, login, session persistence, and role-based access. Store and synchronize user profile records in a dedicated `Users` database collection in Appwrite.
+### R4. Cross-App User Journey Optimization
+Audit and polish user journeys across all apps (`apps/Admin`, `apps/Booth`, `apps/Invitation`, `apps/Main`, `apps/Renderer`), eliminating dummy placeholders and ensuring smooth end-to-end data flow and state management connected to Appwrite.
 
 ## Verification Resources
-
-- Test suites: Run `npm test` across the monorepo.
-- Type checking: Run `npx tsc --noEmit` across each app and package (`packages/react-appwrite`, `apps/Admin`, `apps/Booth`, `apps/Invitation`, `apps/Main`, `apps/Renderer`).
-- Design system: Refer to `docs/ASAR_DESIGN_SYSTEM.md` and benchmark against the existing Booth landing (`apps/Booth`) and Invitation landing (`apps/Invitation`) pages.
-- Database schema: Refer to `appwrite/appwrite.config.json`.
+- Monorepo test suites in `packages/react-appwrite/test` and `apps/*/test`
+- Reference architecture project: `d:\lyder-eco`
+- Appwrite configuration: `appwrite/appwrite.config.json` and live project `6ad1c66c0017b63ab8cc` (`asar-db`)
+- Documentation specifications in `docs/`
 
 ## Acceptance Criteria
 
-### UI/UX & Responsiveness
-- [ ] All pages outside Booth and Invitation landing pages match the visual quality, typography, and styling established in the design system and landing pages.
-- [ ] Every page across `apps/Main`, `apps/Admin`, `apps/Booth`, `apps/Invitation`, and `apps/Renderer` is fully responsive on mobile, tablet, and desktop screens with zero horizontal overflow or clipping.
+### Monorepo & Build Health
+- [ ] All apps (`Admin`, `Booth`, `Invitation`, `Main`, `Renderer`) and shared packages pass type checks and linting without errors.
+- [ ] No extraneous build commands or unnecessary code generator scripts are introduced.
+- [ ] Dummy placeholder components across all apps are replaced with functional implementations wired to Appwrite.
 
-### User Journey
-- [ ] Customer flow from landing page to booking/order completion operates end-to-end without broken navigation, dead ends, or missing states.
-- [ ] Client account portal allows users to view and manage their orders, booth memories, and invitation RSVPs.
-- [ ] Guest RSVP submission and dynamic preview flows function seamlessly end-to-end.
+### Appwrite Backend & Cloud Functions
+- [ ] Appwrite client and server integrations across all apps connect properly to database `asar-db`.
+- [ ] Every required cloud function specified in `appwrite/appwrite.config.json` exists in `appwrite/functions/` with functional handler code.
+- [ ] Cloud functions and data services execute successfully when verified against the configured Appwrite project and automated tests.
 
-### Admin Dashboard
-- [ ] The admin dashboard UI is fully rendered in Arabic with proper RTL layout and Arabic typography.
-- [ ] Navigation and management views for plans, orders, payments, booth memories, and invitations operate reliably without UI or structural errors.
+### Admin Dashboard & Auth Journey
+- [ ] The Admin dashboard typography is configured to use the 'Cairo' font.
+- [ ] The Admin dashboard UI provides an intuitive luxury user experience without confusing navigation or broken layouts.
+- [ ] The Admin dashboard auth journey handles login, session persistence, role checks, and logout reliably without unhandled errors.
 
-### Authentication & Users Collection
-- [ ] User registration, login, logout, and session persistence function reliably without authentication state desync.
-- [ ] User profile data is stored, queried, and updated in the Appwrite `Users` collection upon user registration and account updates.
-- [ ] Admin routes remain protected and accessible only to authorized administrators.
-
-### Code Quality & Verification
-- [ ] Full monorepo TypeScript verification passes with zero type errors (`npx tsc --noEmit` on all apps and packages).
-- [ ] All existing automated tests in `npm test` continue to pass, alongside new automated tests verifying the streamlined user journeys and auth handling.
+### Cross-App User Journeys
+- [ ] User journeys across `apps/Booth`, `apps/Invitation`, `apps/Main`, and `apps/Renderer` complete their end-to-end workflows with live Appwrite data persistence.

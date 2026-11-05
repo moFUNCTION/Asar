@@ -136,7 +136,7 @@ export const OrderTrackerTimeline: React.FC<OrderTrackerTimelineProps> = ({
   );
 
   const { uploadFile, isUploading } = useUpload({
-    bucketId: "payment_receipts",
+    bucketId: "asar_storage",
   });
 
   const handleStageSelect = (stage: OrderStageKey) => {

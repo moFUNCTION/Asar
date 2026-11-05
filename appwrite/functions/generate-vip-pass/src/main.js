@@ -9,7 +9,15 @@ import crypto from "node:crypto";
  */
 export default async ({ req, res, log, error }) => {
   try {
-    const payload = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    const rawBody = req.bodyJson ?? req.bodyText ?? req.body ?? {};
+    let payload = rawBody;
+    if (typeof rawBody === "string") {
+      try {
+        payload = JSON.parse(rawBody || "{}");
+      } catch (parseErr) {
+        return res.json({ success: false, error: "Invalid JSON in request body." }, 400);
+      }
+    }
     const { rsvpId, guestName, companionsCount = 0, invitationSlug, eventTitle } = payload;
 
     if (!rsvpId || !guestName) {

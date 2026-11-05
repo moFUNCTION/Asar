@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Box, Flex, SimpleGrid, Text, Button, Badge } from "@chakra-ui/react";
-import { useUpload } from "@repo/react-appwrite";
+import { useUpload, useAppwrite } from "@repo/react-appwrite";
 
 export interface RawAssetItem {
   id: string;
@@ -87,9 +87,11 @@ export const RawAssetsManager: React.FC<RawAssetsManagerProps> = ({
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Appwrite Storage Hook
+  // Appwrite Storage Hook & Database
+  const { databases, config } = useAppwrite();
+  const dbId = config?.databaseId || "asar-db";
   const { uploadFile } = useUpload({
-    bucketId: "client_raw_assets",
+    bucketId: "asar_storage",
   });
 
   const handleAddCategory = () => {
@@ -204,6 +206,18 @@ export const RawAssetsManager: React.FC<RawAssetsManagerProps> = ({
       localStorage.setItem("asar_orders_cache", JSON.stringify(parsed));
     } catch (e) {
       // ignore
+    }
+
+    // Sync to Appwrite Cloud DB if available
+    if (databases && orderId) {
+      databases
+        .updateDocument(dbId, "orders", orderId, {
+          clientSubmittedAssetsJson: JSON.stringify(payload),
+          orderStatus: "studio_curation",
+        })
+        .catch((err) => {
+          console.warn("Could not sync submitted assets to Appwrite", err);
+        });
     }
 
     setTimeout(() => {

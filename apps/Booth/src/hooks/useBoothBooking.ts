@@ -19,11 +19,12 @@ export const ASAR_COLLECTIONS = {
 } as const;
 
 export const ASAR_BUCKETS = {
-  PAYMENT_RECEIPTS: "payment_receipts",
-  CLIENT_RAW_ASSETS: "client_raw_assets",
-  BOOTH_MASTERED_AUDIO: "booth_mastered_audio",
-  BOOTH_GALLERY_MEDIA: "booth_gallery_media",
-  INVITATION_ASSETS: "invitation_assets",
+  PAYMENT_RECEIPTS: "asar_storage",
+  CLIENT_RAW_ASSETS: "asar_storage",
+  BOOTH_MASTERED_AUDIO: "asar_storage",
+  BOOTH_GALLERY_MEDIA: "asar_storage",
+  INVITATION_ASSETS: "asar_storage",
+  DEFAULT: "asar_storage",
 } as const;
 
 // ============================================================================

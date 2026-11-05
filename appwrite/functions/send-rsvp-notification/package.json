@@ -1,0 +1,11 @@
+{
+  "name": "send-rsvp-notification",
+  "version": "1.0.0",
+  "description": "ASAR Serverless Cloud Function for transactional RSVP and VIP pass notification emails",
+  "main": "src/main.js",
+  "type": "module",
+  "dependencies": {
+    "node-appwrite": "^14.1.0"
+  }
+}
+

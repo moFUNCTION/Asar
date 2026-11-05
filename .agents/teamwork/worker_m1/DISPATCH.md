@@ -1,66 +1,50 @@
-## 2026-11-04T00:27:51Z
-
-You are an expert full-stack TypeScript engineer implementing Milestone 1 (M1: Architecture Documentation & Shared Modular Section Domain Engine).
-Your working directory is: d:\asar\.agents\teamwork\worker_m1
+## 2026-11-05T13:33:37Z
+You are worker_m1, a teamwork_worker subagent.
+Your working directory is d:\asar\.agents\teamwork\worker_m1.
+All your metadata, progress, and reports MUST be written to your working directory.
 
 MANDATORY FIRST STEP:
-Read d:\asar\.agents\teamwork\ORIGINAL_REQUEST.md to understand the exact requirements and constraints.
+Read the authoritative user request at:
+d:\asar\.agents\teamwork\ORIGINAL_REQUEST.md
+Also read the project architecture at:
+d:\asar\.agents\teamwork\PROJECT.md
+and the survey findings at:
+d:\asar\.agents\teamwork\explorer_admin_survey\handoff.md
 
 MANDATORY INTEGRITY WARNING:
 DO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task. A teamwork_auditor will independently verify your work. Integrity violations WILL be detected and your work WILL be rejected.
 
-USER RULES:
-- dont over run npm run build without any reason
-- and dont make scripts or code generators without anyreason , only make that if its needed
-
-REFERENCE MATERIALS TO READ FIRST:
-1. `d:\asar\.agents\teamwork\orchestrator\PROJECT.md`
-2. `d:\asar\.agents\teamwork\spec_miner_survey_1\competitive_analysis.md`
-3. `d:\asar\.agents\teamwork\survey_explorer_1\admin_modular_editor_analysis.md`
-
-FILES YOU OWN EXCLUSIVELY:
-- `docs/COMPETITIVE_ANALYSIS.md`
-- `d:\asar\PROJECT.md`
-- `docs/ASAR_PROJECT_ARCHITECTURE.md`
-- `packages/react-appwrite/src/AsarDomain/sections.ts`
-- `packages/react-appwrite/src/AsarDomain/index.ts`
-- `packages/react-appwrite/src/index.ts`
-- `packages/react-appwrite/test/sections.test.ts`
-
-TASKS:
-1. Publish `docs/COMPETITIVE_ANALYSIS.md` by incorporating the comprehensive competitive benchmark from `d:\asar\.agents\teamwork\spec_miner_survey_1\competitive_analysis.md`.
-2. Sync `d:\asar\PROJECT.md` with `d:\asar\.agents\teamwork\orchestrator\PROJECT.md`.
-3. Update `docs/ASAR_PROJECT_ARCHITECTURE.md` to incorporate the modular section website creation editor architecture in Admin, the discriminated union schema, component responsibilities across Admin, Invitation, and Booth, and the end-to-end data flow.
-4. Implement `packages/react-appwrite/src/AsarDomain/sections.ts`:
-   - Define all 11 `EventSectionType` literals:
-     `"cover_hero" | "couple_story" | "event_schedule" | "photo_gallery" | "wishing_wall" | "digital_gift_registry" | "background_audio" | "venue_location" | "live_countdown" | "custom_highlight" | "dynamic_rsvp"`
-   - Define strongly-typed section models:
-     * `CoverHeroSection`: coupleTitle, dateDisplay, venueDisplay, headline, coverImageUrl, countdownEnabled, audioPromptBadge
-     * `CoupleStorySection`: title, subtitle, milestones array ({ id, yearOrDate, title, description, imageUrl })
-     * `EventScheduleSection`: title, subtitle, scheduleItems array ({ id, time, eventName, locationName, address, mapUrl, dressCode, calendarSummary, calendarDescription })
-     * `PhotoGallerySection`: title, subtitle, layoutMode ("masonry" | "grid" | "carousel"), images array ({ id, url, caption, category }), categories string[]
-     * `WishingWallSection`: title, subtitle, moderationRequired, greetingPrompt, placeholder, allowReactions, maxMessageLength
-     * `DigitalGiftRegistrySection`: title, subtitle, greetingNote, accounts array ({ id, bankName, accountNumber, accountHolder, branchName, qrImageUrl, transferMemo, currency }), cashGiftingEnabled, cashGiftingInstructions
-     * `BackgroundAudioSection`: title, songTitle, artistName, audioUrl, autoPlayNotice, loopEnabled, initialMuted
-     * `VenueLocationSection`: venueName, address, mapCoordinates, mapEmbedUrl, parkingNote, dressCodeTitle, dressCodeSwatches ({ hex, label })
-     * `LiveCountdownSection`: targetDateIso, heading, completedMessage
-     * `CustomHighlightSection`: badge, title, quoteText, author, backgroundStyle, imageUrl
-     * `DynamicRsvpSection`: title, subtitle, deadlineDate, capacityLimit, formSchema (DynamicFormField array with locked email), allowPlusOnes, maxCompanions, askDietary, askTransportation
-   - Define discriminated union `EventSection`.
-   - Define `ModularWebsiteConfig` (version: "2.0", sections: EventSection[], themeConfig, metadata).
-   - Implement `createDefaultModularWebsiteConfig(options?: Partial<{ coupleTitle: string; eventDate: string; venueName: string }>): ModularWebsiteConfig`.
-   - Implement `parseModularWebsiteConfig(raw: unknown): ModularWebsiteConfig`: must gracefully migrate legacy flat `InvitationSectionBlock[]` or unparsed JSON with zero crashes into modern `EventSection[]`.
-   - Implement `validateModularWebsiteConfig(config: unknown): { isValid: boolean; errors: string[] }`.
-   - Re-export everything from `packages/react-appwrite/src/AsarDomain/index.ts` and `packages/react-appwrite/src/index.ts`.
-5. Create automated unit test suite `packages/react-appwrite/test/sections.test.ts`:
-   - Test default config generation.
-   - Test parsing valid modern config.
-   - Test migration parser from legacy flat blocks.
-   - Test validation of corrupted/missing data.
-   - Test serialization and roundtrip integrity.
-6. Run verification:
+YOUR MISSION (Milestone 1: Monorepo Compilation Readiness & Typecheck Integrity):
+1. Fix the 2 type errors in `apps/Admin/src/App.tsx` (around lines 318, 346):
+   Add explicit type annotations for `cloudOrders: AsarOrder[]` and `cloudPayments: AsarPayment[]` when mapping/initializing state so that merging demo orders/payments satisfies TypeScript with zero errors.
+2. Fix the syntax errors in `apps/Main/src/components/home/EcosystemHome.tsx` (around line 253):
+   Remove the orphaned/duplicate `</Flex>` closing tag so the JSX tag balance is valid.
+3. Verify compilation across all workspaces using targeted typechecks (do NOT run full production builds):
    - `npx tsc --noEmit -p packages/react-appwrite/tsconfig.json`
-   - `node --experimental-strip-types --test packages/react-appwrite/test/sections.test.ts`
-   - `node --experimental-strip-types --test packages/react-appwrite/test/storefront.test.ts`
-7. Write your handoff report to `d:\asar\.agents\teamwork\worker_m1\handoff.md`.
-8. Send a completion message back to the orchestrator (conversation ID: 1702b5c8-8740-4f25-b6f5-898d68518b3a).
+   - `npx tsc --noEmit -p packages/UI-components/tsconfig.json`
+   - `npx tsc -b apps/Admin`
+   - `npx tsc -b apps/Main`
+   - `npx tsc -b apps/Booth`
+   - `npx tsc -b apps/Invitation`
+   - `npx tsc -b apps/Renderer`
+   Ensure ALL report 0 errors.
+4. Run the monorepo test suite: `npm test` and verify that all 223+ tests pass.
+
+FILE OWNERSHIP:
+You EXCLUSIVELY own:
+- `d:\asar\apps\Admin\src\App.tsx`
+- `d:\asar\apps\Main\src\components/home/EcosystemHome.tsx`
+Do NOT modify any other files.
+
+USER RULES:
+- Do NOT over run `npm run build` without any reason.
+- Do NOT make unnecessary scripts or code generators.
+
+When finished, write your handoff report to:
+`d:\asar\.agents\teamwork\worker_m1\handoff.md`
+and notify the orchestrator via send_message.
+
+## 2026-11-05T13:41:18Z
+**Context**: Milestone 1 Typecheck in apps/Main
+**Content**: File ownership is officially expanded to include `d:\asar\apps\Main\src\components\account\ClientAccountShell.tsx`. Please update line 131 in `ClientAccountShell.tsx` to `"processing"` (matching `OrderStageKey`).
+**Action**: After making this change, verify that `npx tsc -b apps/Main` compiles with 0 errors, verify that `npm test` passes, and finalize your handoff report.

@@ -27,9 +27,9 @@ import {
   findInCache,
   ASAR_CACHE_KEYS,
   useAppwrite,
+  useCollection,
   ASAR_COLLECTIONS,
   ASAR_DATABASE_ID,
-  Query,
   type BoothMemory,
 } from "@repo/react-appwrite";
 
@@ -65,13 +65,16 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
   source,
   initialMemory,
 }) => {
-  const { databases, config } = useAppwrite();
+  const { config } = useAppwrite();
   const dbId = config?.databaseId || ASAR_DATABASE_ID;
 
   // 1. Resolve Memory Data with multi-tiered fallback
   const baseMemory = useMemo<BoothMemoryFullData>(() => {
     // Priority 1: Check localStorage cache
-    const cached = findInCache<BoothMemory>(ASAR_CACHE_KEYS.BOOTH_MEMORIES, slug);
+    const cached = findInCache<BoothMemory>(
+      ASAR_CACHE_KEYS.BOOTH_MEMORIES,
+      slug,
+    );
     if (cached) {
       return {
         ...DEFAULT_CANONICAL_BOOTH,
@@ -120,45 +123,42 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
 
   const [memory, setMemory] = useState<BoothMemoryFullData>(baseMemory);
   const [voiceRecords, setVoiceRecords] = useState<VoiceRecordItem[]>(
-    baseMemory.voiceRecords || INITIAL_BOOTH_VOICE_RECORDS
+    baseMemory.voiceRecords || INITIAL_BOOTH_VOICE_RECORDS,
   );
   const [photos] = useState<PhotoKeepsake[]>(
-    baseMemory.photos || INITIAL_BOOTH_PHOTOS
+    baseMemory.photos || INITIAL_BOOTH_PHOTOS,
   );
   const [guestBookNotes, setGuestBookNotes] = useState<GuestBlessingNote[]>(
-    baseMemory.guestBookNotes || INITIAL_GUESTBOOK_BLESSINGS
+    baseMemory.guestBookNotes || INITIAL_GUESTBOOK_BLESSINGS,
   );
 
-  // Hydrate from Appwrite Database when available
+  // Hydrate from Appwrite Database reactively via useCollection hook
+  const memoryWhere = useMemo(() => {
+    return slug ? { slug } : undefined;
+  }, [slug]);
+
+  const { data: cloudMemories } = useCollection<BoothMemory>(
+    dbId,
+    ASAR_COLLECTIONS.BOOTH_MEMORIES,
+    {
+      where: memoryWhere as any,
+      limit: 1,
+      enabled: Boolean(slug),
+      realtime: true,
+    },
+  );
+
   useEffect(() => {
-    let isMounted = true;
-    const fetchRemote = async () => {
-      try {
-        if (databases && dbId) {
-          const res = await databases.listDocuments(
-            dbId,
-            ASAR_COLLECTIONS.BOOTH_MEMORIES,
-            [Query.equal("slug", slug), Query.limit(1)]
-          );
-          if (res.documents.length > 0 && isMounted) {
-            const doc = res.documents[0] as unknown as BoothMemory;
-            setMemory((prev) => ({
-              ...prev,
-              ...doc,
-              id: doc.$id || doc.slug,
-              slug: doc.slug,
-            }));
-          }
-        }
-      } catch {
-        // Appwrite query fallback
-      }
-    };
-    fetchRemote();
-    return () => {
-      isMounted = false;
-    };
-  }, [slug, databases, dbId]);
+    if (cloudMemories && cloudMemories.length > 0) {
+      const doc = cloudMemories[0];
+      setMemory((prev) => ({
+        ...prev,
+        ...doc,
+        id: doc.$id || doc.slug,
+        slug: doc.slug,
+      }));
+    }
+  }, [cloudMemories]);
 
   // Tab & Filter States
   const [activeTab, setActiveTab] = useState<BoothTabId>("audio");
@@ -168,7 +168,7 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
 
   // Private Pin Lock State
   const [isLocked, setIsLocked] = useState<boolean>(
-    Boolean(memory.isPrivateLocked)
+    Boolean(memory.isPrivateLocked),
   );
 
   // Audio Playback Engine State
@@ -296,7 +296,7 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
           };
         }
         return rec;
-      })
+      }),
     );
   };
 
@@ -318,7 +318,7 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
           };
         }
         return n;
-      })
+      }),
     );
   };
 
@@ -330,9 +330,7 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
       if (categoryFilter === "friends") return rec.category === "Friends";
       if (categoryFilter === "colleagues") return rec.category === "Colleagues";
       if (categoryFilter === "special")
-        return (
-          rec.category === "Special Guests" || rec.category === "Special"
-        );
+        return rec.category === "Special Guests" || rec.category === "Special";
       return true;
     });
   }, [voiceRecords, categoryFilter]);
@@ -351,9 +349,10 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
       all: voiceRecords.length,
       family: voiceRecords.filter((r) => r.category === "Family").length,
       friends: voiceRecords.filter((r) => r.category === "Friends").length,
-      colleagues: voiceRecords.filter((r) => r.category === "Colleagues").length,
+      colleagues: voiceRecords.filter((r) => r.category === "Colleagues")
+        .length,
       special: voiceRecords.filter(
-        (r) => r.category === "Special Guests" || r.category === "Special"
+        (r) => r.category === "Special Guests" || r.category === "Special",
       ).length,
     };
   }, [voiceRecords]);
@@ -678,7 +677,8 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
               border: "none",
               backgroundColor:
                 activeTab === "audio" ? "var(--athar-maroon)" : "transparent",
-              color: activeTab === "audio" ? "#ffffff" : "var(--athar-text-body)",
+              color:
+                activeTab === "audio" ? "#ffffff" : "var(--athar-text-body)",
               fontWeight: 700,
               fontSize: "0.92rem",
               cursor: "pointer",
@@ -701,7 +701,8 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
               border: "none",
               backgroundColor:
                 activeTab === "photos" ? "var(--athar-maroon)" : "transparent",
-              color: activeTab === "photos" ? "#ffffff" : "var(--athar-text-body)",
+              color:
+                activeTab === "photos" ? "#ffffff" : "var(--athar-text-body)",
               fontWeight: 700,
               fontSize: "0.92rem",
               cursor: "pointer",
@@ -724,7 +725,8 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
               border: "none",
               backgroundColor:
                 activeTab === "video" ? "var(--athar-maroon)" : "transparent",
-              color: activeTab === "video" ? "#ffffff" : "var(--athar-text-body)",
+              color:
+                activeTab === "video" ? "#ffffff" : "var(--athar-text-body)",
               fontWeight: 700,
               fontSize: "0.92rem",
               cursor: "pointer",
@@ -778,9 +780,7 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
                   ? "var(--athar-maroon)"
                   : "transparent",
               color:
-                activeTab === "thankyou"
-                  ? "#ffffff"
-                  : "var(--athar-text-body)",
+                activeTab === "thankyou" ? "#ffffff" : "var(--athar-text-body)",
               fontWeight: 700,
               fontSize: "0.92rem",
               cursor: "pointer",
@@ -798,7 +798,9 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
       </nav>
 
       {/* 4. Main Tab Content Container */}
-      <main style={{ maxWidth: "1020px", margin: "0 auto", padding: "0 1.5rem" }}>
+      <main
+        style={{ maxWidth: "1020px", margin: "0 auto", padding: "0 1.5rem" }}
+      >
         {/* TAB 1: Voice Records & Category Filtering */}
         {activeTab === "audio" && (
           <div>
@@ -826,7 +828,12 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
                 >
                   أصوات وذكريات الأحباب
                 </h2>
-                <p style={{ fontSize: "0.92rem", color: "var(--athar-text-muted)" }}>
+                <p
+                  style={{
+                    fontSize: "0.92rem",
+                    color: "var(--athar-text-muted)",
+                  }}
+                >
                   {filteredVoices.length} رسالة صوتية مسجلة عبر هاتف أثر العتيق
                 </p>
               </div>
@@ -842,8 +849,16 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
                 {(
                   [
                     { id: "all", label: "الكل", count: categoryCounts.all },
-                    { id: "family", label: "العائلة", count: categoryCounts.family },
-                    { id: "friends", label: "الأصدقاء", count: categoryCounts.friends },
+                    {
+                      id: "family",
+                      label: "العائلة",
+                      count: categoryCounts.family,
+                    },
+                    {
+                      id: "friends",
+                      label: "الأصدقاء",
+                      count: categoryCounts.friends,
+                    },
                     {
                       id: "special",
                       label: "كبار الضيوف",
@@ -891,7 +906,13 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
             </div>
 
             {/* Voice Cards Stack */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "1.2rem",
+              }}
+            >
               {filteredVoices.map((voice) => (
                 <BoothVoiceCard
                   key={voice.id}
@@ -947,7 +968,12 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
                 >
                   معرض الصور واللحظات التذكارية
                 </h2>
-                <p style={{ fontSize: "0.92rem", color: "var(--athar-text-muted)" }}>
+                <p
+                  style={{
+                    fontSize: "0.92rem",
+                    color: "var(--athar-text-muted)",
+                  }}
+                >
                   {filteredPhotos.length} لقطة توثق أجمل ذكريات الحفل مع الهاتف
                   العتيق
                 </p>
@@ -994,8 +1020,7 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fill, minmax(280px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
                 gap: "1.5rem",
               }}
             >
@@ -1254,7 +1279,12 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
                 >
                   دفتر التهاني والتبريكات المكتوبة
                 </h2>
-                <p style={{ fontSize: "0.92rem", color: "var(--athar-text-muted)" }}>
+                <p
+                  style={{
+                    fontSize: "0.92rem",
+                    color: "var(--athar-text-muted)",
+                  }}
+                >
                   {guestBookNotes.length} كلمة محبة ودعاء تخلد أثر المعازيم في
                   حياة العروسين
                 </p>
@@ -1273,8 +1303,7 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fill, minmax(320px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
                 gap: "1.5rem",
               }}
             >
@@ -1472,7 +1501,9 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
           }}
         >
           {/* Speaker Details */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+          <div
+            style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}
+          >
             <button
               onClick={() => handleTogglePlay(activeRecord)}
               aria-label="Play/Pause"
@@ -1518,7 +1549,7 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
                 const rect = e.currentTarget.getBoundingClientRect();
                 const ratio = Math.max(
                   0,
-                  Math.min(1, (e.clientX - rect.left) / rect.width)
+                  Math.min(1, (e.clientX - rect.left) / rect.width),
                 );
                 handleSeek(ratio * (activeRecord.durationSeconds || 42));
               }}
@@ -1535,7 +1566,7 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
                 style={{
                   width: `${Math.min(
                     100,
-                    (currentTime / (activeRecord.durationSeconds || 42)) * 100
+                    (currentTime / (activeRecord.durationSeconds || 42)) * 100,
                   )}%`,
                   height: "100%",
                   backgroundColor: "var(--athar-gold)",
@@ -1565,7 +1596,8 @@ export const BoothMemoryRenderer: React.FC<BoothMemoryRendererProps> = ({
           {/* Close audio player */}
           <button
             onClick={() => {
-              if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+              if (playbackTimerRef.current)
+                clearInterval(playbackTimerRef.current);
               setPlayingVoiceId(null);
             }}
             aria-label="Close audio player"

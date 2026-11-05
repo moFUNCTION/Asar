@@ -28,10 +28,11 @@ export const ClientRsvpMailbox: React.FC<ClientRsvpMailboxProps> = ({
   invitationId = "invitation-omar-and-layla",
   clientId,
 }) => {
-  // Appwrite collection hook with safe query options
+  // Appwrite collection hook with safe query options & realtime
   const appwriteResult = useCollection<InvitationRsvp>(
+    ASAR_DATABASE_ID,
     ASAR_COLLECTIONS.INVITATION_RSVPS,
-    { enabled: Boolean(invitationId) }
+    { enabled: Boolean(invitationId), realtime: true }
   );
 
   // Reference clientId to ensure scope isolation

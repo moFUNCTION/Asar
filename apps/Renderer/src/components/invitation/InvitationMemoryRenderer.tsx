@@ -19,9 +19,9 @@ import {
   findInCache,
   ASAR_CACHE_KEYS,
   useAppwrite,
+  useCollection,
   ASAR_COLLECTIONS,
   ASAR_DATABASE_ID,
-  Query,
   type AsarInvitation,
 } from "@repo/react-appwrite";
 
@@ -50,7 +50,7 @@ export interface InvitationMemoryRendererProps {
 export const InvitationMemoryRenderer: React.FC<
   InvitationMemoryRendererProps
 > = ({ slug, source, initialInvitation }) => {
-  const { databases, config } = useAppwrite();
+  const { config } = useAppwrite();
   const dbId = config?.databaseId || ASAR_DATABASE_ID;
 
   // 1. Resolve Invitation Data with multi-tiered fallback
@@ -58,7 +58,7 @@ export const InvitationMemoryRenderer: React.FC<
     // Priority 1: Check localStorage cache
     const cached = findInCache<AsarInvitation>(
       ASAR_CACHE_KEYS.INVITATIONS,
-      slug
+      slug,
     );
     if (cached) {
       return {
@@ -103,36 +103,33 @@ export const InvitationMemoryRenderer: React.FC<
   const [invitation, setInvitation] =
     useState<InvitationStorefrontData>(baseInvitation);
 
-  // Hydrate from Appwrite Database
+  // Hydrate from Appwrite Database reactively via useCollection hook
+  const invitationWhere = useMemo(() => {
+    return slug ? { slug } : undefined;
+  }, [slug]);
+
+  const { data: cloudInvitations } = useCollection<AsarInvitation>(
+    dbId,
+    ASAR_COLLECTIONS.INVITATIONS,
+    {
+      where: invitationWhere as any,
+      limit: 1,
+      enabled: Boolean(slug),
+      realtime: true,
+    },
+  );
+
   useEffect(() => {
-    let isMounted = true;
-    const fetchRemote = async () => {
-      try {
-        if (databases && dbId) {
-          const res = await databases.listDocuments(
-            dbId,
-            ASAR_COLLECTIONS.INVITATIONS,
-            [Query.equal("slug", slug), Query.limit(1)]
-          );
-          if (res.documents.length > 0 && isMounted) {
-            const doc = res.documents[0] as unknown as AsarInvitation;
-            setInvitation((prev) => ({
-              ...prev,
-              ...doc,
-              id: doc.$id || doc.slug,
-              slug: doc.slug,
-            }));
-          }
-        }
-      } catch {
-        // Appwrite query fallback
-      }
-    };
-    fetchRemote();
-    return () => {
-      isMounted = false;
-    };
-  }, [slug, databases, dbId]);
+    if (cloudInvitations && cloudInvitations.length > 0) {
+      const doc = cloudInvitations[0];
+      setInvitation((prev) => ({
+        ...prev,
+        ...doc,
+        id: doc.$id || doc.slug,
+        slug: doc.slug,
+      }));
+    }
+  }, [cloudInvitations]);
 
   // Parse Theme Config
   const themeConfig = useMemo<InvitationThemeConfig>(() => {
@@ -239,7 +236,7 @@ export const InvitationMemoryRenderer: React.FC<
       status: "approved",
       passToken: `INV-PASS-${slug.slice(0, 4).toUpperCase()}-7701`,
       qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=260x260&color=6B1D28&bgcolor=FBF7F2&data=${encodeURIComponent(
-        `http://localhost:3004/pass/rsvp-pass-${slug}`
+        `http://localhost:3004/pass/rsvp-pass-${slug}`,
       )}`,
       emailSent: true,
       respondedAt: new Date().toISOString(),
@@ -383,9 +380,7 @@ export const InvitationMemoryRenderer: React.FC<
                   ? "rgba(212, 175, 55, 0.2)"
                   : "rgba(255, 255, 255, 0.15)",
                 color: isNoir ? "#D4AF37" : "#ffffff",
-                border: isNoir
-                  ? "1px solid rgba(212, 175, 55, 0.4)"
-                  : "none",
+                border: isNoir ? "1px solid rgba(212, 175, 55, 0.4)" : "none",
                 borderRadius: "var(--athar-radius-full)",
                 padding: "0.3rem 0.85rem",
                 fontSize: "0.82rem",

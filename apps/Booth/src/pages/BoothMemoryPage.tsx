@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Box, Flex, HStack, Text, Button } from "@chakra-ui/react";
 import { FaHeart, FaDownload, FaCheck } from "react-icons/fa";
-import { useSubdomain, useAppwrite, ASAR_COLLECTIONS, ASAR_DATABASE_ID, Query } from "@repo/react-appwrite";
+import { useSubdomain, useAppwrite, useCollection, ASAR_COLLECTIONS, ASAR_DATABASE_ID } from "@repo/react-appwrite";
 import {
   MemoryHeader,
   MemoryHero,
@@ -86,7 +86,31 @@ export const BoothMemoryPage: React.FC<BoothMemoryPageProps> = ({
     return memory.guestBookNotes || DEMO_BOOTH_MEMORY.guestBookNotes;
   });
 
-  // Hydrate memory from Appwrite database or local cache
+  // Reactive live memory document via useCollection hook
+  const memoryWhere = useMemo(() => {
+    return slug ? { slug } : undefined;
+  }, [slug]);
+
+  const { data: cloudMemories } = useCollection<BoothMemoryData>(
+    dbId,
+    ASAR_COLLECTIONS.BOOTH_MEMORIES,
+    {
+      where: memoryWhere as any,
+      limit: 1,
+      realtime: true,
+    }
+  );
+
+  useEffect(() => {
+    if (cloudMemories && cloudMemories.length > 0) {
+      const doc = cloudMemories[0];
+      setMemory(doc);
+      if (doc.voiceRecords) setVoiceRecords(doc.voiceRecords);
+      if (doc.guestBookNotes) setGuestBookNotes(doc.guestBookNotes);
+    }
+  }, [cloudMemories]);
+
+  // Hydrate memory fallback from local cache or demo
   useEffect(() => {
     let isMounted = true;
 
@@ -108,27 +132,7 @@ export const BoothMemoryPage: React.FC<BoothMemoryPageProps> = ({
         // Fallback
       }
 
-      // 2. Try Appwrite database query
-      try {
-        if (databases && dbId) {
-          const response = await databases.listDocuments(
-            dbId,
-            ASAR_COLLECTIONS.BOOTH_MEMORIES,
-            [Query.equal("slug", slug), Query.limit(1)]
-          );
-          if (response.documents.length > 0 && isMounted) {
-            const doc = response.documents[0] as unknown as BoothMemoryData;
-            setMemory(doc);
-            if (doc.voiceRecords) setVoiceRecords(doc.voiceRecords);
-            if (doc.guestBookNotes) setGuestBookNotes(doc.guestBookNotes);
-            return;
-          }
-        }
-      } catch {
-        // Appwrite query fallback
-      }
-
-      // 3. Fallback to demo or customized base
+      // 2. Fallback to demo or customized base
       if (isMounted) {
         if (slug === "mina-and-maryam" || !slug) {
           setMemory(DEMO_BOOTH_MEMORY);

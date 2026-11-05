@@ -1,19 +1,19 @@
-# BRIEFING — 2026-11-04T22:54:00Z
+# BRIEFING — 2026-11-05T17:00:00Z
 
 ## Mission
-Audit and stabilize invitation and booth memory generation across the workspace apps (Admin, Booth, Invitation, Main, Renderer) for production readiness, enhance the UI/UX across Admin and all apps using the ASAR Warm Vintage Editorial luxury design system, and create a comprehensive agent onboarding guide in docs/AGENT_GUIDE.md.
+Analyze documentation files, connect and verify all data with Appwrite (asar-db), implement all missing cloud functions with full business logic referencing d:\lyder-eco, redesign Admin dashboard with Cairo font and smooth auth journey, eliminate all dummy components, and ensure smooth cross-app user journeys across Admin, Booth, Invitation, Main, and Renderer to make Asar ship-ready.
 
 ## 🔒 My Identity
 - Archetype: project_orchestrator
 - Roles: orchestrator, user_liaison, human_reporter, successor
 - Working directory: d:\asar\.agents\teamwork\orchestrator
 - Original parent: Sentinel (parent)
-- Original parent conversation ID: 648c9059-4cc4-42ee-9304-66fe872baa22
+- Original parent conversation ID: bb41dbdb-2ce3-4c1a-a6b8-6f9cadd08181
 
 ## 🔒 My Workflow
 - **Pattern**: Project Pattern (Dual Track: Implementation + E2E Testing)
 - **Scope document**: d:\asar\.agents\teamwork\orchestrator\PROJECT.md
-1. **Decompose**: Survey requirements, codebase architecture, generation pipelines, UI/UX systems, and documentation needs; map dependencies into PROJECT.md.
+1. **Decompose**: Survey requirements, Appwrite schemas, cloud functions, Admin UI/auth, dummy components, and reference architecture; map milestones and feature inventory into PROJECT.md.
 2. **Dispatch & Execute**:
    - **Direct (iteration loop)**: For milestones, run Explorer -> Worker -> Reviewer -> Challenger -> Auditor cycle.
    - **Delegate (sub-orchestrator)**: For multi-agent milestones, dispatch dedicated sub-orchestrators or workers strictly adhering to file boundaries.
@@ -26,14 +26,14 @@ Audit and stabilize invitation and booth memory generation across the workspace 
    - Escalate: report to parent (sub-orchestrators only, last resort)
 4. **Succession**: At 16 spawns, write soft handoff.md, kill timers, spawn successor.
 - **Work items**:
-  1. Survey & Scope Mapping (Generation Pipelines, UI/UX Systems, Agent Guide) [DONE]
-  2. Architecture & PROJECT.md Formulation [DONE]
-  3. Milestone 1: Invitation & Booth Memory Generation Stabilization & Edge Case Hardening [DONE]
-  4. Milestone 2: Workspace-Wide UI/UX Overhaul (ASAR Warm Vintage Editorial Luxury System) [DONE]
-  5. Milestone 3: Comprehensive Agent Onboarding Guide (docs/AGENT_GUIDE.md) [DONE]
-  6. Milestone 4: Workspace Verification, 144+ Tests, Adversarial Testing & Forensic Audit [DONE]
-- **Current phase**: Complete (Gate PASS)
-- **Current focus**: Handoff & Final Reporting
+  1. Survey & Scope Mapping (Docs & Appwrite, Admin & Auth, Apps & Cloud Functions) [DONE]
+  2. Architecture & PROJECT.md Formulation (21 features across 4 milestones) [DONE]
+  3. Milestone 1: Appwrite Backend & Cloud Functions Implementation [IN_PROGRESS]
+  4. Milestone 2: Admin Dashboard Redesign, Cairo Typography & Flawless Auth [IN_PROGRESS]
+  5. Milestone 3: Cross-App User Journeys & Dummy Component Remediation [IN_PROGRESS]
+  6. Milestone 4: Monorepo Health, Test Suite Verification & Audit Gate [PLANNED]
+- **Current phase**: Phase 2 (Implementation Track - Milestones M1, M2, M3 in parallel)
+- **Current focus**: Monitoring Workers M1, M2, M3
 
 ## 🔒 Key Constraints
 - NEVER write, modify, or create source code files directly.
@@ -41,63 +41,54 @@ Audit and stabilize invitation and booth memory generation across the workspace 
 - NEVER investigate or explore the problem at the code level — dispatch Explorers for technical investigation.
 - File-editing tools ONLY for metadata/state files (.md) in .agents/teamwork/orchestrator/.
 - Strictly adhere to workspace boundary rules in each agent doc.
-- Do not run npm run build without specific need.
-- Do not make scripts or code generators unless needed.
+- User Global Rule: Do not over-run npm run build without any reason.
+- User Global Rule: Do not make scripts or code generators without any reason, only make if needed.
+- Constraint from Sentinel: The team must NOT: Use pre-built libraries or frameworks for core functionality.
 - Never reuse a subagent after it has delivered its handoff — always spawn fresh.
 - Binary veto on integrity violations from Forensic Auditor.
 
 ## Current Parent
-- Conversation ID: 648c9059-4cc4-42ee-9304-66fe872baa22
-- Updated: 2026-11-04T22:54:00Z
+- Conversation ID: bb41dbdb-2ce3-4c1a-a6b8-6f9cadd08181
+- Updated: 2026-11-05T16:40:00Z
 
 ## Key Decisions Made
-- All milestones M1, M2, M3, M4 completed with full passing gate checks:
-  - M1: Canonical pass URLs, Object URL memory leak revocation, real HTMLAudioElement streaming with analog chime in Booth, scanner route resiliency.
-  - M2: Elimination of 404 flash in DynamicStorefrontIndex with luxury editorial resolving screen, package dependency alignment, Admin palette sanitation, native alert removal, mobile action bar layout flattening, bilingual `dir="auto"`, font preloads and 35 CSS tokens synchronized.
-  - M3: Publication of `docs/AGENT_GUIDE.md` (1,151 lines, 72.3 KB).
-  - M4: Reviewer 1 (APPROVE), Reviewer 2 (APPROVE), Challenger 1 (APPROVE), Challenger 2 (APPROVE), Forensic Auditor (CLEAN).
-  - 219/219 tests pass cleanly. Zero `npm run build` runs, zero ad-hoc scripts.
+- Survey completed. `PROJECT.md` created with 21 features mapped into 4 milestones.
+- Concurrent workers dispatched with strictly disjoint write boundaries:
+  - `worker_m1_cloud_functions` (writes `appwrite/functions/**/*`, `appwrite.config.json`, `collections.ts`)
+  - `worker_m2_admin_cairo` (writes `apps/Admin/**/*`)
+  - `worker_m3_apps_persistence` (writes `apps/Booth/**/*`, `apps/Invitation/**/*`, `apps/Main/**/*`, `apps/Renderer/**/*`, `packages/react-appwrite/src/**/*` except collections.ts)
 
 ## Team Roster
 | Agent | Type | Work Item | Status | Conv ID |
 |-------|------|-----------|--------|---------|
-| explorer_survey_gen | teamwork_explorer | Survey Generation Pipelines & Stability | completed | 7a454cfa-3cb7-41a8-9078-cf6d7fc4a1fe |
-| explorer_survey_ui | teamwork_explorer | Survey UI/UX Design System Across Apps | completed | 13e77d30-83fb-4974-af5d-ef5e99a9a0e4 |
-| spec_miner_survey_guide | teamwork_spec_miner | Survey System Architecture & Agent Guide Blueprint | completed | 244745ab-7170-4001-bef6-93df92f74c3f |
-| worker_m1_gen | teamwork_worker | M1 Generation Stability & Resource Management | completed | ce342893-a1ea-4728-b7b9-412a5771d03c |
-| worker_m2_ui | teamwork_worker | M2 Workspace UI/UX Overhaul | completed | 83271639-ff5e-4525-bc29-9fc26fec40e9 |
-| worker_m3_guide | teamwork_worker | M3 Comprehensive Agent Guide | completed | 38cc5203-7745-447a-91b2-bff716131d44 |
-| reviewer_m4_1 | teamwork_reviewer | M4 TypeScript & Test Suite Review | completed | 57c58e85-82e1-4992-a628-5ed3b06ddff8 |
-| reviewer_m4_2 | teamwork_reviewer | M4 Feature Parity & UI/UX Review | completed | c08d7103-a621-4ffa-846e-4149e3dcc21c |
-| challenger_m4_1 | teamwork_challenger | M4 Generation Stability Adversarial Verifier | completed | ce0a7e4c-9dd9-4973-a77b-8b71fed2bfdb |
-| challenger_m4_2 | teamwork_challenger | M4 Storefront & UI Robustness Adversarial Verifier | completed | d604a88e-368f-4926-92d5-824297bbc197 |
-| auditor_m4_1 | teamwork_auditor | M4 Forensic Integrity Auditor (Binary Veto) | completed | 0aea4b2b-ee0d-4e42-9768-4798ddeceb4b |
+| spec_miner_docs_and_appwrite | teamwork_spec_miner | Survey Docs, Specs & Appwrite Config | completed | 7879293e-c44b-4dee-a2ac-1fe37176c566 |
+| explorer_admin_and_auth | teamwork_explorer | Survey Admin Dashboard & Auth Journey | completed | 220a8428-3bb9-4e49-bb2f-6f40cd5890ce |
+| explorer_apps_and_cloud_functions | teamwork_explorer | Survey Apps, Dummy Components & Cloud Functions | completed | b2b4f9a1-6885-45a8-92c3-8b6eb4252ea9 |
+| worker_m1_cloud_functions | teamwork_worker | M1 Cloud Functions Implementation & Config | in-progress | a5a0aade-0e95-4ae6-8c72-05e18e121887 |
+| worker_m2_admin_cairo | teamwork_worker | M2 Admin Redesign, Cairo Font & Auth | in-progress | 801a2dcc-6bd4-43e8-9d34-2d3cf53d67aa |
+| worker_m3_apps_persistence | teamwork_worker | M3 Cross-App Persistence & Dummy Remediation | in-progress | 005ffe3f-98a8-4a78-83e8-eb80da2ef4f0 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 11 / 16
-- Pending subagents: none
+- Spawn count: 6 / 16
+- Pending subagents: a5a0aade-0e95-4ae6-8c72-05e18e121887, 801a2dcc-6bd4-43e8-9d34-2d3cf53d67aa, 005ffe3f-98a8-4a78-83e8-eb80da2ef4f0
 - Predecessor: none
 - Successor: not yet spawned
 
 ## Active Timers
-- Heartbeat cron: cancelled
-- Safety timer: none
+- Heartbeat cron: c0cbc713-bb4b-4f5f-825c-c7aaa562056a/task-26
+- Safety timer: c0cbc713-bb4b-4f5f-825c-c7aaa562056a/task-110
 
 ## Artifact Index
+- d:\asar\PROJECT.md — Global Architecture & Feature Inventory
 - d:\asar\.agents\teamwork\ORIGINAL_REQUEST.md — Original User Request
 - d:\asar\.agents\teamwork\orchestrator\DISPATCH.md — Incoming Dispatch Log
 - d:\asar\.agents\teamwork\orchestrator\progress.md — Liveness heartbeat and progress
 - d:\asar\.agents\teamwork\orchestrator\PROJECT.md — Global architecture, milestones, interface contracts
 - d:\asar\.agents\teamwork\orchestrator\GATE_STATUS.md — Gate Status per Iteration
-- docs/AGENT_GUIDE.md — Comprehensive Agent Onboarding Guide (72.3 KB)
-- d:\asar\.agents\teamwork\worker_m1_gen\handoff.md — Milestone 1 Handoff Report
-- d:\asar\.agents\teamwork\worker_m2_ui\handoff.md — Milestone 2 Handoff Report
-- d:\asar\.agents\teamwork\worker_m3_guide\handoff.md — Milestone 3 Handoff Report
-- d:\asar\.agents\teamwork\reviewer_m4_1\handoff.md — Reviewer 1 Handoff Report
-- d:\asar\.agents\teamwork\reviewer_m4_2\handoff.md — Reviewer 2 Handoff Report
-- d:\asar\.agents\teamwork\challenger_m4_1\handoff.md — Challenger 1 Handoff Report
-- d:\asar\.agents\teamwork\challenger_m4_2\handoff.md — Challenger 2 Handoff Report
-- d:\asar\.agents\teamwork\auditor_m4_1\handoff.md — Forensic Auditor Handoff Report
-- docs/ASAR_PROJECT_ARCHITECTURE.md — Monorepo Architecture Documentation
-- docs/ASAR_DESIGN_SYSTEM.md — ASAR Warm Vintage Editorial Design System Documentation
+- d:\asar\.agents\teamwork\spec_miner_docs_and_appwrite\spec_report.md — 63 KB Specification Report
+- d:\asar\.agents\teamwork\spec_miner_docs_and_appwrite\handoff.md — Spec Miner Handoff
+- d:\asar\.agents\teamwork\explorer_admin_and_auth\admin_auth_report.md — Admin & Auth Technical Audit
+- d:\asar\.agents\teamwork\explorer_admin_and_auth\handoff.md — Admin & Auth Handoff
+- d:\asar\.agents\teamwork\explorer_apps_and_cloud_functions\apps_functions_report.md — Apps & Cloud Functions Audit
+- d:\asar\.agents\teamwork\explorer_apps_and_cloud_functions\handoff.md — Apps & Functions Handoff

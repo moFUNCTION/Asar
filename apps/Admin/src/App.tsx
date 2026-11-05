@@ -1,13 +1,37 @@
 import React, { useState, useEffect } from "react";
-import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { Box, Text, Button } from "@chakra-ui/react";
 import { AdminShell } from "./components/layout/AdminShell";
-import { AdminOverview, type AsarOrder } from "./components/dashboard/AdminOverview";
-import { PlanBuilderStudio, DEFAULT_INITIAL_PLANS, type AsarPlan } from "./components/plans/PlanBuilderStudio";
+import {
+  AdminOverview,
+  type AsarOrder,
+} from "./components/dashboard/AdminOverview";
+import {
+  PlanBuilderStudio,
+  DEFAULT_INITIAL_PLANS,
+  type AsarPlan,
+} from "./components/plans/PlanBuilderStudio";
 import { OrdersQueueManager } from "./components/orders/OrdersQueueManager";
 import type { AsarPayment } from "./components/orders/PaymentReceiptInspector";
 import { UsersManager } from "./components/users";
-import { useAppwrite, ASAR_DATABASE_ID, ASAR_COLLECTIONS } from "@repo/react-appwrite";
+import {
+  useCollection,
+  DEMO_INVITATION_RSVPS,
+} from "@repo/react-appwrite";
+import {
+  ASAR_DATABASE_ID,
+  ASAR_COLLECTIONS,
+  type InvitationRsvp,
+} from "./services/asarService";
+import { useAdminAuth } from "./hooks/useAdminAuth";
+import { AdminRsvpMailbox } from "./components/mailbox/AdminRsvpMailbox";
+import { AdminLoginView } from "./components/auth/AdminLoginView";
 
 declare global {
   const process: {
@@ -20,13 +44,21 @@ import { BoothMemoryStudio as ImportedBoothMemoryStudio } from "./components/boo
 import { InvitationStudio as ImportedInvitationStudio } from "./components/invitation-studio";
 
 // Fallback wrappers to guarantee resilience if studios are still compiling
-const FallbackBoothStudio: React.FC<{ orderId?: string | null; onBack?: () => void }> = ({
-  orderId,
-  onBack,
-}) => (
+const FallbackBoothStudio: React.FC<{
+  orderId?: string | null;
+  onBack?: () => void;
+}> = ({ orderId, onBack }) => (
   <Box p={8} textAlign="center" className="athar-card" bg="#ffffff">
-    <Text fontSize="2rem" mb={2}>🎙️</Text>
-    <Text fontSize="1.5rem" color="var(--athar-maroon)" fontWeight="800" mb={2} fontFamily="var(--font-arabic-display)">
+    <Text fontSize="2rem" mb={2}>
+      🎙️
+    </Text>
+    <Text
+      fontSize="1.5rem"
+      color="var(--athar-maroon)"
+      fontWeight="800"
+      mb={2}
+      fontFamily="var(--font-arabic-display)"
+    >
       أستوديو هاتف أثر (Booth Memory Studio)
     </Text>
     <Text fontSize="0.95rem" color="var(--athar-text-muted)" mb={6}>
@@ -38,13 +70,21 @@ const FallbackBoothStudio: React.FC<{ orderId?: string | null; onBack?: () => vo
   </Box>
 );
 
-const FallbackInvitationStudio: React.FC<{ orderId?: string | null; onBack?: () => void }> = ({
-  orderId,
-  onBack,
-}) => (
+const FallbackInvitationStudio: React.FC<{
+  orderId?: string | null;
+  onBack?: () => void;
+}> = ({ orderId, onBack }) => (
   <Box p={8} textAlign="center" className="athar-card" bg="#ffffff">
-    <Text fontSize="2rem" mb={2}>✉️</Text>
-    <Text fontSize="1.5rem" color="#8C6F12" fontWeight="800" mb={2} fontFamily="var(--font-arabic-display)">
+    <Text fontSize="2rem" mb={2}>
+      ✉️
+    </Text>
+    <Text
+      fontSize="1.5rem"
+      color="#8C6F12"
+      fontWeight="800"
+      mb={2}
+      fontFamily="var(--font-arabic-display)"
+    >
       أستوديو تصميم الدعوات الرقمية (Invitation Studio)
     </Text>
     <Text fontSize="0.95rem" color="var(--athar-text-muted)" mb={6}>
@@ -56,18 +96,32 @@ const FallbackInvitationStudio: React.FC<{ orderId?: string | null; onBack?: () 
   </Box>
 );
 
-const BoothMemoryStudio: React.FC<{ orderId?: string | null; onBack?: () => void }> =
-  typeof ImportedBoothMemoryStudio !== "undefined" ? ImportedBoothMemoryStudio : FallbackBoothStudio;
+const BoothMemoryStudio: React.FC<{
+  orderId?: string | null;
+  onBack?: () => void;
+}> =
+  typeof ImportedBoothMemoryStudio !== "undefined"
+    ? ImportedBoothMemoryStudio
+    : FallbackBoothStudio;
 
-const InvitationStudio: React.FC<{ orderId?: string | null; onBack?: () => void }> =
-  typeof ImportedInvitationStudio !== "undefined" ? ImportedInvitationStudio : FallbackInvitationStudio;
+const InvitationStudio: React.FC<{
+  orderId?: string | null;
+  onBack?: () => void;
+}> =
+  typeof ImportedInvitationStudio !== "undefined"
+    ? ImportedInvitationStudio
+    : FallbackInvitationStudio;
 
-const BoothStudioRouteWrapper: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+const BoothStudioRouteWrapper: React.FC<{ onBack: () => void }> = ({
+  onBack,
+}) => {
   const { orderId } = useParams<{ orderId?: string }>();
   return <BoothMemoryStudio orderId={orderId || null} onBack={onBack} />;
 };
 
-const InvitationStudioRouteWrapper: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+const InvitationStudioRouteWrapper: React.FC<{ onBack: () => void }> = ({
+  onBack,
+}) => {
   const { orderId } = useParams<{ orderId?: string }>();
   return <InvitationStudio orderId={orderId || null} onBack={onBack} />;
 };
@@ -91,14 +145,16 @@ const DEFAULT_INITIAL_ORDERS: AsarOrder[] = [
     eventDate: "12 July 2026",
     eventVenue: "Four Seasons San Stefano, Alexandria",
     clientSubmittedAssetsJson: JSON.stringify({
-      heroImageUrl: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
+      heroImageUrl:
+        "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
       coupleTitle: "Mina & Maryam",
       eventHeaderTag: "THE WEDDING OF",
       eventDateDisplay: "12 July 2026",
       eventLocationDisplay: "Alexandria, Egypt",
       coupleQuote: "Every voice here is a piece of our forever...",
       categories: ["Family", "Friends", "Colleagues", "Special Guests"],
-      thankYouMessage: "Thank you for sharing our joy and leaving your voices in our Athar vault.",
+      thankYouMessage:
+        "Thank you for sharing our joy and leaving your voices in our Athar vault.",
     }),
     createdAt: "2026-07-01T10:15:00Z",
   },
@@ -134,13 +190,20 @@ const DEFAULT_INITIAL_ORDERS: AsarOrder[] = [
     eventDate: "28 August 2026",
     eventVenue: "Lake House Club, New Cairo",
     clientSubmittedAssetsJson: JSON.stringify({
-      heroImageUrl: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80",
+      heroImageUrl:
+        "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80",
       coupleTitle: "Omar & Layla",
       eventHeaderTag: "JOIN OUR CELEBRATION",
       eventDateDisplay: "28 August 2026",
       eventLocationDisplay: "New Cairo, Egypt",
       coupleQuote: "معاً نبدأ فصلاً جديداً من المحبة...",
-      requestedRsvpFields: ["Full Name", "Email Address", "WhatsApp Phone", "Companions Count", "Dietary Note"],
+      requestedRsvpFields: [
+        "Full Name",
+        "Email Address",
+        "WhatsApp Phone",
+        "Companions Count",
+        "Dietary Note",
+      ],
     }),
     createdAt: "2026-06-25T09:00:00Z",
   },
@@ -201,7 +264,8 @@ const DEFAULT_INITIAL_PAYMENTS: AsarPayment[] = [
     clientId: "usr-mina-maryam",
     amount: 2500,
     paymentMethod: "instapay",
-    screenshotUrl: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80",
+    screenshotUrl:
+      "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80",
     status: "pending",
     submittedAt: "اليوم 11:42 ص",
   },
@@ -211,7 +275,8 @@ const DEFAULT_INITIAL_PAYMENTS: AsarPayment[] = [
     clientId: "usr-sherif-hania",
     amount: 1500,
     paymentMethod: "vodafone_cash",
-    screenshotUrl: "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1200&q=80",
+    screenshotUrl:
+      "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1200&q=80",
     status: "rejected",
     rejectionReason: "صورة الإيصال غير واضحة / البيانات مطموسة",
     submittedAt: "أمس 04:15 م",
@@ -222,7 +287,8 @@ const DEFAULT_INITIAL_PAYMENTS: AsarPayment[] = [
     clientId: "usr-omar-layla",
     amount: 1000,
     paymentMethod: "instapay",
-    screenshotUrl: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80",
+    screenshotUrl:
+      "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80",
     status: "approved",
     submittedAt: "25 يونيو 2026",
   },
@@ -230,7 +296,6 @@ const DEFAULT_INITIAL_PAYMENTS: AsarPayment[] = [
 
 export const App: React.FC = () => {
   const navigate = useNavigate();
-  const { databases } = useAppwrite();
 
   // Synchronized persistent state for Orders
   const [orders, setOrders] = useState<AsarOrder[]>(() => {
@@ -281,89 +346,105 @@ export const App: React.FC = () => {
     }
   }, [payments]);
 
-  // Live Appwrite sync for Orders and Payments
+  // Admin Authentication State via unified useAdminAuth hook
+  const {
+    isAuthenticated,
+    isVerifiedAdmin,
+    isLoading: authLoading,
+  } = useAdminAuth();
+
+  // 1. Reactive live collection for Orders using @repo/react-appwrite hook
+  const { data: cloudOrders } = useCollection<AsarOrder>(
+    ASAR_DATABASE_ID,
+    ASAR_COLLECTIONS.ORDERS,
+    { realtime: true },
+  );
+
+  // 2. Reactive live collection for Payments using @repo/react-appwrite hook
+  const { data: cloudPayments } = useCollection<AsarPayment>(
+    ASAR_DATABASE_ID,
+    ASAR_COLLECTIONS.PAYMENTS,
+    { realtime: true },
+  );
+
+  // 3. Reactive live collection for Plans using @repo/react-appwrite hook
+  const { data: cloudPlans } = useCollection<AsarPlan>(
+    ASAR_DATABASE_ID,
+    ASAR_COLLECTIONS.PLANS,
+    { realtime: true },
+  );
+
+  // 4. Reactive live collection for RSVPs using @repo/react-appwrite hook
+  const { data: cloudRsvps } = useCollection<InvitationRsvp>(
+    ASAR_DATABASE_ID,
+    ASAR_COLLECTIONS.INVITATION_RSVPS,
+    { realtime: true },
+  );
+
+  // Synchronize Cloud data when available
   useEffect(() => {
-    let isMounted = true;
-    async function loadCloudData() {
-      if (!databases) return;
-      try {
-        const orderRes = await databases.listDocuments(ASAR_DATABASE_ID, ASAR_COLLECTIONS.ORDERS);
-        if (isMounted && orderRes.documents.length > 0) {
-          const cloudOrders = orderRes.documents.map((d: any) => ({
-            $id: d.$id,
-            clientId: d.clientId || "",
-            clientName: d.clientName || "",
-            partnerOrOrgName: d.partnerOrOrgName || "",
-            clientEmail: d.clientEmail || "",
-            clientPhone: d.clientPhone || "",
-            serviceType: d.serviceType || "booth",
-            planId: d.planId || "",
-            planName: d.planName || "",
-            selectedAddonsJson: d.selectedAddonsJson,
-            totalAmount: Number(d.totalAmount) || 0,
-            orderStatus: d.orderStatus || "pending_payment",
-            eventDate: d.eventDate || "",
-            eventVenue: d.eventVenue || "",
-            clientSubmittedAssetsJson: d.clientSubmittedAssetsJson,
-            quotaOverridesJson: d.quotaOverridesJson,
-            adminNotes: d.adminNotes,
-            createdAt: d.$createdAt,
-            updatedAt: d.$updatedAt,
-          }));
-          setOrders((prev) => {
-            const merged = [...cloudOrders];
-            // keep demo orders that aren't overwritten
-            for (const p of prev) {
-              if (!merged.some((m) => m.$id === p.$id)) {
-                merged.push(p);
-              }
-            }
-            return merged;
-          });
+    if (cloudOrders && cloudOrders.length > 0) {
+      setOrders((prev) => {
+        const merged: AsarOrder[] = [...(cloudOrders as AsarOrder[])];
+        for (const p of prev) {
+          if (!merged.some((m) => m.$id === p.$id)) {
+            merged.push(p);
+          }
         }
-      } catch (err) {
-        console.warn("Using offline / cached orders:", err);
-      }
-
-      try {
-        const payRes = await databases.listDocuments(ASAR_DATABASE_ID, ASAR_COLLECTIONS.PAYMENTS);
-        if (isMounted && payRes.documents.length > 0) {
-          const cloudPayments = payRes.documents.map((d: any) => ({
-            $id: d.$id,
-            orderId: d.orderId || "",
-            clientId: d.clientId || "",
-            amount: Number(d.amount) || 0,
-            paymentMethod: d.paymentMethod || "instapay",
-            screenshotUrl: d.screenshotUrl || "",
-            status: d.status || "pending",
-            rejectionReason: d.rejectionReason,
-            submittedAt: d.$createdAt ? new Date(d.$createdAt).toLocaleTimeString("ar-EG") : "اليوم",
-          }));
-          setPayments((prev) => {
-            const merged = [...cloudPayments];
-            for (const p of prev) {
-              if (!merged.some((m) => m.$id === p.$id)) {
-                merged.push(p);
-              }
-            }
-            return merged;
-          });
-        }
-      } catch (err) {
-        console.warn("Using offline / cached payments:", err);
-      }
+        return merged;
+      });
     }
+  }, [cloudOrders]);
 
-    loadCloudData();
-    return () => {
-      isMounted = false;
-    };
-  }, [databases]);
+  useEffect(() => {
+    if (cloudPayments && cloudPayments.length > 0) {
+      setPayments((prev) => {
+        const merged: AsarPayment[] = [...(cloudPayments as AsarPayment[])];
+        for (const p of prev) {
+          if (!merged.some((m) => m.$id === p.$id)) {
+            merged.push(p);
+          }
+        }
+        return merged;
+      });
+    }
+  }, [cloudPayments]);
+
+  useEffect(() => {
+    if (cloudPlans && cloudPlans.length > 0) {
+      setPlans(cloudPlans);
+    }
+  }, [cloudPlans]);
+
+  // Synchronized persistent state for RSVPs
+  const [rsvps, setRsvps] = useState<InvitationRsvp[]>(() => {
+    try {
+      const cached = localStorage.getItem("asar_invitation_rsvps_cache");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return DEMO_INVITATION_RSVPS;
+  });
+
+  useEffect(() => {
+    if (cloudRsvps && cloudRsvps.length > 0) {
+      setRsvps(cloudRsvps);
+    }
+  }, [cloudRsvps]);
 
   // Pending payments count
-  const pendingPaymentsCount = orders.filter((o) => o.orderStatus === "pending_payment").length;
+  const pendingPaymentsCount = orders.filter(
+    (o) => o.orderStatus === "pending_payment",
+  ).length;
+  // Pending RSVPs count
+  const pendingRsvpsCount = rsvps.filter((r) => r.status === "pending").length;
 
-  const handleOpenStudio = (orderId: string, serviceType: "booth" | "invitation") => {
+  const handleOpenStudio = (
+    orderId: string,
+    serviceType: "booth" | "invitation",
+  ) => {
     if (serviceType === "booth") {
       navigate(`/booth-studio/${orderId}`);
     } else {
@@ -375,8 +456,41 @@ export const App: React.FC = () => {
     navigate("/orders");
   };
 
+  if (authLoading) {
+    return (
+      <Box
+        minH="100vh"
+        bg="var(--athar-bg-primary)"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Text
+          fontFamily="var(--font-arabic-display)"
+          fontSize="1.3rem"
+          color="var(--athar-maroon)"
+        >
+          جاري التحقق من هوية المسؤول...
+        </Text>
+      </Box>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <AdminLoginView onSuccess={() => navigate("/overview")} />;
+  }
+
+  if (!isVerifiedAdmin) {
+    return (
+      <AdminLoginView isForbidden onSuccess={() => navigate("/overview")} />
+    );
+  }
+
   return (
-    <AdminShell pendingPaymentsCount={pendingPaymentsCount}>
+    <AdminShell
+      pendingPaymentsCount={pendingPaymentsCount}
+      pendingRsvpsCount={pendingRsvpsCount}
+    >
       <Routes>
         <Route path="/" element={<Navigate to="/overview" replace />} />
         <Route
@@ -392,7 +506,11 @@ export const App: React.FC = () => {
         />
         <Route
           path="/plans"
-          element={<PlanBuilderStudio onPlansUpdated={(updated) => setPlans(updated)} />}
+          element={
+            <PlanBuilderStudio
+              onPlansUpdated={(updated) => setPlans(updated)}
+            />
+          }
         />
         <Route
           path="/orders"
@@ -425,6 +543,10 @@ export const App: React.FC = () => {
         <Route
           path="/invitation-studio/:orderId?"
           element={<InvitationStudioRouteWrapper onBack={handleBackToOrders} />}
+        />
+        <Route
+          path="/mailbox"
+          element={<AdminRsvpMailbox onRsvpsUpdated={setRsvps} />}
         />
         <Route path="/users" element={<UsersManager />} />
         <Route path="*" element={<Navigate to="/overview" replace />} />

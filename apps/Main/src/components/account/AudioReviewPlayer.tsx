@@ -1,5 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Box, Flex, SimpleGrid, Text, Button, Badge } from "@chakra-ui/react";
+import {
+  useCollection,
+  ASAR_DATABASE_ID,
+  ASAR_COLLECTIONS,
+} from "@repo/react-appwrite";
 
 export interface MasteredTrack {
   id: string;
@@ -103,6 +108,59 @@ export const AudioReviewPlayer: React.FC<AudioReviewPlayerProps> = ({
   const [selectedCategory, setSelectedCategory] = useState("الكل");
   const [searchQuery, setSearchQuery] = useState("");
   const [continuousPlay, setContinuousPlay] = useState(false);
+
+  // Live collection query from Appwrite
+  const voiceWhere = useMemo(
+    () => (orderId ? { orderId } : undefined),
+    [orderId]
+  );
+  const { data: cloudRecords } = useCollection<Record<string, unknown>>(
+    ASAR_DATABASE_ID,
+    ASAR_COLLECTIONS.BOOTH_VOICE_RECORDS,
+    {
+      where: voiceWhere as any,
+      enabled: Boolean(orderId),
+      realtime: true,
+    }
+  );
+
+  useEffect(() => {
+    if (cloudRecords && cloudRecords.length > 0) {
+      const mapped: MasteredTrack[] = cloudRecords.map((r, idx) => {
+        let peaks: number[] = DEMO_MASTERED_TRACKS[0].waveformPeaks;
+        if (typeof r.waveformPeaksJson === "string") {
+          try {
+            peaks = JSON.parse(r.waveformPeaksJson);
+          } catch {
+            // fallback
+          }
+        }
+        return {
+          id: (r.$id as string) || `track-${idx}`,
+          speakerName:
+            (r.guestName as string) ||
+            (r.speakerName as string) ||
+            "ضيف أثر",
+          speakerRole:
+            (r.guestRole as string) || (r.speakerRole as string) || "ضيف",
+          category: (r.category as string) || "العائلة",
+          quoteSnippet:
+            (r.transcription as string) ||
+            (r.quoteSnippet as string) ||
+            "تسجيل صوتي من الهاتف العتيق",
+          durationFormatted: (r.durationFormatted as string) || "0:45",
+          durationSeconds: Number(r.durationSeconds) || 45,
+          waveformPeaks: peaks,
+          audioUrl: r.audioUrl as string | undefined,
+          isFavorite: Boolean(r.isFavorite),
+        };
+      });
+      setTrackList(mapped);
+      if (mapped[0]?.id && !activeTrackId) {
+        setActiveTrackId(mapped[0].id);
+      }
+    }
+  }, [cloudRecords]);
 
   // Web Audio Context for simulated sound playback
   const audioCtxRef = useRef<AudioContext | null>(null);

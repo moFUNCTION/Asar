@@ -41,7 +41,8 @@ export interface AsarInvitationDocument {
   clientId: string;
   slug: string;
   eventTitle: string;
-  occasionType: "wedding" | "engagement" | "festival" | "gala" | "corporate" | "graduation";
+  occasionType:
+    "wedding" | "engagement" | "festival" | "gala" | "corporate" | "graduation";
   eventDate: string;
   eventTime: string;
   venueName: string;
@@ -60,7 +61,8 @@ interface DemoOrderData {
   clientName: string;
   partnerOrOrgName: string;
   clientEmail: string;
-  occasionType: "wedding" | "engagement" | "festival" | "gala" | "corporate" | "graduation";
+  occasionType:
+    "wedding" | "engagement" | "festival" | "gala" | "corporate" | "graduation";
   eventTitle: string;
   eventDate: string;
   eventTime: string;
@@ -84,9 +86,11 @@ const DEMO_ORDERS: Record<string, DemoOrderData> = {
     eventTime: "19:30",
     venueName: "Four Seasons Hotel Alexandria",
     venueAddress: "Corniche Road, San Stefano, Alexandria, Egypt",
-    venueMapUrl: "https://maps.google.com/?q=Four+Seasons+Hotel+Alexandria+at+San+Stefano",
+    venueMapUrl:
+      "https://maps.google.com/?q=Four+Seasons+Hotel+Alexandria+at+San+Stefano",
     maxCapacity: 150,
-    clientRequestedNote: "Please include WhatsApp number, companions dropdown, dietary restrictions, and a blessing box.",
+    clientRequestedNote:
+      "Please include WhatsApp number, companions dropdown, dietary restrictions, and a blessing box.",
     requestedFields: [
       "WhatsApp Phone Number",
       "Number of Companions",
@@ -107,7 +111,8 @@ const DEMO_ORDERS: Record<string, DemoOrderData> = {
     venueAddress: "Corniche El Nile, Garden City, Cairo, Egypt",
     venueMapUrl: "https://maps.google.com/?q=Grand+Nile+Tower+Cairo",
     maxCapacity: 250,
-    clientRequestedNote: "Require WhatsApp number, organization name, and delegate attending side.",
+    clientRequestedNote:
+      "Require WhatsApp number, organization name, and delegate attending side.",
     requestedFields: [
       "WhatsApp Phone Number",
       "Organization / Institution Name",
@@ -127,7 +132,8 @@ const DEMO_ORDERS: Record<string, DemoOrderData> = {
     venueAddress: "Kom El Dekka, Alexandria, Egypt",
     venueMapUrl: "https://maps.google.com/?q=Roman+Amphitheatre+Alexandria",
     maxCapacity: 500,
-    clientRequestedNote: "Capture WhatsApp, companion tickets, and dietary preferences.",
+    clientRequestedNote:
+      "Capture WhatsApp, companion tickets, and dietary preferences.",
     requestedFields: [
       "WhatsApp Phone Number",
       "Number of Companions",
@@ -136,22 +142,35 @@ const DEMO_ORDERS: Record<string, DemoOrderData> = {
   },
 };
 
-export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onBack }) => {
+export const InvitationStudio: React.FC<InvitationStudioProps> = ({
+  orderId,
+  onBack,
+}) => {
   const { databases } = useAppwrite();
 
   // Active Order & Invitation Metadata State
   const initialOrderId = orderId || "ORD-915";
-  const [selectedOrderId, setSelectedOrderId] = useState<string>(initialOrderId);
-  const currentDemoOrder = DEMO_ORDERS[selectedOrderId] || DEMO_ORDERS["ORD-915"];
+  const [selectedOrderId, setSelectedOrderId] =
+    useState<string>(initialOrderId);
+  const currentDemoOrder =
+    DEMO_ORDERS[selectedOrderId] || DEMO_ORDERS["ORD-915"];
 
-  const [activeTab, setActiveTab] = useState<"theme" | "sections" | "form">("theme");
-  const [previewEngine, setPreviewEngine] = useState<"modular" | "classic">("modular");
-  const [occasionType, setOccasionType] = useState<AsarInvitationDocument["occasionType"]>(
-    currentDemoOrder.occasionType
+  const [activeTab, setActiveTab] = useState<"theme" | "sections" | "form">(
+    "theme",
   );
+  const [previewEngine, setPreviewEngine] = useState<"modular" | "classic">(
+    "modular",
+  );
+  const [occasionType, setOccasionType] = useState<
+    AsarInvitationDocument["occasionType"]
+  >(currentDemoOrder.occasionType);
   const [slug, setSlug] = useState<string>("omar-and-layla");
-  const [eventTitle, setEventTitle] = useState<string>(currentDemoOrder.eventTitle);
-  const [maxCapacity, setMaxCapacity] = useState<number>(currentDemoOrder.maxCapacity);
+  const [eventTitle, setEventTitle] = useState<string>(
+    currentDemoOrder.eventTitle,
+  );
+  const [maxCapacity, setMaxCapacity] = useState<number>(
+    currentDemoOrder.maxCapacity,
+  );
 
   const invitationUrls = buildMemoryUrls({
     slug: slug || "omar-and-layla",
@@ -163,50 +182,64 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
 
   // Theme Config State
   const [themeConfig, setThemeConfig] = useState<InvitationThemeConfig>(() => {
-    if (currentDemoOrder.occasionType === "gala") return THEME_PRESETS["midnight-gala"].config;
-    if (currentDemoOrder.occasionType === "festival") return THEME_PRESETS["cultural-festival"].config;
+    if (currentDemoOrder.occasionType === "gala")
+      return THEME_PRESETS["midnight-gala"].config;
+    if (currentDemoOrder.occasionType === "festival")
+      return THEME_PRESETS["cultural-festival"].config;
     return THEME_PRESETS["royal-wedding"].config;
   });
 
   // Modular Website Config State (v2.0)
-  const [modularConfig, setModularConfig] = useState<ModularWebsiteConfig>(() => {
-    // Attempt load from localStorage cache
-    const savedActive = localStorage.getItem("asar_active_invitation");
-    if (savedActive) {
-      try {
-        const parsedDoc = JSON.parse(savedActive);
-        if (parsedDoc?.sectionsConfigJson) {
-          return parseModularWebsiteConfig(parsedDoc.sectionsConfigJson);
+  const [modularConfig, setModularConfig] = useState<ModularWebsiteConfig>(
+    () => {
+      // Attempt load from localStorage cache
+      const savedActive = localStorage.getItem("asar_active_invitation");
+      if (savedActive) {
+        try {
+          const parsedDoc = JSON.parse(savedActive);
+          if (parsedDoc?.sectionsConfigJson) {
+            return parseModularWebsiteConfig(parsedDoc.sectionsConfigJson);
+          }
+        } catch (err: unknown) {
+          console.warn("Failed to load active invitation cache", err);
         }
-      } catch (err: unknown) {
-        console.warn("Failed to load active invitation cache", err);
       }
-    }
-    return createDefaultModularWebsiteConfig({
-      coupleTitle: currentDemoOrder.eventTitle,
-      eventDate: currentDemoOrder.eventDate,
-      venueName: currentDemoOrder.venueName,
-    });
-  });
+      return createDefaultModularWebsiteConfig({
+        coupleTitle: currentDemoOrder.eventTitle,
+        eventDate: currentDemoOrder.eventDate,
+        venueName: currentDemoOrder.venueName,
+      });
+    },
+  );
 
   // Legacy Section Blocks State kept synchronized
   const [blocks, setBlocks] = useState<InvitationSectionBlock[]>(() =>
-    projectModernSectionsToLegacyBlocks(modularConfig.sections)
+    projectModernSectionsToLegacyBlocks(modularConfig.sections),
   );
 
   // Dynamic Form Schema State (Always enforce mandatory guestEmail)
   const [formFields, setFormFields] = useState<DynamicFormField[]>(() => {
-    const initialCustom = generateFieldsFromClientRequests(currentDemoOrder.requestedFields);
-    return enforceMandatoryEmailConstraint([...MANDATORY_SYSTEM_FIELDS, ...initialCustom]);
+    const initialCustom = generateFieldsFromClientRequests(
+      currentDemoOrder.requestedFields,
+    );
+    return enforceMandatoryEmailConstraint([
+      ...MANDATORY_SYSTEM_FIELDS,
+      ...initialCustom,
+    ]);
   });
 
   // UI Modals and Toasts
   const [showQrModal, setShowQrModal] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastType, setToastType] = useState<"success" | "error" | "info">("success");
+  const [toastType, setToastType] = useState<"success" | "error" | "info">(
+    "success",
+  );
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const showToast = (msg: string, type: "success" | "error" | "info" = "success") => {
+  const showToast = (
+    msg: string,
+    type: "success" | "error" | "info" = "success",
+  ) => {
     setToastMessage(msg);
     setToastType(type);
     setTimeout(() => setToastMessage(null), 4500);
@@ -301,13 +334,23 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
             };
           }
           return b;
-        })
+        }),
       );
 
       // Update form
-      const custom = generateFieldsFromClientRequests(orderData.requestedFields);
-      setFormFields(enforceMandatoryEmailConstraint([...MANDATORY_SYSTEM_FIELDS, ...custom]));
-      showToast(`Loaded details for Order #${newOrdId} (${orderData.eventTitle})`, "info");
+      const custom = generateFieldsFromClientRequests(
+        orderData.requestedFields,
+      );
+      setFormFields(
+        enforceMandatoryEmailConstraint([
+          ...MANDATORY_SYSTEM_FIELDS,
+          ...custom,
+        ]),
+      );
+      showToast(
+        `Loaded details for Order #${newOrdId} (${orderData.eventTitle})`,
+        "info",
+      );
     }
   };
 
@@ -369,17 +412,22 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
           };
         }
         return b;
-      })
+      }),
     );
 
     // 4. Generate dynamic form fields from client requested list
-    const generated = generateFieldsFromClientRequests(orderData.requestedFields);
-    const merged = enforceMandatoryEmailConstraint([...MANDATORY_SYSTEM_FIELDS, ...generated]);
+    const generated = generateFieldsFromClientRequests(
+      orderData.requestedFields,
+    );
+    const merged = enforceMandatoryEmailConstraint([
+      ...MANDATORY_SYSTEM_FIELDS,
+      ...generated,
+    ]);
     setFormFields(merged);
 
     showToast(
-      `📥 Applied client assets! Populated event info and ${generated.length} requested RSVP fields with locked email.`,
-      "success"
+      `📥 تم تطبيق بيانات ومتطلبات العميل! تم تحديث بيانات المناسبة و${generated.length} حقول استمارة مع إلزام البريد الإلكتروني.`,
+      "success",
     );
   };
 
@@ -388,14 +436,17 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
     // 0. Validate Subdomain Slug
     const slugCheck = validateSubdomainSlug(slug);
     if (!slugCheck.isValid) {
-      showToast(`Cannot publish: Invalid subdomain slug (${slugCheck.error})`, "error");
+      showToast(
+        `تعذر النشر: اسم النطاق الفرعي (Slug) غير صالح (${slugCheck.error})`,
+        "error",
+      );
       return;
     }
 
     // 1. Validate Form Schema
     const validation = validateFormSchema(formFields);
     if (!validation.isValid) {
-      showToast(`Cannot publish: ${validation.errors[0]}`, "error");
+      showToast(`تعذر النشر: ${validation.errors[0]}`, "error");
       setActiveTab("form");
       return;
     }
@@ -403,7 +454,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
     // 2. Validate Modular Website Config (v2.0)
     const configCheck = validateModularWebsiteConfig(modularConfig);
     if (!configCheck.isValid) {
-      showToast(`Cannot publish: ${configCheck.errors[0]}`, "error");
+      showToast(`تعذر النشر: ${configCheck.errors[0]}`, "error");
       setActiveTab("sections");
       return;
     }
@@ -444,15 +495,28 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
       list = list.filter((item) => item.id !== invitationPayload.id);
       list.push(invitationPayload);
       localStorage.setItem("asar_invitations_cache", JSON.stringify(list));
-      localStorage.setItem("asar_active_invitation", JSON.stringify(invitationPayload));
+      localStorage.setItem(
+        "asar_active_invitation",
+        JSON.stringify(invitationPayload),
+      );
 
       // 2. Attempt Appwrite persist if databases client exists
       if (databases && typeof databases.createDocument === "function") {
         try {
-          await databases.createDocument("asar-db", "invitations", invitationPayload.id, invitationPayload);
+          await databases.createDocument(
+            "asar-db",
+            "invitations",
+            invitationPayload.id,
+            invitationPayload,
+          );
         } catch {
           try {
-            await databases.updateDocument("asar-db", "invitations", invitationPayload.id, invitationPayload);
+            await databases.updateDocument(
+              "asar-db",
+              "invitations",
+              invitationPayload.id,
+              invitationPayload,
+            );
           } catch {
             // Non-fatal if Appwrite backend is unprovisioned in test mode
           }
@@ -460,18 +524,20 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
       }
 
       showToast(
-        `🚀 Custom Modular Invitation Published! Storefront: ${invitationUrls.canonicalUrl} (Renderer: ${invitationUrls.devRendererUrl} | Dev: ${invitationUrls.devQueryUrl})`,
-        "success"
+        `🚀 تم نشر موقع الدعوة الرقمية بنجاح! الرابط الأساسي: ${invitationUrls.canonicalUrl} (منصة العرض: ${invitationUrls.devRendererUrl} | التطوير: ${invitationUrls.devQueryUrl})`,
+        "success",
       );
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : "Unknown error";
-      showToast(`Error saving invitation: ${errMsg}`, "error");
+      const errMsg = err instanceof Error ? err.message : "خطأ غير معروف";
+      showToast(`خطأ أثناء حفظ الدعوة: ${errMsg}`, "error");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const activeSectionsCount = modularConfig.sections.filter((s) => s.enabled).length;
+  const activeSectionsCount = modularConfig.sections.filter(
+    (s) => s.enabled,
+  ).length;
 
   return (
     <div
@@ -496,8 +562,8 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
               toastType === "success"
                 ? "#1E6F50"
                 : toastType === "error"
-                ? "#9B2C2C"
-                : "#6B1D28",
+                  ? "#9B2C2C"
+                  : "#6B1D28",
             color: "#FFFFFF",
             padding: "0.85rem 1.4rem",
             borderRadius: "12px",
@@ -509,7 +575,9 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
             gap: "0.5rem",
           }}
         >
-          <span>{toastType === "success" ? "✓" : toastType === "error" ? "⚠️" : "ℹ"}</span>
+          <span>
+            {toastType === "success" ? "✓" : toastType === "error" ? "⚠️" : "ℹ"}
+          </span>
           <span>{toastMessage}</span>
         </div>
       )}
@@ -548,7 +616,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 gap: "0.3rem",
               }}
             >
-              ← Back to Orders
+              ← العودة لطابور الطلبات
             </button>
           )}
 
@@ -570,7 +638,9 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
               ✉️
             </div>
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}
+              >
                 <span
                   style={{
                     fontSize: "0.95rem",
@@ -579,7 +649,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                     fontFamily: "Amiri, Georgia, serif",
                   }}
                 >
-                  ASAR Modular Website Studio
+                  استوديو أثر لتصميم المواقع والدعوات
                 </span>
                 <span
                   style={{
@@ -591,20 +661,34 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                     fontWeight: 700,
                   }}
                 >
-                  R2 Editor
+                  محرر R2
                 </span>
               </div>
               <div style={{ fontSize: "0.75rem", color: "#7A6F6D" }}>
-                Active: <b>{currentDemoOrder.clientName}</b> ({currentDemoOrder.partnerOrOrgName}) • {occasionType}
+                الطلب النشط: <b>{currentDemoOrder.clientName}</b> (
+                {currentDemoOrder.partnerOrOrgName}) • {occasionType}
               </div>
             </div>
           </div>
         </div>
 
         {/* Center: Quick Switch Demo Order, Capacity & Slug */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#7A6F6D" }}>Order:</span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <div
+            style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+          >
+            <span
+              style={{ fontSize: "0.75rem", fontWeight: 600, color: "#7A6F6D" }}
+            >
+              الطلب:
+            </span>
             <select
               value={selectedOrderId}
               onChange={(e) => handleOrderChange(e.target.value)}
@@ -618,20 +702,30 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 color: "#6B1D28",
               }}
             >
-              <option value="ORD-915">ORD-915 (Omar & Layla - Wedding)</option>
-              <option value="ORD-916">ORD-916 (Athar VIP Gala)</option>
-              <option value="ORD-917">ORD-917 (Alex Indie Sound Fest)</option>
+              <option value="ORD-915">ORD-915 (عمر وليلى - حفل زفاف)</option>
+              <option value="ORD-916">ORD-916 (حفل مؤسسة أثر السنوي)</option>
+              <option value="ORD-917">
+                ORD-917 (مهرجان الإسكندرية الموسيقي)
+              </option>
             </select>
           </div>
 
           {/* Max Venue Capacity Input */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#7A6F6D" }}>Max Capacity:</span>
+          <div
+            style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+          >
+            <span
+              style={{ fontSize: "0.75rem", fontWeight: 600, color: "#7A6F6D" }}
+            >
+              السعة القصوى:
+            </span>
             <input
               type="number"
               min={1}
               value={maxCapacity}
-              onChange={(e) => setMaxCapacity(parseInt(e.target.value, 10) || 0)}
+              onChange={(e) =>
+                setMaxCapacity(parseInt(e.target.value, 10) || 0)
+              }
               style={{
                 width: "70px",
                 padding: "0.35rem 0.5rem",
@@ -641,24 +735,36 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 fontWeight: 700,
                 textAlign: "center",
               }}
-              title="Used by the Client RSVP Mailbox capacity meter"
+              title="يستخدم في حساب سعة صندوق تأكيد الحضور"
             />
-            <span style={{ fontSize: "0.75rem", color: "#7A6F6D" }}>guests</span>
+            <span style={{ fontSize: "0.75rem", color: "#7A6F6D" }}>ضيف</span>
           </div>
 
           {/* Subdomain Slug Input */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#6B1D28" }}>Slug:</span>
+          <div
+            style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+          >
+            <span
+              style={{ fontSize: "0.75rem", fontWeight: 700, color: "#6B1D28" }}
+            >
+              الرابط:
+            </span>
             <input
               type="text"
               value={slug}
-              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
+              onChange={(e) =>
+                setSlug(
+                  e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+                )
+              }
               placeholder="e.g. omar-and-layla"
               style={{
                 width: "150px",
                 padding: "0.35rem 0.5rem",
                 borderRadius: "6px",
-                border: !slugValidation.isValid ? "1.5px solid #dc2626" : "1px solid rgba(0,0,0,0.15)",
+                border: !slugValidation.isValid
+                  ? "1.5px solid #dc2626"
+                  : "1px solid rgba(0,0,0,0.15)",
                 fontSize: "0.8rem",
                 fontWeight: 700,
                 background: "#FFF",
@@ -689,9 +795,9 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
               gap: "0.3rem",
               transition: "all 0.2s ease",
             }}
-            title="Preview directly in Dedicated Storefront Renderer (Port 3004)"
+            title="معاينة مباشرة في منصة العرض المستقلة (Port 3004)"
           >
-            🌐 Renderer (:3004) ↗
+            🌐 منصة العرض (:3004) ↗
           </a>
 
           <button
@@ -708,9 +814,9 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
               cursor: "pointer",
               transition: "all 0.2s ease",
             }}
-            title="Populates event info and adds custom RSVP fields requested by the client"
+            title="تعبئة بيانات المناسبة وإضافة حقول استمارة تأكيد الحضور المطلوبة من العميل"
           >
-            📥 Apply Client Requests
+            📥 تطبيق متطلبات العميل
           </button>
 
           <button
@@ -728,7 +834,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
               transition: "all 0.2s ease",
             }}
           >
-            📱 Generate QR
+            📱 توليد رمز QR
           </button>
 
           <button
@@ -748,7 +854,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
               opacity: isSaving ? 0.7 : 1,
             }}
           >
-            {isSaving ? "Saving..." : "🚀 Save & Publish"}
+            {isSaving ? "⏳ جاري الحفظ..." : "🚀 حفظ ونشر الموقع"}
           </button>
         </div>
       </header>
@@ -768,15 +874,26 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
           boxShadow: "0 1px 4px rgba(0,0,0,0.02)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+            flexWrap: "wrap",
+          }}
+        >
           <span style={{ fontWeight: 700, color: "#6B1D28" }}>
-            🌐 Subdomain Storefront:
+            🌐 رابط المنصة الفرعي:
           </span>
           <a
             href={invitationUrls.canonicalUrl}
             target="_blank"
             rel="noreferrer"
-            style={{ fontWeight: 700, color: "#6B1D28", textDecoration: "underline" }}
+            style={{
+              fontWeight: 700,
+              color: "#6B1D28",
+              textDecoration: "underline",
+            }}
           >
             {invitationUrls.canonicalUrl}
           </a>
@@ -791,27 +908,44 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
               border: "1px solid rgba(212, 175, 55, 0.4)",
             }}
           >
-            Canonical
+            الرابط الأساسي
           </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "#7A6F6D", flexWrap: "wrap" }}>
-          <span>Dev Previews:</span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+            color: "#7A6F6D",
+            flexWrap: "wrap",
+          }}
+        >
+          <span>معاينات التطوير:</span>
           <a
             href={invitationUrls.devRendererUrl}
             target="_blank"
             rel="noreferrer"
-            style={{ color: "#6B1D28", textDecoration: "underline", fontFamily: "monospace", fontWeight: 700 }}
-            title="Dedicated Storefront Renderer (Port 3004)"
+            style={{
+              color: "#6B1D28",
+              textDecoration: "underline",
+              fontFamily: "monospace",
+              fontWeight: 700,
+            }}
+            title="منصة العرض المستقلة (Port 3004)"
           >
-            Renderer (3004) ↗
+            منصة العرض (3004) ↗
           </a>
           <span>•</span>
           <a
             href={invitationUrls.devQueryUrl}
             target="_blank"
             rel="noreferrer"
-            style={{ color: "#7A6F6D", textDecoration: "underline", fontFamily: "monospace" }}
+            style={{
+              color: "#7A6F6D",
+              textDecoration: "underline",
+              fontFamily: "monospace",
+            }}
           >
             {invitationUrls.devQueryUrl}
           </a>
@@ -820,7 +954,11 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
             href={invitationUrls.devLocalhostUrl}
             target="_blank"
             rel="noreferrer"
-            style={{ color: "#7A6F6D", textDecoration: "underline", fontFamily: "monospace" }}
+            style={{
+              color: "#7A6F6D",
+              textDecoration: "underline",
+              fontFamily: "monospace",
+            }}
           >
             {invitationUrls.devLocalhostUrl}
           </a>
@@ -846,7 +984,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
           <span>⚠️</span>
           <span>
             {slugValidation.error ||
-              "Subdomain must follow RFC 1123 DNS rules: lowercase letters, numbers, hyphens only, no leading/trailing hyphens, and cannot be a reserved name like admin or api."}
+              "يجب أن يتوافق النطاق الفرعي مع معايير RFC 1123 DNS: حروف صغيرة، أرقام، وشرطات فقط، وبدون أسماء محجوزة مثل admin أو api."}
           </span>
         </div>
       )}
@@ -865,7 +1003,9 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
         }}
       >
         {/* Left Column (60%): 3 Builder Tabs */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}
+        >
           {/* Tab Navigation Strip */}
           <div
             style={{
@@ -890,11 +1030,14 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 cursor: "pointer",
                 background: activeTab === "theme" ? "#6B1D28" : "transparent",
                 color: activeTab === "theme" ? "#FFFFFF" : "#7A6F6D",
-                boxShadow: activeTab === "theme" ? "0 4px 12px rgba(107, 29, 40, 0.2)" : "none",
+                boxShadow:
+                  activeTab === "theme"
+                    ? "0 4px 12px rgba(107, 29, 40, 0.2)"
+                    : "none",
                 transition: "all 0.2s ease",
               }}
             >
-              1. Theme, Palette & Shaders
+              ١. الثيم والألوان والتأثيرات
             </button>
 
             <button
@@ -908,13 +1051,17 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 fontSize: "0.85rem",
                 fontWeight: 700,
                 cursor: "pointer",
-                background: activeTab === "sections" ? "#6B1D28" : "transparent",
+                background:
+                  activeTab === "sections" ? "#6B1D28" : "transparent",
                 color: activeTab === "sections" ? "#FFFFFF" : "#7A6F6D",
-                boxShadow: activeTab === "sections" ? "0 4px 12px rgba(107, 29, 40, 0.2)" : "none",
+                boxShadow:
+                  activeTab === "sections"
+                    ? "0 4px 12px rgba(107, 29, 40, 0.2)"
+                    : "none",
                 transition: "all 0.2s ease",
               }}
             >
-              2. Modular Page Sections ({activeSectionsCount})
+              ٢. أقسام الموقع التفاعلية ({activeSectionsCount})
             </button>
 
             <button
@@ -930,11 +1077,14 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 cursor: "pointer",
                 background: activeTab === "form" ? "#6B1D28" : "transparent",
                 color: activeTab === "form" ? "#FFFFFF" : "#7A6F6D",
-                boxShadow: activeTab === "form" ? "0 4px 12px rgba(107, 29, 40, 0.2)" : "none",
+                boxShadow:
+                  activeTab === "form"
+                    ? "0 4px 12px rgba(107, 29, 40, 0.2)"
+                    : "none",
                 transition: "all 0.2s ease",
               }}
             >
-              3. Dynamic RSVP Form (🔒 Email Locked)
+              ٣. استمارة تأكيد الحضور (🔒 البريد إجباري)
             </button>
           </div>
 
@@ -949,7 +1099,10 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 boxShadow: "0 8px 30px rgba(0,0,0,0.03)",
               }}
             >
-              <ThemeAndEffectsPanel themeConfig={themeConfig} onChange={setThemeConfig} />
+              <ThemeAndEffectsPanel
+                themeConfig={themeConfig}
+                onChange={setThemeConfig}
+              />
             </div>
           )}
 
@@ -1011,12 +1164,17 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
               gap: "0.35rem",
             }}
           >
-            <span style={{ fontSize: "0.72rem", color: "#777", fontWeight: 600 }}>Preview Engine:</span>
+            <span
+              style={{ fontSize: "0.72rem", color: "#777", fontWeight: 600 }}
+            >
+              محرك المعاينة:
+            </span>
             <button
               type="button"
               onClick={() => setPreviewEngine("modular")}
               style={{
-                background: previewEngine === "modular" ? "#6B1D28" : "rgba(0,0,0,0.05)",
+                background:
+                  previewEngine === "modular" ? "#6B1D28" : "rgba(0,0,0,0.05)",
                 color: previewEngine === "modular" ? "#FFF" : "#555",
                 border: "none",
                 borderRadius: "6px",
@@ -1026,13 +1184,14 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 cursor: "pointer",
               }}
             >
-              Modular v2.0
+              النسخة الحديثة v2.0
             </button>
             <button
               type="button"
               onClick={() => setPreviewEngine("classic")}
               style={{
-                background: previewEngine === "classic" ? "#6B1D28" : "rgba(0,0,0,0.05)",
+                background:
+                  previewEngine === "classic" ? "#6B1D28" : "rgba(0,0,0,0.05)",
                 color: previewEngine === "classic" ? "#FFF" : "#555",
                 border: "none",
                 borderRadius: "6px",
@@ -1042,7 +1201,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 cursor: "pointer",
               }}
             >
-              Classic
+              النسخة الكلاسيكية
             </button>
           </div>
 
@@ -1116,11 +1275,24 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
             </div>
 
             <div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#231F20", margin: 0 }}>
-                Invitation Landing QR Code
+              <h3
+                style={{
+                  fontSize: "1.2rem",
+                  fontWeight: 700,
+                  color: "#231F20",
+                  margin: 0,
+                }}
+              >
+                رمز الاستجابة السريعة (QR) لصفحة الدعوة
               </h3>
-              <p style={{ fontSize: "0.82rem", color: "#7A6F6D", marginTop: "0.25rem" }}>
-                Guests can scan this code to view the live bespoke event invitation.
+              <p
+                style={{
+                  fontSize: "0.82rem",
+                  color: "#7A6F6D",
+                  marginTop: "0.25rem",
+                }}
+              >
+                يمكن للضيوف مسح هذا الرمز لعرض بطاقة وموقع الدعوة الفاخر مباشرة.
               </p>
             </div>
 
@@ -1153,27 +1325,52 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
               >
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
-                    invitationUrls.canonicalUrl
+                    invitationUrls.canonicalUrl,
                   )}&color=6B1D28&bgcolor=FBF7F2`}
                   alt="Invitation QR Code"
                   style={{ width: "100%", height: "100%" }}
                 />
               </div>
 
-              <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#6B1D28" }}>
+              <div
+                style={{
+                  fontSize: "0.85rem",
+                  fontWeight: 700,
+                  color: "#6B1D28",
+                }}
+              >
                 {eventTitle}
               </div>
-              <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "#6B1D28", wordBreak: "break-all" }}>
+              <div
+                style={{
+                  fontSize: "0.78rem",
+                  fontWeight: 700,
+                  color: "#6B1D28",
+                  wordBreak: "break-all",
+                }}
+              >
                 {invitationUrls.canonicalUrl}
               </div>
               <div style={{ fontSize: "0.7rem", color: "#7A6F6D" }}>
-                Subdomain Storefront Canonical Target
+                الوجهة الأساسية للموقع الفرعي
               </div>
-              <div style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "#7A6F6D" }}>
-                Renderer Dev: {invitationUrls.devRendererUrl}
+              <div
+                style={{
+                  fontSize: "0.7rem",
+                  fontFamily: "monospace",
+                  color: "#7A6F6D",
+                }}
+              >
+                منصة العرض: {invitationUrls.devRendererUrl}
               </div>
-              <div style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "#7A6F6D" }}>
-                Dev Test: {invitationUrls.devQueryUrl}
+              <div
+                style={{
+                  fontSize: "0.7rem",
+                  fontFamily: "monospace",
+                  color: "#7A6F6D",
+                }}
+              >
+                بيئة التطوير: {invitationUrls.devQueryUrl}
               </div>
             </div>
 
@@ -1182,7 +1379,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                 type="button"
                 onClick={() => {
                   navigator.clipboard?.writeText(invitationUrls.canonicalUrl);
-                  showToast("Copied canonical storefront link to clipboard!", "info");
+                  showToast("تم نسخ رابط الدعوة إلى الحافظة بنجاح!", "info");
                 }}
                 style={{
                   flex: 1,
@@ -1196,7 +1393,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                   cursor: "pointer",
                 }}
               >
-                Copy Link 📋
+                نسخ الرابط 📋
               </button>
 
               <button
@@ -1214,7 +1411,7 @@ export const InvitationStudio: React.FC<InvitationStudioProps> = ({ orderId, onB
                   cursor: "pointer",
                 }}
               >
-                Done ✓
+                تم ✓
               </button>
             </div>
           </div>

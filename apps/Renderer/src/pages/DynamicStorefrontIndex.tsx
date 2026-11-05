@@ -16,9 +16,9 @@ import {
   ASAR_CACHE_KEYS,
   DEMO_BOOTH_MEMORY,
   useAppwrite,
+  useCollection,
   ASAR_COLLECTIONS,
   ASAR_DATABASE_ID,
-  Query,
   type UseSubdomainOptions,
   type BoothMemory,
   type AsarInvitation,
@@ -46,7 +46,7 @@ export const DynamicStorefrontIndex: React.FC<DynamicStorefrontIndexProps> = ({
     rsvpId?: string;
   }>();
   const [searchParams] = useSearchParams();
-  const { databases, config } = useAppwrite();
+  const { config } = useAppwrite();
   const dbId = config?.databaseId || ASAR_DATABASE_ID;
 
   // 1. Tier 1 -> Tier 2 -> Tier 3 -> Tier 4 Subdomain Resolution
@@ -65,7 +65,7 @@ export const DynamicStorefrontIndex: React.FC<DynamicStorefrontIndexProps> = ({
   const [remoteClassification, setRemoteClassification] =
     useState<MemoryStorefrontType | null>(null);
   const [remoteBoothData, setRemoteBoothData] = useState<BoothMemory | null>(
-    null
+    null,
   );
   const [remoteInvitationData, setRemoteInvitationData] =
     useState<AsarInvitation | null>(null);
@@ -128,63 +128,46 @@ export const DynamicStorefrontIndex: React.FC<DynamicStorefrontIndexProps> = ({
     return "unknown";
   }, [forcedType, searchParams, subdomain]);
 
-  // 3. Asynchronous Appwrite Collections Query when classification is unknown
+  // 3. Reactive Appwrite Collections Query via useCollection hooks when classification is unknown
+  const slugWhere = useMemo(() => {
+    return subdomain && synchronousType === "unknown"
+      ? { slug: subdomain }
+      : undefined;
+  }, [subdomain, synchronousType]);
+
+  const { data: boothDocs } = useCollection<BoothMemory>(
+    dbId,
+    ASAR_COLLECTIONS.BOOTH_MEMORIES,
+    {
+      where: slugWhere as any,
+      limit: 1,
+      enabled: Boolean(slugWhere),
+      realtime: true,
+    },
+  );
+
+  const { data: inviteDocs } = useCollection<AsarInvitation>(
+    dbId,
+    ASAR_COLLECTIONS.INVITATIONS,
+    {
+      where: slugWhere as any,
+      limit: 1,
+      enabled: Boolean(slugWhere),
+      realtime: true,
+    },
+  );
+
   useEffect(() => {
-    let isMounted = true;
-    if (!subdomain || synchronousType !== "unknown") {
+    if (boothDocs && boothDocs.length > 0) {
+      setRemoteBoothData(boothDocs[0]);
+      setRemoteClassification("booth");
       setIsResolvingRemote(false);
-      return;
+    } else if (inviteDocs && inviteDocs.length > 0) {
+      setRemoteInvitationData(inviteDocs[0]);
+      setRemoteClassification("invitation");
+      setIsResolvingRemote(false);
     }
-
-    const queryRemoteCollections = async () => {
-      setIsResolvingRemote(true);
-      try {
-        if (!databases || !dbId) {
-          if (isMounted) setIsResolvingRemote(false);
-          return;
-        }
-
-        // Try Booth Memories Collection
-        const boothRes = await databases.listDocuments(
-          dbId,
-          ASAR_COLLECTIONS.BOOTH_MEMORIES,
-          [Query.equal("slug", subdomain), Query.limit(1)]
-        );
-
-        if (boothRes.documents.length > 0 && isMounted) {
-          setRemoteBoothData(boothRes.documents[0] as unknown as BoothMemory);
-          setRemoteClassification("booth");
-          return;
-        }
-
-        // Try Invitations Collection
-        const inviteRes = await databases.listDocuments(
-          dbId,
-          ASAR_COLLECTIONS.INVITATIONS,
-          [Query.equal("slug", subdomain), Query.limit(1)]
-        );
-
-        if (inviteRes.documents.length > 0 && isMounted) {
-          setRemoteInvitationData(
-            inviteRes.documents[0] as unknown as AsarInvitation
-          );
-          setRemoteClassification("invitation");
-          return;
-        }
-      } catch {
-        // Appwrite network or offline fallback
-      } finally {
-        if (isMounted) {
-          setIsResolvingRemote(false);
-        }
-      }
-    };
-
-    queryRemoteCollections();
-    return () => {
-      isMounted = false;
-    };
-  }, [subdomain, synchronousType, databases, dbId]);
+  }, [boothDocs, inviteDocs]);
 
   // 4. Bare apex check: no subdomain, no route slug, no query parameter override
   if (!subdomain) {
@@ -268,9 +251,9 @@ export interface StorefrontResolvingScreenProps {
   slug: string;
 }
 
-export const StorefrontResolvingScreen: React.FC<StorefrontResolvingScreenProps> = ({
-  slug,
-}) => {
+export const StorefrontResolvingScreen: React.FC<
+  StorefrontResolvingScreenProps
+> = ({ slug }) => {
   return (
     <div
       style={{
@@ -410,7 +393,9 @@ export const StorefrontResolvingScreen: React.FC<StorefrontResolvingScreenProps>
           }}
         >
           جاري البحث في الأرشيف ومزامنة السجلات الخاصة بـ{" "}
-          <strong style={{ color: "var(--athar-text-title, #231F20)" }}>{slug}</strong>
+          <strong style={{ color: "var(--athar-text-title, #231F20)" }}>
+            {slug}
+          </strong>
         </p>
 
         {/* Waveform ornament */}

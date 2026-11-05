@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, Flex, SimpleGrid, Text, HStack, Button, Badge } from "@chakra-ui/react";
 import { FaCheck, FaCrown, FaStar, FaShieldAlt } from "react-icons/fa";
+import { useCollection } from "@repo/react-appwrite";
 
 export interface InvitationPlan {
   id: string;
@@ -87,23 +88,122 @@ export const InvitationPackagesSection: React.FC<InvitationPackagesSectionProps>
 }) => {
   const [plans, setPlans] = useState<InvitationPlan[]>(DEFAULT_INVITATION_PLANS);
 
+  // 1. Reactive live collection for Plans from Appwrite DB
+  const { data: cloudPlans } = useCollection<Record<string, unknown>>(
+    "asar-db",
+    "plans",
+    { realtime: true }
+  );
+
   // Synchronize dynamic plans from Appwrite or local storage cache
   useEffect(() => {
+    if (cloudPlans && cloudPlans.length > 0) {
+      const invDocs = cloudPlans.filter(
+        (p) => p.serviceType === "invitation" && p.isActive !== false
+      );
+      if (invDocs.length > 0) {
+        const mapped: InvitationPlan[] = invDocs.map((p) => {
+          let parsedFeatures: string[] = [];
+          if (Array.isArray(p.features)) {
+            parsedFeatures = p.features as string[];
+          } else if (typeof p.featuresJson === "string") {
+            try {
+              parsedFeatures = JSON.parse(p.featuresJson);
+            } catch {
+              parsedFeatures = [];
+            }
+          }
+          let parsedLimits = p.limits as InvitationPlan["limits"] | undefined;
+          if (!parsedLimits && typeof p.limitsJson === "string") {
+            try {
+              parsedLimits = JSON.parse(p.limitsJson);
+            } catch {
+              parsedLimits = undefined;
+            }
+          }
+
+          return {
+            id: (p.$id as string) || (p.id as string) || "plan-inv",
+            serviceType: "invitation" as const,
+            name: (p.name as string) || "باقة دعوة أثر",
+            subtitle: (p.subtitle as string) || "",
+            badge: (p.badge as string) || undefined,
+            subBadge: (p.subBadge as string) || undefined,
+            price: Number(p.price) || 2500,
+            depositRequired:
+              Number(p.depositRequired) ||
+              Math.round(Number(p.price || 2500) * 0.4),
+            currency: (p.currency as string) || "EGP",
+            themeVariant:
+              p.themeVariant === "noir-obsidian"
+                ? "noir-obsidian"
+                : "ivory-royal",
+            features:
+              parsedFeatures.length > 0
+                ? parsedFeatures
+                : DEFAULT_INVITATION_PLANS[0].features,
+            limits: parsedLimits,
+          };
+        });
+
+        setPlans(mapped);
+        try {
+          localStorage.setItem("asar_synced_plans", JSON.stringify(cloudPlans));
+        } catch {
+          // Ignore
+        }
+        return;
+      }
+    }
+
     try {
       const cached = localStorage.getItem("asar_synced_plans");
       if (cached) {
         const parsed = JSON.parse(cached) as Array<Record<string, unknown>>;
         const invPlans = parsed.filter(
           (p) => p.serviceType === "invitation" && p.isActive !== false
-        ) as unknown as InvitationPlan[];
+        );
         if (invPlans.length > 0) {
-          setPlans(invPlans);
+          const mapped: InvitationPlan[] = invPlans.map((p) => {
+            let parsedFeatures: string[] = [];
+            if (Array.isArray(p.features)) {
+              parsedFeatures = p.features as string[];
+            } else if (typeof p.featuresJson === "string") {
+              try {
+                parsedFeatures = JSON.parse(p.featuresJson);
+              } catch {
+                parsedFeatures = [];
+              }
+            }
+            return {
+              id: (p.$id as string) || (p.id as string) || "plan-inv",
+              serviceType: "invitation" as const,
+              name: (p.name as string) || "باقة دعوة أثر",
+              subtitle: (p.subtitle as string) || "",
+              badge: (p.badge as string) || undefined,
+              subBadge: (p.subBadge as string) || undefined,
+              price: Number(p.price) || 2500,
+              depositRequired:
+                Number(p.depositRequired) ||
+                Math.round(Number(p.price || 2500) * 0.4),
+              currency: (p.currency as string) || "EGP",
+              themeVariant:
+                p.themeVariant === "noir-obsidian"
+                  ? "noir-obsidian"
+                  : "ivory-royal",
+              features:
+                parsedFeatures.length > 0
+                  ? parsedFeatures
+                  : DEFAULT_INVITATION_PLANS[0].features,
+            };
+          });
+          setPlans(mapped);
         }
       }
     } catch {
       // Fallback cleanly to default plans
     }
-  }, []);
+  }, [cloudPlans]);
 
   return (
     <Box

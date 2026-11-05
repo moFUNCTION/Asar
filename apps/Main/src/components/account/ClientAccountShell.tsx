@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Box, Flex, Text, Button, Badge } from "@chakra-ui/react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAppwrite, useAsarAuth, ASAR_DATABASE_ID, ASAR_COLLECTIONS, Query } from "@repo/react-appwrite";
+import { useAppwrite, useAsarAuth, useCollection, ASAR_DATABASE_ID, ASAR_COLLECTIONS } from "@repo/react-appwrite";
 import { OrderTrackerTimeline } from "./OrderTrackerTimeline";
 import type { OrderData, OrderStageKey } from "./OrderTrackerTimeline";
 import { RawAssetsManager } from "./RawAssetsManager";
@@ -94,69 +94,67 @@ export const ClientAccountShell: React.FC<ClientAccountShellProps> = ({
   const [orders, setOrders] = useState<OrderData[]>(DEFAULT_ORDERS);
   const [activeOrderId, setActiveOrderId] = useState<string>(DEFAULT_ORDERS[0].orderId);
 
-  // Load cloud orders from Appwrite
+  // Query user orders reactively via useCollection hook
+  const userOrderWhere = useMemo(() => {
+    if (user?.$id) return { clientId: user.$id };
+    if (effectiveUser.email && effectiveUser.email !== "client@asar.audio") {
+      return { clientEmail: effectiveUser.email };
+    }
+    return undefined;
+  }, [user?.$id, effectiveUser.email]);
+
+  const { data: cloudOrderDocs } = useCollection(ASAR_COLLECTIONS.ORDERS, {
+    where: userOrderWhere as any,
+    enabled: Boolean(userOrderWhere),
+    realtime: true,
+  });
+
   useEffect(() => {
-    let isMounted = true;
-    async function loadCloudOrders() {
-      if (!databases) return;
-      try {
-        const queries: any[] = [];
-        if (user?.$id) {
-          queries.push(Query.equal("clientId", user.$id));
-        } else if (effectiveUser.email && effectiveUser.email !== "client@asar.audio") {
-          queries.push(Query.equal("clientEmail", effectiveUser.email));
-        }
+    if (cloudOrderDocs && cloudOrderDocs.length > 0) {
+      const mappedOrders: OrderData[] = cloudOrderDocs.map((d: any) => ({
+        orderId: d.$id,
+        serviceType: d.serviceType || "booth",
+        planName: d.planName || "باقة أثر الفاخرة",
+        clientNames: d.clientName || effectiveUser.name,
+        eventDate: d.eventDate || "قريباً",
+        eventVenue: d.eventVenue || "القاهرة، مصر",
+        totalAmount: Number(d.totalAmount) || 0,
+        currency: "EGP",
+        currentStage:
+          d.orderStatus === "pending_payment"
+            ? "draft"
+            : d.orderStatus === "payment_rejected"
+            ? "payment_rejected"
+            : d.orderStatus === "awaiting_client_assets"
+            ? "submitted"
+            : d.orderStatus === "event_scheduled"
+            ? "under_review"
+            : d.orderStatus === "audio_mastering"
+            ? "paid_confirmed"
+            : d.orderStatus === "studio_curation"
+            ? "assets_uploaded"
+            : d.orderStatus === "published"
+            ? "delivered"
+            : "draft",
+        paymentMethod: "InstaPay",
+        paymentReceiptUrl: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop",
+        rejectionReason: d.adminNotes || "",
+      }));
 
-        if (queries.length > 0) {
-          const res = await databases.listDocuments(ASAR_DATABASE_ID, ASAR_COLLECTIONS.ORDERS, queries);
-          if (isMounted && res.documents.length > 0) {
-            const cloudOrders: OrderData[] = res.documents.map((d: any) => ({
-              orderId: d.$id,
-              serviceType: d.serviceType || "booth",
-              planName: d.planName || "باقة أثر الفاخرة",
-              clientNames: d.clientName || effectiveUser.name,
-              eventDate: d.eventDate || "قريباً",
-              eventVenue: d.eventVenue || "القاهرة، مصر",
-              totalAmount: Number(d.totalAmount) || 0,
-              currency: "EGP",
-              currentStage:
-                d.orderStatus === "pending_payment"
-                  ? "submitted"
-                  : d.orderStatus === "payment_rejected"
-                  ? "payment_rejected"
-                  : d.orderStatus === "awaiting_client_assets"
-                  ? "under_review"
-                  : d.orderStatus === "published"
-                  ? "delivered"
-                  : "in_production",
-              paymentMethod: "InstaPay",
-              paymentReceiptUrl: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop",
-              rejectionReason: d.adminNotes || "",
-            }));
-
-            setOrders((prev) => {
-              const merged = [...cloudOrders];
-              for (const p of prev) {
-                if (!merged.some((m) => m.orderId === p.orderId)) {
-                  merged.push(p);
-                }
-              }
-              return merged;
-            });
-            setActiveOrderId(cloudOrders[0].orderId);
-            return;
+      setOrders((prev) => {
+        const merged = [...mappedOrders];
+        for (const p of prev) {
+          if (!merged.some((m) => m.orderId === p.orderId)) {
+            merged.push(p);
           }
         }
-      } catch (err) {
-        console.warn("Using default demo orders:", err);
+        return merged;
+      });
+      if (mappedOrders[0]?.orderId) {
+        setActiveOrderId(mappedOrders[0].orderId);
       }
     }
-
-    loadCloudOrders();
-    return () => {
-      isMounted = false;
-    };
-  }, [databases, user, effectiveUser.email]);
+  }, [cloudOrderDocs, effectiveUser.name]);
 
   // Read any saved demo client or cached order from localStorage
   useEffect(() => {

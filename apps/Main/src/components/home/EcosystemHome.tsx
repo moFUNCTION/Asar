@@ -250,7 +250,6 @@ export const EcosystemHome: React.FC<EcosystemHomeProps> = ({
             </Flex>
           </Box>
         )}
-        </Flex>
       </Box>
 
       {/* Hero Section */}

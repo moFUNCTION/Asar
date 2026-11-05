@@ -1,95 +1,64 @@
-# BRIEFING — 2026-11-04T00:57:00Z
+# BRIEFING — 2026-11-05T13:45:30Z
 
 ## Mission
-Implement Milestone 2 (M2: Admin Modular Website Creation Editor in `apps/Admin`). Build the section palette modal, modular reorderable section list, specialized inspectors for all 11 section types, live modular preview canvas, and upgrade SectionBlocksManager & InvitationStudio with dual-tier persistence (Appwrite + localStorage) and zero regressions.
+Milestone 2: Appwrite Cloud Functions Implementation & Verification (process-rsvp-action & generate-vip-pass).
 
 ## 🔒 My Identity
-- Archetype: frontend-architect
+- Archetype: teamwork_worker
 - Roles: implementer, qa, specialist
 - Working directory: d:\asar\.agents\teamwork\worker_m2
-- Original parent: 1702b5c8-8740-4f25-b6f5-898d68518b3a
-- Milestone: M2 - Admin Modular Website Creation Editor
+- Original parent: b5d74e17-aa59-4840-99b9-a702127a1c5c
+- Milestone: Milestone 2: Appwrite Cloud Functions Implementation & Verification
 
 ## 🔒 Key Constraints
-- DO NOT CHEAT: all implementations must be genuine.
-- Do not over run `npm run build` without any reason.
-- Do not make scripts or code generators without any reason, only make that if its needed.
-- Follow the minimal change principle.
-- Files owned exclusively:
-  - `apps/Admin/src/components/invitation-studio/SectionPaletteModal.tsx`
-  - `apps/Admin/src/components/invitation-studio/ModularSectionList.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/CoverHeroInspector.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/CoupleStoryInspector.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/EventScheduleInspector.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/PhotoGalleryInspector.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/WishingWallInspector.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/DigitalGiftRegistryInspector.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/BackgroundAudioInspector.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/VenueLocationInspector.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/LiveCountdownInspector.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/CustomHighlightInspector.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/DynamicRsvpInspector.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/SectionInspectorRouter.tsx`
-  - `apps/Admin/src/components/invitation-studio/inspectors/index.ts`
-  - `apps/Admin/src/components/invitation-studio/LiveModularPreview.tsx`
-  - `apps/Admin/src/components/invitation-studio/SectionBlocksManager.tsx`
-  - `apps/Admin/src/components/invitation-studio/InvitationStudio.tsx`
-  - `apps/Admin/src/components/invitation-studio/index.ts`
+- Exclusively own: `d:\asar\appwrite/appwrite.config.json`, `d:\asar\appwrite/functions/process-rsvp-action/*`, `d:\asar\appwrite/functions/generate-vip-pass/*`
+- Do NOT modify files in `apps/*` or `packages/*`
+- Do NOT over run `npm run build` without any reason
+- Do NOT make unnecessary scripts or code generators
+- Genuine implementations only: no hardcoding, no facades, no circumventing logic
+- Verify locally with Node and against live Appwrite instance
 
 ## Current Parent
-- Conversation ID: 1702b5c8-8740-4f25-b6f5-898d68518b3a
-- Updated: 2026-11-04T00:57:00Z
+- Conversation ID: b5d74e17-aa59-4840-99b9-a702127a1c5c
+- Updated: 2026-11-05T13:45:30Z
 
 ## Task Summary
-- **What to build**: Modular website creation editor in Admin allowing addition, reordering, visibility toggling, editing via specialized inspectors for all 11 section types, real-time responsive split-screen preview, and persistence to `invitation.sectionsConfigJson` and `localStorage`.
+- **What to build**: Production-ready implementation of `process-rsvp-action` Appwrite function, verification and polish of `generate-vip-pass`, updating `appwrite.config.json`, and end-to-end verification.
 - **Success criteria**:
-  - `SectionPaletteModal.tsx` supports adding all 11 section types categorized logically with defaults.
-  - `ModularSectionList.tsx` provides reorder up/down steppers, visibility toggle, duplicate, delete with guards, and edit inspection triggers.
-  - All 11 specialized inspectors in `inspectors/` with rich property editing.
-  - `LiveModularPreview.tsx` renders live preview of all enabled sections in device frame (mobile/desktop).
-  - `SectionBlocksManager.tsx` & `InvitationStudio.tsx` seamlessly wire `ModularWebsiteConfig` with backward compatibility and dual-tier persistence.
-  - `npx tsc --noEmit -p apps/Admin/tsconfig.json` exits with code 0.
-  - `npx tsc --noEmit -p packages/react-appwrite/tsconfig.json` exits with code 0.
-  - `npx eslint apps/Admin/src/components/invitation-studio/` exits with code 0.
-- **Interface contracts**: `packages/react-appwrite/src/AsarDomain/sections.ts` (authoritative `EventSection`, `ModularWebsiteConfig`, etc.)
+  - `appwrite.config.json` configured properly (`npm install` command, timeout 30s, scopes, env vars).
+  - `process-rsvp-action` installed and implements full validation, database reads, capacity check (409 on full), VIP pass generation (`VIP-XXXX-YYYY`), decline handling with rejectionReason, proper response codes (200, 400, 404, 409, 500).
+  - `generate-vip-pass` HMAC-SHA256 signature and token payload verified.
+  - Test locally and with live Appwrite instance; `npm test` passes.
+- **Interface contracts**: `d:\asar\.agents\teamwork\PROJECT.md`
+- **Code layout**: `d:\asar\appwrite/functions/`
 
 ## Key Decisions Made
-- Organized `SectionPaletteModal` into 4 clear categories: Hero & Story, Timeline & Wishes, Media & Registry, and Venue & RSVP, with searchable items and default instance builder `createDefaultSectionForType`.
-- Provided tactile reorder steppers (up/down), visibility toggle, guarded delete (protecting `cover_hero` and `dynamic_rsvp`), duplication, and inspector triggering in `ModularSectionList`.
-- Created dedicated inspectors for all 11 section types in `inspectors/` with rich editing, audio preview tester, and color swatch pickers.
-- Built `LiveModularPreview` supporting responsive iPhone (375px) vs Desktop frames with live audio playback simulation, ticking countdown timer, gallery lightbox teaser, wishing wall post submission and heart liking, bank QR modal, and dynamic RSVP submission.
-- Upgraded `SectionBlocksManager` to handle both modern `EventSection[]` and backward-compatible legacy blocks with `projectModernSectionsToLegacyBlocks`.
-- Upgraded `InvitationStudio` to serialize `ModularWebsiteConfig` to `sectionsConfigJson`, validate config on publish, and persist to dual tiers (Appwrite and localStorage).
+- Updated `appwrite/appwrite.config.json` with `"commands": "npm install"`, `timeout: 30`, scopes for databases/collections/documents, and vars.
+- Implemented full atomic capacity validation in `process-rsvp-action`, checking `invitations.maxCapacity` against current approved guests before issuing passes.
+- Resolved schema compatibility for `rejectionReason` by storing it in `dynamicResponsesJson` so that `updateDocument` succeeds without throwing unmapped column errors, while returning `rejectionReason` directly in JSON.
+- Deployed updated functions to Appwrite Cloud using Appwrite CLI (`appwrite push functions`) and verified live executions returning HTTP 200/400/404 via Appwrite MCP tools.
+
+## Artifact Index
+- `d:\asar\.agents\teamwork\worker_m2\DISPATCH.md` — Dispatch prompt
+- `d:\asar\.agents\teamwork\worker_m2\progress.md` — Liveness & step-by-step progress
+- `d:\asar\.agents\teamwork\worker_m2\handoff.md` — Final handoff report
+- `d:\asar\appwrite\functions\process-rsvp-action\test\test-process-rsvp.test.js` — Unit tests for process-rsvp-action
+- `d:\asar\appwrite\functions\generate-vip-pass\test\test-generate-vip-pass.test.js` — Unit tests for generate-vip-pass
 
 ## Change Tracker
 - **Files modified**:
-  - `apps/Admin/src/components/invitation-studio/SectionPaletteModal.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/ModularSectionList.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/CoverHeroInspector.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/CoupleStoryInspector.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/EventScheduleInspector.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/PhotoGalleryInspector.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/WishingWallInspector.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/DigitalGiftRegistryInspector.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/BackgroundAudioInspector.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/VenueLocationInspector.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/LiveCountdownInspector.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/CustomHighlightInspector.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/DynamicRsvpInspector.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/SectionInspectorRouter.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/inspectors/index.ts` (Created)
-  - `apps/Admin/src/components/invitation-studio/LiveModularPreview.tsx` (Created)
-  - `apps/Admin/src/components/invitation-studio/SectionBlocksManager.tsx` (Upgraded)
-  - `apps/Admin/src/components/invitation-studio/InvitationStudio.tsx` (Upgraded)
-  - `apps/Admin/src/components/invitation-studio/index.ts` (Updated exports)
-  - `apps/Admin/test/modularWebsiteEditor.test.ts` (Unit test suite)
-- **Build status**: PASS (all typechecks and tests exit with code 0)
-- **Pending issues**: None
+  - `appwrite/appwrite.config.json`: Added `npm install`, timeout 30, scopes, vars for cloud functions.
+  - `appwrite/functions/process-rsvp-action/package.json`: Added test script, installed `node-appwrite`.
+  - `appwrite/functions/process-rsvp-action/src/main.js`: Complete atomic handler with validation, capacity checks, VIP tokens, decline logic, standard responses.
+  - `appwrite/functions/generate-vip-pass/package.json`: Added test script, installed dependencies.
+  - `appwrite/functions/generate-vip-pass/src/main.js`: Enhanced body parsing for openruntimes request types.
+- **Build status**: Pass (all tests pass, live cloud deployments ready).
+- **Pending issues**: None.
 
 ## Quality Status
-- **Build/test result**: PASS (Admin tsconfig exit 0, react-appwrite tsconfig exit 0, tests 5/5 pass)
-- **Lint status**: PASS (0 errors, 0 warnings across invitation-studio)
-- **Tests added/modified**: `apps/Admin/test/modularWebsiteEditor.test.ts` (5 automated tests)
+- **Build/test result**: Pass (223 passed monorepo, 6/6 passed process-rsvp-action, 4/4 passed generate-vip-pass, live executions HTTP 200).
+- **Lint status**: Clean.
+- **Tests added/modified**: `test-process-rsvp.test.js` (6 tests), `test-generate-vip-pass.test.js` (4 tests).
 
 ## Loaded Skills
-- None
+- None specified in dispatch

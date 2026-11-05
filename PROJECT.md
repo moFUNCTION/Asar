@@ -1,144 +1,73 @@
-# Project: ASAR Modular Section Website Creation Editor & Modern Interactive Event Features
+# Project: ASAR Monorepo Ship-Readiness
 
 ## Architecture
+ASAR is a Turborepo v2 monorepo powering luxury digital heirlooms and interactive living event websites.
+- **5 Applications**:
+  - `apps/Main` (Port 3000): Brand gateway, customer auth modal, client portal (7-stage order tracker, raw assets submitter, audio player, QR hub, host mailbox).
+  - `apps/Admin` (Port 3001): Operations dashboard with Cairo typography, KPI overview, plans studio, orders & receipts queue, booth studio, invitation studio, admin mailbox, users & RBAC.
+  - `apps/Booth` (Port 3002): Dynamic audio guestbook memory storefront & 14-section booking landing.
+  - `apps/Invitation` (Port 3003): Dynamic modular invitation storefront, booking, living event page, VIP QR pass view, venue entrance QR scanner.
+  - `apps/Renderer` (Port 3004): Universal multi-tenant edge storefront router & memory classifier.
+- **5 Shared Packages**:
+  - `@repo/react-appwrite`: Appwrite provider, auth provider, subdomain engine, AsarDomain engine.
+  - `@repo/ui-components`: 21 luxury interactive UI components (WebGL, Canvas, Framer Motion).
+  - `@repo/assets-shared`: Shared branding and assets.
+  - `@repo/typescript-config`: Shared TypeScript configurations.
+  - `@repo/eslint-config`: Shared ESLint configurations.
+- **Backend & Serverless**:
+  - Appwrite Cloud: Frankfurt (`https://fra.cloud.appwrite.io/v1`), Project `6ad1c66c0017b63ab8cc`, Database `asar-db`.
+  - 10 Collections: `plans`, `orders`, `payments`, `booth_memories`, `booth_voice_records`, `booth_media`, `invitations`, `invitation_rsvps`, `wishing_wall_messages`, `users`.
+  - Cloud Functions: `process-rsvp-action`, `generate-vip-pass`, `send-rsvp-notification`, `sync-user-role`, `check-user-exists`.
 
-ASAR is a luxury event audio and digital invitation platform engineered as a high-performance Turborepo monorepo:
-- `packages/react-appwrite`: Shared domain models, Appwrite collection/bucket constants, Storefront Subdomain Engine, and the **Modular Section Domain Engine** (`sections.ts`, `ModularWebsiteConfig`, `EventSection`, section validators, legacy migration parsers).
-- `apps/Admin`: Luxury management console with React Router v6 declarative routes, dynamic plans builder, order queue pipeline, and the **Modular Section-Based Website Creation Editor** (`SectionPaletteModal`, `ModularSectionList`, per-section Config Inspectors, and `LiveModularPreview`).
-- `apps/Invitation`: Digital invitation showcase and dynamic storefront with the **Dynamic Modular Section Dispatcher** and modern interactive features: Live Wishing Wall, Multi-Event Schedule, Persistent Floating Audio Soundtrack, Digital Gift Registry with Bank QR / VietQR, Dynamic RSVP with Instant VIP Pass, and Responsive Photo Gallery with Lightbox.
-- `apps/Booth`: Audio guestbook experience, dynamic plans selection, and **Photo Memories Gallery** aligned with the shared modular event schema.
-- `apps/Main`: Client platform gateway and customer account portal with VIP RSVP Mailbox and QR pass hub.
-- `packages/UI-components`: 21 Awwwards-grade luxury UI components (`GradientWaves`, `BlurText`, `SplitText`, `TiltedCard`, etc.).
-
----
+## Code Layout & Write Boundaries
+- **Milestone 1**: `appwrite/functions/**/*`, `appwrite/appwrite.config.json`, `packages/react-appwrite/src/AsarDomain/collections.ts`
+- **Milestone 2**: `apps/Admin/**/*`
+- **Milestone 3**: `apps/Booth/**/*`, `apps/Invitation/**/*`, `apps/Main/**/*`, `apps/Renderer/**/*`, `packages/react-appwrite/src/**/*` (except collections.ts)
+- **Milestone 4**: Test suites, verification scripts, reports
 
 ## Feature Inventory
-
-Every feature from the Survey phase is mapped to a milestone:
-
 | # | Feature | Description | Milestone | Source |
 |---|---------|-------------|-----------|--------|
-| 1 | Competitive Analysis Documentation | Publish `docs/COMPETITIVE_ANALYSIS.md` analyzing Chungdoi, WithJoy, Zola, Biihappy | M1 | ORIGINAL_REQUEST §R1 |
-| 2 | Architecture Documentation Update | Update `docs/ASAR_PROJECT_ARCHITECTURE.md` with modular section architecture, schema, data flow, app boundaries | M1 | ORIGINAL_REQUEST §R1 |
-| 3 | Shared Modular Section Data Schema | `packages/react-appwrite/src/AsarDomain/sections.ts` with discriminated union `EventSection` (11 types), `ModularWebsiteConfig`, validators | M1 | ORIGINAL_REQUEST §R1, §R2 |
-| 4 | Legacy Block Migration & Parser | Backward-compatible parser transforming legacy flat blocks into modern `EventSection` models with zero crash | M1 | Survey Explorer 1 |
-| 5 | Domain Automated Unit Tests | Unit tests in `packages/react-appwrite/test/sections.test.ts` verifying parsing, validation, serialization, migration | M1 | ORIGINAL_REQUEST §Acceptance |
-| 6 | Admin Section Palette Modal | `apps/Admin` visual picker dialog allowing admins to drop in any available modular section type with icons & categories | M2 | ORIGINAL_REQUEST §R2 |
-| 7 | Admin Reorderable Modular Section Deck | `apps/Admin` section list with move up/down order controls, enable/disable toggle, duplicate, and delete actions | M2 | ORIGINAL_REQUEST §R2 |
-| 8 | Admin RSVP Section Inspector | Config form for RSVP capacity, attendance options, companions limit, dietary options, locked email verification | M2 | ORIGINAL_REQUEST §R2 |
-| 9 | Admin Wishing Wall Section Inspector | Config form for guestbook title, subtitle, moderation policy, greeting prompt, allowed reactions | M2 | ORIGINAL_REQUEST §R2 |
-| 10 | Admin Event Schedule Inspector | Config form for multi-event items (Ceremony, Reception, Afterparty) with times, locations, dress codes, Google Map links | M2 | ORIGINAL_REQUEST §R2 |
-| 11 | Admin Background Audio Inspector | Config form for audio track URL, song title, artist, auto-play hint, loop toggle | M2 | ORIGINAL_REQUEST §R2 |
-| 12 | Admin Digital Gift Registry Inspector | Config form for Bank QR (VietQR / InstaPay / IBAN), account number, bank name, beneficiary name, transfer memo, cash details | M2 | ORIGINAL_REQUEST §R2 |
-| 13 | Admin Photo Gallery Inspector | Config form for gallery photos, layout mode (masonry, grid, carousel), category tags | M2 | ORIGINAL_REQUEST §R2 |
-| 14 | Admin Hero, Story, Venue & Highlight Inspectors | Config forms for Cover/Hero, Couple Story milestones, Venue/Map with parking, and Editorial Highlights | M2 | ORIGINAL_REQUEST §R2 |
-| 15 | Admin Live Split-Screen Modular Preview | Real-time preview canvas in `apps/Admin` displaying the configured website with mobile and desktop viewport frames | M2 | ORIGINAL_REQUEST §R2 |
-| 16 | Admin Data Persistence & Appwrite Sync | Save and retrieve `ModularWebsiteConfig` to `sectionsConfigJson` on `invitations` collection and `localStorage` | M2 | ORIGINAL_REQUEST §R2 |
-| 17 | Invitation Dynamic Modular Dispatcher | `apps/Invitation` dynamic section renderer mapping section types to components in configured order | M3 | ORIGINAL_REQUEST §R3 |
-| 18 | Interactive Wishing Wall in Invitation | Real-time guest message submission, optimistic update, live wall card feed, likes, and local/Appwrite sync | M3 | ORIGINAL_REQUEST §R3 |
-| 19 | Multi-Event Schedule Timeline in Invitation | Interactive schedule cards, location addresses, Google Maps directions, and Add to Calendar (.ics) export | M3 | ORIGINAL_REQUEST §R3 |
-| 20 | Persistent Floating Background Audio Player | Floating audio player bar with vinyl/sound visualizer, play/pause, volume/mute toggle, and song title | M3 | ORIGINAL_REQUEST §R3 |
-| 21 | Digital Gift Registry Box with Bank QR | Blessing box displaying Bank QR, account details, 1-tap copy to clipboard, and transfer memo | M3 | ORIGINAL_REQUEST §R3 |
-| 22 | Dynamic Guest RSVP Submission | Form submission with attendance status, companions count, dietary choices, real-time feedback, instant VIP QR pass modal | M3 | ORIGINAL_REQUEST §R3 |
-| 23 | Responsive Photo Memories Gallery | Responsive masonry photo grid with category filter pills and fullscreen modal lightbox | M3 | ORIGINAL_REQUEST §R3 |
-| 24 | Invitation Page Integration | Update `apps/Invitation/src/pages/CustomEventPage.tsx` to dynamically render modular sections with zero regressions | M3 | ORIGINAL_REQUEST §R3 |
-| 25 | Booth Photo Memories Alignment | Align `apps/Booth` photo gallery components and models with the shared event section schema and category filters | M4 | ORIGINAL_REQUEST §R3 |
-| 26 | Workspace TypeScript & Quality Verification | `tsc --noEmit` across all 5 tsconfigs, zero lint errors, automated test suites execution | M5 | ORIGINAL_REQUEST §Acceptance |
-| 27 | Adversarial Stress Testing | Empirical challenger stress testing of section ordering, schema validation, wishing wall and RSVP edge cases | M5 | ORIGINAL_REQUEST §Acceptance |
-| 28 | Forensic Integrity Audit | Systematic integrity validation verifying authentic, genuine implementation without shortcuts or dummy facades | M5 | ORIGINAL_REQUEST §Acceptance |
-
----
+| 1 | `send-rsvp-notification` Cloud Function | Complete email notification logic via EmailJS / Appwrite Messaging | M1 | R2, appwrite.config.json, d:\lyder-eco |
+| 2 | `sync-user-role` Cloud Function | Sync users.*.create to database `users` collection and manage `admins` team | M1 | R2, appwrite.config.json, d:\lyder-eco |
+| 3 | `generate-vip-pass` Cloud Function | Persist signed passes with HMAC-SHA256 to `invitation_rsvps` | M1 | R2, appwrite.config.json |
+| 4 | `check-user-exists` Cloud Function | Pre-auth account existence probe for seamless auth modal routing | M1 | R2, d:\lyder-eco |
+| 5 | Cloud Functions Test Suites | Automated unit and integration tests for all cloud functions | M1 | R2, verification resources |
+| 6 | Admin Cairo Font Integration | Universal Cairo font hierarchy (300..900) across all Admin views, replacing serif overrides | M2 | R3, ASAR_DESIGN_SYSTEM.md |
+| 7 | Admin Compilation Fixes | Fix undeclared `profile`, `fetchUsers`, `isLoading`, and type mismatches | M2 | R1, tsc audit |
+| 8 | Admin Luxury UI Redesign | Warm Vintage Editorial styling, eliminate raw hex colors, responsive mobile drawer | M2 | R3, ASAR_DESIGN_SYSTEM.md |
+| 9 | Admin Flawless Auth Journey | Split-screen login, password recovery, session persistence without race conditions | M2 | R3, d:\lyder-eco |
+| 10 | Admin Role Sync & Dynamic URLs | Wire `UsersManager` to `sync-user-role`, dynamic origin URLs in `AdminShell` | M2 | R3, spec report |
+| 11 | Admin Studio Real Appwrite Data | Remove mock `DEFAULT_ORDERS`/`DEMO_ORDERS`; persist plans & booth memories to Appwrite | M2 | R1, R2, spec report |
+| 12 | Renderer Live RSVP Persistence | Wire `InvitationDynamicRsvpForm` to call `databases.createDocument` in `invitation_rsvps` | M3 | R1, R4, audit report |
+| 13 | Main Audio Player & Downloads | Replace 220Hz synthetic oscillator with Appwrite storage audio streaming & real binary downloads | M3 | R1, R4, audit report |
+| 14 | Main Client Assets Persistence | Persist submitted couple assets directly to Appwrite `orders.clientSubmittedAssetsJson` | M3 | R1, R4, audit report |
+| 15 | Invitation Live Venue Scanner | Wire `VenueQrScanner` to verify and check in guests against Appwrite `invitation_rsvps` | M3 | R1, R4, audit report |
+| 16 | Invitation Wishing Wall Wiring | Persist RSVP blessings to `wishing_wall_messages` collection | M3 | R1, R4, audit report |
+| 17 | Booth Keepsake & Reactions | Real PDF keepsake generation and Appwrite persistence for heart likes and guest notes | M3 | R1, R4, audit report |
+| 18 | Contact & Footer Cleanup | Eliminate generic placeholders, fake phone numbers, and dead links | M3 | R1, R4, audit report |
+| 19 | Monorepo Typecheck & Build Health | Clean `tsc --noEmit` across all 5 apps and packages, zero lint errors | M4 | Acceptance criteria |
+| 20 | Monorepo Test Suite Verification | Pass all 240+ unit and integration tests across monorepo | M4 | Acceptance criteria |
+| 21 | Reviewers, Challengers & Forensic Audit | 2 Reviewers (APPROVE), 2 Challengers (APPROVE), 1 Forensic Auditor (CLEAN) | M4 | Iteration gate criteria |
 
 ## Milestones
-
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| M1 | Architecture & Shared Modular Domain Engine | `docs/COMPETITIVE_ANALYSIS.md`, `docs/ASAR_PROJECT_ARCHITECTURE.md`, `packages/react-appwrite/src/AsarDomain/sections.ts`, tests | none | DONE |
-| M2 | Admin Modular Website Creation Editor | `apps/Admin/src/components/invitation-studio/*` (palette, reorder list, inspectors, live preview, persistence) | M1 | DONE |
-| M3 | Invitation Dynamic Storefront & Interactive Features | `apps/Invitation/src/components/modular-renderer/*`, `CustomEventPage.tsx` | M1 | DONE |
-| M4 | Booth Photo Memories Alignment | `apps/Booth/src/components/memory/PhotoGalleryGrid.tsx`, shared category alignment | M1, M3 | DONE |
-| M5 | Verification, Adversarial Testing & Forensic Audit | Workspace typecheck, test suites, Challenger stress tests, Forensic Auditor | M1–M4 | DONE |
-
----
+| M1 | Appwrite Backend & Cloud Functions | Implement all missing cloud functions with business logic, env vars, tests, and config | none | IN_PROGRESS |
+| M2 | Admin Dashboard Redesign & Auth Journey | Cairo font typography, luxury UI, compile error fixes, real Appwrite data in studios, flawless auth & RBAC | none | IN_PROGRESS |
+| M3 | Cross-App User Journeys & Dummy Remediation | Replace dummy components across Booth, Invitation, Main, and Renderer with live Appwrite persistence | none | IN_PROGRESS |
+| M4 | Monorepo Health, E2E Verification & Gate Audit | Full test suite pass, zero tsc errors, 2 Reviewers, 2 Challengers, Forensic Auditor veto gate | M1, M2, M3 | PLANNED |
 
 ## Interface Contracts
+### Appwrite Cloud Functions ↔ Client Applications
+- `process-rsvp-action`: Input `{ rsvpId, action: "approve" | "decline", rejectionReason?, maxVenueCapacity? }` -> Output `{ success: true, status: "approved" | "declined", passToken, qrCodeUrl }`.
+- `generate-vip-pass`: Input `{ rsvpId, guestName, companionsCount, invitationSlug, eventTitle }` -> Output `{ success: true, pass: { token, signature, checkInUrl, totalGuests } }`. Persists to `invitation_rsvps`.
+- `send-rsvp-notification`: Input `{ rsvpId, decision: "approved" | "declined", toEmail, toName, eventTitle, passLink?, passToken?, rejectionReason? }` -> Output `{ success: true, delivered: true, recipient, sentAt }`.
+- `sync-user-role`: Input `{ userId, email, name, role }` -> Output `{ success: true, userId, role, syncedAt }`. Upserts into `users` collection and syncs with `admins` team.
+- `check-user-exists`: Input `{ email }` -> Output `{ success: true, exists: boolean, email }`.
 
-### Shared Modular Section Schema (`@repo/react-appwrite`)
-```typescript
-export type EventSectionType =
-  | "cover_hero"
-  | "couple_story"
-  | "event_schedule"
-  | "photo_gallery"
-  | "wishing_wall"
-  | "digital_gift_registry"
-  | "background_audio"
-  | "venue_location"
-  | "live_countdown"
-  | "custom_highlight"
-  | "dynamic_rsvp";
-
-export interface SectionBase {
-  id: string;
-  type: EventSectionType;
-  title: string;
-  titleAr?: string;
-  enabled: boolean;
-  order: number;
-}
-
-export type EventSection =
-  | CoverHeroSection
-  | CoupleStorySection
-  | EventScheduleSection
-  | PhotoGallerySection
-  | WishingWallSection
-  | DigitalGiftRegistrySection
-  | BackgroundAudioSection
-  | VenueLocationSection
-  | LiveCountdownSection
-  | CustomHighlightSection
-  | DynamicRsvpSection;
-
-export interface ModularWebsiteConfig {
-  version: "2.0";
-  sections: EventSection[];
-  themeConfig?: Record<string, unknown>;
-  metadata?: {
-    lastEditedAt: string;
-    publishedAt?: string;
-  };
-}
-```
-
-### Admin ↔ Invitation Contract
-- Admin stores `ModularWebsiteConfig` as serialized JSON in `invitation.sectionsConfigJson`.
-- Invitation reads `invitation.sectionsConfigJson`, parses it via `parseModularWebsiteConfig(json)` from `@repo/react-appwrite`, filters `section.enabled === true`, sorts by `section.order`, and dispatches to visual components via `ModularSectionDispatcher`.
-
-### Guest ↔ Host Contract
-- Guest submits Wishing Wall message: stored in Appwrite collection `booth_media` (or `invitations` cache) with guest name, message, timestamp, and optional avatar.
-- Guest submits RSVP: validated against `formSchema`, stored in `invitation_rsvps` collection, immediately generating a VIP QR pass token and displaying confirmation modal.
-
----
-
-## Code Layout
-
-- `packages/react-appwrite/src/AsarDomain/sections.ts`: Schema, models, parsers, default sections, migration helpers.
-- `packages/react-appwrite/test/sections.test.ts`: Automated unit test suite for modular section engine.
-- `apps/Admin/src/components/invitation-studio/`:
-  - `SectionPaletteModal.tsx`: Visual section picker dialog.
-  - `ModularSectionList.tsx`: Reorderable section management deck.
-  - `inspectors/`: Per-section config forms (`RsvpSectionInspector.tsx`, `WishingWallInspector.tsx`, etc.).
-  - `LiveModularPreview.tsx`: Real-time preview canvas with device frame toggles.
-  - `InvitationStudio.tsx`: Master studio coordinating state and Appwrite persistence.
-- `apps/Invitation/src/components/modular-renderer/`:
-  - `ModularSectionDispatcher.tsx`: Dispatcher mapping `EventSection` to visual components.
-  - `sections/`:
-    - `InteractiveWishingWallSection.tsx`
-    - `MultiEventScheduleSection.tsx`
-    - `FloatingAudioPlayerBar.tsx`
-    - `DigitalGiftRegistrySection.tsx`
-    - `InteractiveRsvpSection.tsx`
-    - `ResponsivePhotoGallerySection.tsx`
-- `apps/Invitation/src/pages/CustomEventPage.tsx`: Dynamic modular page entry point.
-- `apps/Booth/src/components/memory/PhotoGalleryGrid.tsx`: Aligned photo memories component.
+### Admin Studios ↔ Appwrite Collections
+- `BoothMemoryStudio`: Reads from `orders` (where `serviceType === "booth"`), writes to `booth_memories` and `booth_voice_records`.
+- `InvitationStudio`: Reads from `orders` (where `serviceType === "invitation"`), writes to `invitations`.
+- `PlanBuilderStudio`: Creates and deletes documents in `plans` collection via `databases.createDocument` / `databases.deleteDocument`.
+- `OrdersQueueManager`: Updates `payments.status` when reviewing receipts.
